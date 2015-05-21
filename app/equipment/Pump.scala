@@ -1,13 +1,15 @@
 package equipment
 
 
-trait Pump {
+class Pump extends Switchable(id, on){
 
-  def turnOnPump(): Unit = {
+  def On(): Unit = {
     println("Pump has been turned on")
+    on = true
   }
 
-  def turnOffPump(): Unit = {
+  def Off(): Unit = {
     println("Pump has been turned off")
+    on = false
   }
 }
