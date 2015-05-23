@@ -1,15 +1,18 @@
 package equipment
 
 
-class Pump extends Switchable(id, on){
+class Pump(name: String, family: String) extends Equipment(name, family) with Switchable{
 
-  def On(): Unit = {
-    println("Pump has been turned on")
-    on = true
-  }
+  val id = getId
 
-  def Off(): Unit = {
-    println("Pump has been turned off")
-    on = false
+  def on = {}
+  def off = {}
+
+}
+
+
+object Pump{
+  def apply(name: String): Pump ={
+    new Pump(name, "Pump")
   }
 }
