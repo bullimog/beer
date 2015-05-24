@@ -1,5 +1,6 @@
 package controllers
 
+import akka.actor.ActorSystem
 import equipment._
 import play.api._
 import play.api.mvc._
@@ -29,6 +30,8 @@ object Beer extends App{
 
   val boiler1 = Boiler("myBoiler", heatingElement1, thermometer1, pump1)
   boiler1.circulateOn
-  val possible = boiler1.maintainTemperature(42.0, 60*20) // 42 degrees for 20 minutes
+  println("m1")
+  val possible = boiler1.maintainTemperature(42.0, 10) // 42 degrees for 10 seconds
+  println("possible:" + possible)
 
 }

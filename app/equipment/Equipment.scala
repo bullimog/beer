@@ -1,25 +1,34 @@
 package equipment
 
 
-abstract class Equipment(name: String, family: String) {
+abstract class Equipment(id: Int, name: String, equipmentType: String) {
 
+  override def toString = "type:"+equipmentType +"; name:" + name
+}
+
+object EquipmentIndexer {
   var lastId: Int = 0
 
   val getId: Int = {
     lastId += 1
     lastId
   }
-
-  override def toString = "type:"+family +"; name:" + name
-
 }
-
 
 
 
 trait Controllable {
   def setPower(power: Int): Unit = {
     println("Controllable item has been set to: " + power + "%")
+  }
+
+  def getPower: Int = {
+    println("Controllable item has been read")
+    0
+  }
+
+  def off: Unit = {
+    println("Controllable item has been turned off")
   }
 }
 

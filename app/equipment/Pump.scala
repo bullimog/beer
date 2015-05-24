@@ -1,18 +1,18 @@
 package equipment
 
+import EquipmentIndexer.getId
 
-class Pump(name: String, family: String) extends Equipment(name, family) with Switchable{
 
-  val id = getId
+class Pump(id: Int, name: String, equipmentType: String) extends Equipment(id, name, equipmentType) with Switchable{
 
   def on = {}
   def off = {}
-
+  def isOn:Boolean = {false}
 }
 
 
 object Pump{
   def apply(name: String): Pump ={
-    new Pump(name, "Pump")
+    new Pump(getId, name, "Pump")
   }
 }

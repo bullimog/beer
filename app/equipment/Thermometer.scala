@@ -1,9 +1,8 @@
 package equipment
 
+import EquipmentIndexer.getId
 
-class Thermometer(name: String, family: String) extends Equipment(name, family) with Readable{
-
-  val id = getId
+class Thermometer(id: Int, name: String, equipmentType: String) extends Equipment(id, name, equipmentType) with Readable{
 
 
   def readTemperature(): Double = {
@@ -14,7 +13,7 @@ class Thermometer(name: String, family: String) extends Equipment(name, family) 
 
 object Thermometer{
   def apply(name: String): Thermometer ={
-    new Thermometer(name, "Thermometer")
+    new Thermometer(getId, name, "Thermometer")
   }
 }
 
