@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import equipment._
 import play.api._
 import play.api.mvc._
+import sequencer.{Sequencer}
 
 import scala.collection.mutable.ListBuffer
 
@@ -16,22 +17,35 @@ object Application extends Controller {
 
 object Beer extends App{
   println("Hello")
+  //find the item of Equipment, for the given step
+//  val getEquipment = (l:List[Int], equipmentList:List[Equipment]) => {
+//    val equipmentId:Int = l.head
+//    println("equipmentId="+equipmentId)
+//    val fn = (equipment:Equipment) => (equipment.id == equipmentId)
+//    println("fn="+fn)
+//    val item:Equipment = parts.filter(fn).head
+//    println("item="+item)
+//    item
+//
+//    equipmentList.filter((e:Equipment) => e.id == l.head).head
+//  }
 
-  val thermometer1 = Thermometer("myThermometer")
-  val pump1 = Pump("myPump")
-  val heatingElement1 = HeatingElement("myHeater")
+  //instantiate Equipment singleton Object
+  //val equipment = Equipment
+
+  //instantiate Sequencer singleton Object
+  val sequencer = Sequencer
 
 
-//  val parts = new ListBuffer[Equipment]()
-//  parts += thermometer1
-//  parts += pump1
-//  parts += heatingElement1
 
 
-  val boiler1 = Boiler("myBoiler", heatingElement1, thermometer1, pump1)
-  boiler1.circulateOn
-  println("m1")
-  val possible = boiler1.maintainTemperature(42.0, 10) // 42 degrees for 10 seconds
-  println("possible:" + possible)
+
+
+  //val boiler1 = Boiler(4, "myBoiler", heatingElement1, thermometer1, pump1)
+  //boiler1.circulateOn
+  //println("m1")
+  //val possible = boiler1.maintainTemperature(42.0) // 42 degrees
+  //println("possible:" + possible)
+
 
 }
