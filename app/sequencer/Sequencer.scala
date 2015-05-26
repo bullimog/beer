@@ -1,9 +1,6 @@
 package sequencer
 
-import akka.actor.Actor
-import equipment.{Equipment, Pump, Boiler}
-import model.{Device, Step}
-
+import model.{Thermostat, Device, Step}
 import scala.collection.mutable.ListBuffer
 
 
@@ -22,84 +19,79 @@ import scala.collection.mutable.ListBuffer
 
 object Sequencer{
 
-  // Static definition for now....
-  val stepDefn1 = Step(4, 3, Some(41), None)          // Set required boiler temp to 41
-  val stepDefn2 = Step(2, 1, None, None)              // Turn pump on
-  val stepDefn3 = Step(1, 4, Some(41), None)          // Wait for thermometer to reach 41
-  val stepDefn4 = Step(4, 5, None, Some(60*20))       // wait for 20 minutes
-  val stepDefn5 = Step(4, 3, Some(68), None)          // Set boiler temp to 68
-  val stepDefn6 = Step(4, 5, None, Some(60*20))       // wait for 20 minutes
-  val stepDefn7 = Step(4, 2, None, None)              // turn boiler off
-  val stepDefn8 = Step(2, 2, None, None)               // turn pump off
+  // Static device definition for now....
+  val device1 = Device(1,"Thermometer", Device.ANALOGUE_IN, Some(1))
+  val device2 = Device(2, "Pump", Device.DIGITAL_OUT, Some(1))
+  val device3 = Device(3, "Heater", Device.ANALOGUE_OUT, Some(1))
 
-  //  val step = ("device", "stepType", "meta_data")
+  val device4 = Thermostat(4, "Boiler", Device.MONITOR, None, 1, 3)
+
+  val d = new ListBuffer[Device]()
+  d += device1 += device2 += device3 += device4
+  val devices = d.toList
+  println("devices created: " + d)
+
+
+  // Static step definition for now....
+  //  val step  = Step(device, stepType, temp, duration)
+  val stepDefn1 = Step(4, Step.SET_TEMP, Some(41), None)      // Set required thermostat temp to 41
+  val stepDefn2 = Step(2, Step.ON, None, None)                // Turn pump on
+  val stepDefn3 = Step(1, Step.WAIT_TEMP, Some(41), None)     // Wait for thermometer to reach 41
+  val stepDefn4 = Step(4, Step.WAIT_TIME, None, Some(60*20))  // wait for 20 minutes
+  val stepDefn5 = Step(4, Step.SET_TEMP, Some(68), None)      // Set thermostat temp to 68
+  val stepDefn6 = Step(4, Step.WAIT_TIME, None, Some(60*20))  // wait for 20 minutes
+  val stepDefn7 = Step(4, Step.OFF, None, None)               // turn boiler off
+  val stepDefn8 = Step(2, Step.OFF, None, None)               // turn pump off
 
   val p = new ListBuffer[Step]()
-  p += stepDefn1
-  p += stepDefn2
-  p += stepDefn3
-  p += stepDefn4
-  p += stepDefn5
-  p += stepDefn6
-  p += stepDefn7
-  p += stepDefn8
+  p += stepDefn1 += stepDefn2 += stepDefn3 += stepDefn4 += stepDefn5 += stepDefn6 += stepDefn7 += stepDefn8
   val mySequence = p.toList
   println("sequences created: " + p)
 
-
-  val device1 = Device(1,"Thermometer", Device.ANALOGUE_IN, 1)
-  val device2 = Device(2, "Pump", Device.DIGITAL_OUT, 1)
-  val device3 = Device(3, "Heater", Device.ANALOGUE_OUT, 1)
-  val device4 = Device(4, "Boiler", Device.MONITOR, 0)
-
-  val d = new ListBuffer[Device]()
-  d += device1
-  d += device2
-  d += device3
-  d += device4
-  val devices = d.toList
-  println("devices created: " + d)
 
   //function to find the item of Equipment, for the given step
   val getEquipment = (step:Step, deviceList:List[Device]) => {
     deviceList.filter((device:Device) => device.id == step.device).head
   }
 
-//  println("getEquipment created: " + getEquipment)
-//  println("Looking for equipment in: " + devices)
 
-
-  mySequence.foreach( step => {
+  def runSequence {
+    mySequence.foreach( step => {
 //    println("looking for equipment for : " + step)
-    val device :Device = getEquipment(step, devices)
-    println("step " + step + "to be serviced by "+ device )
+      val device :Device = getEquipment(step, devices)
+      println("step " + step + "to be serviced by "+ device )
 
+      step.eventType match{
+        case Step.ON => device.on()                       //Digital Out
+        case Step.OFF => device.off()                     //Digital/Analogue Out
+        case Step.SET_TEMP => runSetTemp(step, device)    //Thermostat
+        case Step.WAIT_TEMP => runWaitTemp(step, device)  //Thermometer
+        case Step.WAIT_TIME => runWaitTime(step, device)  //Any
+        case _ => {println("Bad Step Type")}  //TODO report/log
+      }
+    })
+  }
 
-    step.eventType match{
-      case Step.ON => {device.on()}                       //Digital Out
-      case Step.OFF => {device.off()}                     //Digital Out
-      case Step.SET_TEMP => {                             //Boiler
-        step.temperature match {
-          case Some(temperature) => device.setThermostat (temperature)
-          case _ => println("No temperature specified,  can't set temperature for: "+step)
-        }
-      }
-      case Step.WAIT_TEMP => {                            //Thermometer
-        step.temperature match {
-          case Some(temperature) => device.waitTemperature(temperature)
-          case _ => println("No temperature specified,  can't wait for temperature for: "+step)
-        }
-      }
-      case Step.WAIT_TIME => {
-        step.duration match {
-          case Some(duration) => device.waitTime(duration)
-          case _ => println("No duration specified,  can't wait for: "+step)
-        }
-      }
-      case _ => {println("Bad Step Type")}  //TODO report/log
+  def runSetTemp(step:Step, device:Device): Unit ={
+    step.temperature match {
+      case Some(temperature) => device.setThermostat (temperature)
+      case _ => println("No temperature specified,  can't set temperature for: "+step)
     }
+  }
 
-  })
+  def runWaitTemp(step:Step, device:Device): Unit ={
+    step.temperature match {
+      case Some(temperature) => device.waitTemperature(temperature)
+      case _ => println("No temperature specified,  can't wait for temperature for: "+step)
+    }
+  }
+
+  def runWaitTime(step:Step, device:Device): Unit ={
+    step.duration match {
+      case Some(duration) => device.waitTime(duration)
+      case _ => println("No duration specified,  can't wait for: " + step)
+    }
+  }
 }
 
 
