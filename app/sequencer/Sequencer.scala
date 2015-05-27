@@ -81,7 +81,7 @@ object Sequencer{
 
   def runWaitTemp(step:Step, device:Device): Unit ={
     step.temperature match {
-      case Some(temperature) => device.waitTemperature(temperature)
+      case Some(temperature) => device.waitTemperatureHeating(temperature)
       case _ => println("No temperature specified,  can't wait for temperature for: "+step)
     }
   }

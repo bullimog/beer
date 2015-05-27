@@ -18,9 +18,9 @@ class Thermostat(override val id: Int, override val description: String, overrid
     //Thermostat setting
     //Start Akka Actor, to adjust element, according to temperature
     //val scheduler = system.actorOf(Props[BoilerActor], name = "scheduler")
-    val boiler = system.actorOf(Props(new ThermostatActor(thermometer, heater, temperature)), name = "boiler")
+    val thermostat = system.actorOf(Props(new ThermostatActor(thermometer, heater, temperature)), name = "thermostat")
     val tickInterval  = new FiniteDuration(1, TimeUnit.SECONDS)
-    cancellable = system.scheduler.schedule(tickInterval, tickInterval, boiler, "tick") //initialDelay, delay, Actor, Message
+    cancellable = system.scheduler.schedule(tickInterval, tickInterval, thermostat, "tick") //initialDelay, delay, Actor, Message
     println(description+ " set thermostat to "+ temperature)
   }
 }

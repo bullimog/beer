@@ -7,6 +7,7 @@ import org.joda.time.DateTime
 import async.BeerAppActorSystem.system
 import sequencer.Sequencer
 
+import scala.annotation.tailrec
 import scala.concurrent.duration.FiniteDuration
 
 
@@ -27,12 +28,32 @@ class Device(val id: Int, val description: String, val deviceType: Int,
 
   def setThermostat(temperature:Double) = {}
 
-  def waitTemperature(temperature: Double) = {
-    print(description+ " waiting for temperature: " + temperature +"... ")
-    Thread.sleep(5000)
-    println(" Done!")
-    //Will need an Actor, to periodically check
+
+
+  @tailrec
+  final def waitTemperatureHeating(targetTemperature: Double):Unit = {
+    print(description + " waiting for temperature: " + targetTemperature + "... ")
+    val risingTemp:Double = readTemperature().getOrElse(-273)
+    if (risingTemp < targetTemperature) {
+      Thread.sleep(1000)
+      waitTemperatureHeating(targetTemperature)
+    }
   }
+
+
+
+
+
+
+
+//    println(" Done!")
+//    val thermostat = system.actorOf(Props(new ThermometerActor(this, temperature)), name = "thermometer")
+//    val tickInterval  = new FiniteDuration(1, TimeUnit.SECONDS)
+//    //cancellable = system.scheduler.schedule(tickInterval, tickInterval, thermostat, "tick") //initialDelay, delay, Actor, Message
+//    cancellable = system.scheduler.scheduleOnce(tickInterval, thermostat, "foo")
+//    //Will need an Actor, to periodically check
+//  }
+
   def waitTime(duration: Int) = {
     print(description+ " waiting for "+ duration + " seconds...")
     Thread.sleep(5000)
@@ -63,17 +84,11 @@ object Device {
 class ThermometerActor(thermometer: Device, targetTemperature: Double) extends Actor {
   def receive = {
     case tick: String => {
-      println("still going " + DateTime.now)
-      thermometer.readTemperature() match {
+       thermometer.readTemperature() match {
         case Some(currentTemp) => if(currentTemp == targetTemperature) thermometer.cancellable.cancel()
-        case _ =>  //to be safe!
+        case _ =>
       }
     }
     case _ => println("unknown message")
-  }
-
-  def calculateHeatSetting(tempDiff: Double): Int ={
-    if(tempDiff > 1.0) 100
-    else (tempDiff * 50).toInt
   }
 }
