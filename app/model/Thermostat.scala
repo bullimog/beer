@@ -8,6 +8,8 @@ import org.joda.time.DateTime
 import sequencer.Sequencer
 
 import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.ExecutionContext.Implicits.global
+
 
 //Thermostat is composed of a heater and a Thermometer Device
 class Thermostat(override val id: Int, override val description: String, override val deviceType: Int,
@@ -32,8 +34,8 @@ object Thermostat{
     new Thermostat(id, description, deviceType, port, deviceFromId(thermometerId),deviceFromId(heaterId))
   }
 
-  val deviceFromId = (id:Int) => {
-    Sequencer.devices.filter((device:Device) => device.id == id).head
+  def deviceFromId = (id:Int) => {
+    Sequencer.components.toList.filter((device:Device) => device.id == id).head
   }
 }
 

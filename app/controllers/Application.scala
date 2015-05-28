@@ -15,6 +15,10 @@ object Application extends Controller {
 object Beer extends App{
   //instantiate Sequencer singleton Object
   val sequencer = Sequencer
-  sequencer.runSequence
+
+  println("About to run sequence")
+ // sequencer.runSequence
+  println("Kicked off sequence")
+  Thread.sleep(10000)
 
 }

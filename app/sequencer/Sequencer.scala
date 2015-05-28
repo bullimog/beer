@@ -2,6 +2,9 @@ package sequencer
 
 import model.{Thermostat, Device, Step}
 import scala.collection.mutable.ListBuffer
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+
 
 
 //class SequencerActor(taskList: List[Step]) extends Actor {
@@ -20,16 +23,20 @@ import scala.collection.mutable.ListBuffer
 object Sequencer{
 
   // Static device definition for now....
-  val device1 = Device(1,"Thermometer", Device.ANALOGUE_IN, Some(1))
-  val device2 = Device(2, "Pump", Device.DIGITAL_OUT, Some(1))
-  val device3 = Device(3, "Heater", Device.ANALOGUE_OUT, Some(1))
+  val component1 = Device(1,"Thermometer", Device.ANALOGUE_IN, Some(1))
+  val component2 = Device(2, "Pump", Device.DIGITAL_OUT, Some(1))
+  val component3 = Device(3, "Heater", Device.ANALOGUE_OUT, Some(1))
 
-  val device4 = Thermostat(4, "Boiler", Device.MONITOR, None, 1, 3)
+  val lb = new ListBuffer[Device]()
+  lb += component1 += component2 += component3
+  val components = lb.toList
 
-  val d = new ListBuffer[Device]()
-  d += device1 += device2 += device3 += device4
-  val devices = d.toList
-  println("devices created: " + d)
+  val thermostat1 = Thermostat(4, "Boiler", Device.MONITOR, None, 1, 3)
+  val allDevices = thermostat1 :: components
+
+  println("devices created: " + allDevices)
+
+
 
 
   // Static step definition for now....
@@ -55,21 +62,25 @@ object Sequencer{
   }
 
 
-  def runSequence {
-    mySequence.foreach( step => {
-//    println("looking for equipment for : " + step)
-      val device :Device = getEquipment(step, devices)
-      println("step " + step + "to be serviced by "+ device )
+  def runSequence:Unit = {
+    Future {
+      mySequence.foreach(step => {
+        //    println("looking for equipment for : " + step)
+        val device: Device = getEquipment(step, allDevices)
+        println("step " + step + "to be serviced by " + device)
 
-      step.eventType match{
-        case Step.ON => device.on()                       //Digital Out
-        case Step.OFF => device.off()                     //Digital/Analogue Out
-        case Step.SET_TEMP => runSetTemp(step, device)    //Thermostat
-        case Step.WAIT_TEMP => runWaitTemp(step, device)  //Thermometer
-        case Step.WAIT_TIME => runWaitTime(step, device)  //Any
-        case _ => {println("Bad Step Type")}  //TODO report/log
-      }
-    })
+        step.eventType match {
+          case Step.ON => device.on() //Digital Out
+          case Step.OFF => device.off() //Digital/Analogue Out
+          case Step.SET_TEMP => runSetTemp(step, device) //Thermostat
+          case Step.WAIT_TEMP => runWaitTemp(step, device) //Thermometer
+          case Step.WAIT_TIME => runWaitTime(step, device) //Any
+          case _ => {
+            println("Bad Step Type")
+          } //TODO report/log
+        }
+      })
+    }
   }
 
   def runSetTemp(step:Step, device:Device): Unit ={
