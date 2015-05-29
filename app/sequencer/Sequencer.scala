@@ -1,6 +1,7 @@
 package sequencer
 
 import model.{Thermostat, Device, Step}
+import play.api.libs.json._
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -8,6 +9,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object Sequencer{
 
   // Static device definition for now....
+  val json: JsValue = Json.parse("""{
+    {"id" : 1, "description: "Thermometer", "deviceType": 1,  "port": 1},
+    {"id" : 2, "description: "Pump",        "deviceType": 4,  "port": 1}
+  }""")
+
+
   val component1 = Device(1,"Thermometer", Device.ANALOGUE_IN, Some(1))
   val component2 = Device(2, "Pump", Device.DIGITAL_OUT, Some(1))
   val component3 = Device(3, "Heater", Device.ANALOGUE_OUT, Some(1))
