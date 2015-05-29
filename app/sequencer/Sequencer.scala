@@ -5,21 +5,6 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-
-
-//class SequencerActor(taskList: List[Step]) extends Actor {
-//  def receive = {
-//    case message: String => {
-//      for (step:Step <- taskList)
-//        yield {
-//          println(step)
-//          step.execute()
-//        }
-//    }
-//    case _ => println("unknown message")
-//  }
-//}
-
 object Sequencer{
 
   // Static device definition for now....
@@ -31,12 +16,16 @@ object Sequencer{
   lb += component1 += component2 += component3
   val components = lb.toList
 
-  val thermostat1 = Thermostat(4, "Boiler", Device.MONITOR, None, 1, 3)
-  val allDevices = thermostat1 :: components
+  def addThermostat(devices: List[Device], thermo: Option[Device]): List[Device] ={
+    thermo match {
+      case Some(thermostat) => thermostat :: devices
+      case _ => devices
+    }
+  }
+  val thermo = Thermostat(4, "Boiler", Device.MONITOR, None, component1, component3)
+  val allDevices = addThermostat(components, thermo)
 
   println("devices created: " + allDevices)
-
-
 
 
   // Static step definition for now....
@@ -56,6 +45,7 @@ object Sequencer{
   println("sequences created: " + p)
 
 
+
   //function to find the item of Equipment, for the given step
   val getEquipment = (step:Step, deviceList:List[Device]) => {
     deviceList.filter((device:Device) => device.id == step.device).head
@@ -65,7 +55,6 @@ object Sequencer{
   def runSequence:Unit = {
     Future {
       mySequence.foreach(step => {
-        //    println("looking for equipment for : " + step)
         val device: Device = getEquipment(step, allDevices)
         println("step " + step + "to be serviced by " + device)
 
@@ -75,9 +64,7 @@ object Sequencer{
           case Step.SET_TEMP => runSetTemp(step, device) //Thermostat
           case Step.WAIT_TEMP => runWaitTemp(step, device) //Thermometer
           case Step.WAIT_TIME => runWaitTime(step, device) //Any
-          case _ => {
-            println("Bad Step Type")
-          } //TODO report/log
+          case _ => {println("Bad Step Type")} //TODO report/log
         }
       })
     }

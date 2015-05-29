@@ -29,13 +29,16 @@ class Thermostat(override val id: Int, override val description: String, overrid
 
 object Thermostat{
   def apply(id: Int, description: String, deviceType: Int, port:Option[Int],
-          thermometerId:Int, heaterId:Int): Device ={
-
-    new Thermostat(id, description, deviceType, port, deviceFromId(thermometerId),deviceFromId(heaterId))
-  }
-
-  def deviceFromId = (id:Int) => {
-    Sequencer.components.toList.filter((device:Device) => device.id == id).head
+          thermometer:Device, heater:Device): Option[Device] ={
+    thermometer.deviceType match{
+      case  Device.DIGITAL_IN => {
+        heater.deviceType match {
+          case Device.DIGITAL_OUT => Some(new Thermostat(id, description, deviceType, port, thermometer, heater))
+          case _ => None
+        }
+      }
+      case _ => None
+    }
   }
 }
 
@@ -52,7 +55,7 @@ class ThermostatActor(thermometer: Device, heater: Device, targetTemperature: Do
   }
 
   def calculateHeatSetting(tempDiff: Double): Int ={
-    if(tempDiff > 1.0) 100
+    if(tempDiff > 2.0) 100
     else (tempDiff * 50).toInt
   }
 }

@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit
 import akka.actor.{Cancellable, Props, Actor}
 import org.joda.time.DateTime
 import async.BeerAppActorSystem.system
+import play.api.libs.json.Json
 import sequencer.Sequencer
 
 import scala.annotation.tailrec
@@ -79,6 +80,8 @@ object Device {
     //TODO: validate values
     new Device(id, description, deviceType, port)
   }
+
+  implicit val formats=Json.format[Device]
 }
 
 class ThermometerActor(thermometer: Device, targetTemperature: Double) extends Actor {
