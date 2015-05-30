@@ -19,6 +19,6 @@ object Beer extends App{
   println("About to run sequence")
  // sequencer.runSequence
   println("Kicked off sequence")
-  Thread.sleep(10000)
+  //Thread.sleep(10000)
 
 }

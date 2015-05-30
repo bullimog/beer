@@ -8,13 +8,20 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object Sequencer{
 
-  // Static device definition for now....
+  //working towards json definition...
   val json: JsValue = Json.parse("""{
-    {"id" : 1, "description: "Thermometer", "deviceType": 1,  "port": 1},
-    {"id" : 2, "description: "Pump",        "deviceType": 4,  "port": 1}
+    "devices:": [
+      {"id" : 1, "description": "Thermometer", "deviceType": 1,  "port": 1},
+      {"id" : 2, "description": "Pump",        "deviceType": 4,  "port": 1},
+      {"id" : 3, "description": "Heater",      "deviceType": 2,  "port": 1}
+    ]
   }""")
 
+  println("json: "+Json.prettyPrint(json))
 
+
+
+  // Static device definition for now....
   val component1 = Device(1,"Thermometer", Device.ANALOGUE_IN, Some(1))
   val component2 = Device(2, "Pump", Device.DIGITAL_OUT, Some(1))
   val component3 = Device(3, "Heater", Device.ANALOGUE_OUT, Some(1))
@@ -75,6 +82,18 @@ object Sequencer{
         }
       })
     }
+  }
+
+  def pauseSequence:Unit = {
+    Future {allDevices.foreach( device => device.pause())}
+  }
+
+  def resumeSequence:Unit = {
+    Future {allDevices.foreach( device => device.resume())}
+  }
+
+  def abortSequence:Unit = {
+    Future {}
   }
 
   def runSetTemp(step:Step, device:Device): Unit ={

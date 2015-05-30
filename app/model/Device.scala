@@ -12,7 +12,7 @@ import scala.annotation.tailrec
 import scala.concurrent.duration.FiniteDuration
 
 
-class Device(val id: Int, val description: String, val deviceType: Int,
+case class Device(val id: Int, val description: String, val deviceType: Int,
 //             val port:Option[Int], thermometer:Option[Device], heater:Option[Device]) {
              val port:Option[Int]) {
 
@@ -21,15 +21,12 @@ class Device(val id: Int, val description: String, val deviceType: Int,
     "## Device:"+id+", description:"+description+", deviceType:"+deviceType+", port:"+port
   }
 
-  def on() = {println(description+ " switched on")}
-  def off() = {
-
-    println(description+ " switched off")
-  }
+  def on() = {println(description+ " switched on")} //TODO
+  def off() = {println(description+ " switched off")} //TODO
+  def pause() = {}  //TODO
+  def resume() = {} //TODO
 
   def setThermostat(temperature:Double) = {}
-
-
 
   @tailrec
   final def waitTemperatureHeating(targetTemperature: Double):Unit = {
@@ -76,12 +73,12 @@ object Device {
   val DIGITAL_OUT = 4
   val MONITOR = 5
 
-  def apply(id: Int, description: String, deviceType: Int, port:Option[Int]): Device ={
-    //TODO: validate values
-    new Device(id, description, deviceType, port)
-  }
+//  def apply(id: Int, description: String, deviceType: Int, port:Option[Int]): Device ={
+//    //TODO: validate values
+//    new Device(id, description, deviceType, port)
+//  }
 
-  implicit val formats=Json.format[Device]
+//  implicit val formats=Json.format[Device]
 }
 
 class ThermometerActor(thermometer: Device, targetTemperature: Double) extends Actor {
