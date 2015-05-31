@@ -12,9 +12,7 @@ import scala.annotation.tailrec
 import scala.concurrent.duration.FiniteDuration
 
 
-case class Device(val id: Int, val description: String, val deviceType: Int,
-//             val port:Option[Int], thermometer:Option[Device], heater:Option[Device]) {
-             val port:Option[Int]) {
+case class Device(id: Int, description: String, deviceType: Int, port:Option[Int]) {
 
   var cancellable:Cancellable = null
   override def toString(): String ={

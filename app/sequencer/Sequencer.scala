@@ -1,6 +1,6 @@
 package sequencer
 
-import model.{Thermostat, Device, Step}
+import model.{DeviceCollection, Thermostat, Device, Step}
 import play.api.libs.json._
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
@@ -19,7 +19,48 @@ object Sequencer{
 
   println("json: "+Json.prettyPrint(json))
 
+//import play.api.libs.json.{JsNull,Json,JsString,JsValue}
 
+  import play.api.libs.functional.syntax._
+
+  implicit val deviceReads: Reads[Device] = (
+      (JsPath \ "devices" \ "id").read[Int] and
+      (JsPath \ "devices" \ "description").read[String] and
+      (JsPath \ "devices" \ "deviceType").read[Int] and
+      (JsPath \ "devices" \ "port").read[Option[Int]]
+    )(Device.apply _)
+
+//  val deviceResult: JsResult[Device] = json.validate[Device]
+//  println("deviceResult: "+deviceResult)
+
+  //val residentResult: JsResult[Resident] = (json \ "residents")(1).validate[Resident]
+
+
+//  val jasonDevices : JsValue = Json.obj(
+//    "description" -> "My Setup",
+//    "devices" -> Json.arr(
+//      Json.obj(
+//        "id" -> 1,
+//        "description" -> "Thermometer",
+//        "deviceType" -> 1,
+//        "port" -> 1
+//      ),
+//      Json.obj(
+//        "id" -> 2,
+//        "description" -> "Pump",
+//        "deviceType" -> 4,
+//        "port" -> 1
+//      ),
+//      Json.obj(
+//        "id" -> 3,
+//        "description" -> "Heater",
+//        "deviceType" -> 2,
+//        "port" -> 1
+//      )
+//    )
+//  )
+
+/* ----------------------------------------------------------- */
 
   // Static device definition for now....
   val component1 = Device(1,"Thermometer", Device.ANALOGUE_IN, Some(1))
@@ -39,7 +80,54 @@ object Sequencer{
   val thermo = Thermostat(4, "Boiler", Device.MONITOR, None, component1, component3)
   val allDevices = addThermostat(components, thermo)
 
-  println("devices created: " + allDevices)
+  //create the case class of all devices
+  val devices = DeviceCollection ("Masher 1", "My first set-up, for mashing", allDevices)
+  println("devices created: " + devices)
+
+
+
+  /*-------------------------------------------------*/
+
+  import play.api.libs.json._
+
+  // Different ways of defining a Writes:
+
+  //Very simple Writes. Often impractical...
+  implicit val devWrites = Json.writes[Device]
+
+//  //Define custom mapping... Not needed in this instance
+//  implicit val deviceWrites = new Writes[Device] {
+//    def writes(device: Device) = Json.obj(
+//      "id"          -> device.id,
+//      "description" -> device.description,
+//      "deviceType"  -> device.deviceType,
+//      "port"        -> device.port
+//    )
+//  }
+
+
+  // The above method wouldn't handle a Seq, so used this combinator pattern, instead...
+  // But as it turned out, the default, simple Writes did the job!
+//  implicit val devicesWrites: Writes[DeviceCollection] = (
+//      (JsPath \ "name").write[String] and
+//      (JsPath \ "description").write[String] and
+//      (JsPath \ "devices").write[Seq[Device]]
+//    )(unlift(DeviceCollection.unapply))
+
+  implicit val devicesWrites = Json.writes[DeviceCollection]
+
+  val isThisIt = Json.toJson(devices)
+  println("---------> toJson" + isThisIt)
+
+
+
+
+
+  /*-------------------------------------------------*/
+
+
+
+
 
 
   // Static step definition for now....
