@@ -10,55 +10,48 @@ object Sequencer{
 
   //working towards json definition...
   val json: JsValue = Json.parse("""{
-    "devices:": [
+    "name": "First setup",
+    "description": "My first setup",
+    "devices": [
       {"id" : 1, "description": "Thermometer", "deviceType": 1,  "port": 1},
       {"id" : 2, "description": "Pump",        "deviceType": 4,  "port": 1},
       {"id" : 3, "description": "Heater",      "deviceType": 2,  "port": 1}
     ]
   }""")
 
-  println("json: "+Json.prettyPrint(json))
+//  println("json: "+Json.prettyPrint(json))
 
-//import play.api.libs.json.{JsNull,Json,JsString,JsValue}
 
   import play.api.libs.functional.syntax._
 
   implicit val deviceReads: Reads[Device] = (
-      (JsPath \ "devices" \ "id").read[Int] and
-      (JsPath \ "devices" \ "description").read[String] and
-      (JsPath \ "devices" \ "deviceType").read[Int] and
-      (JsPath \ "devices" \ "port").read[Option[Int]]
+    (JsPath \ "id").read[Int] and
+    (JsPath \ "description").read[String] and
+    (JsPath \ "deviceType").read[Int] and
+    (JsPath \ "port").readNullable[Int]
     )(Device.apply _)
+
+  implicit val deviceCollectionReads: Reads[DeviceCollection] = (
+      (JsPath \ "name").read[String] and
+      (JsPath \ "description").read[String] and
+      (JsPath \ "devices").read[List[Device]]
+    )(DeviceCollection.apply _)
+
+  json.validate[DeviceCollection] match {
+    case s: JsSuccess[DeviceCollection] => {
+      val dc: DeviceCollection = s.get
+      println("---------> DeviceCollection read:" + dc)
+    }
+    case e: JsError => {
+      println("---------> Crap happened:" + e)
+    }
+  }
+
+
 
 //  val deviceResult: JsResult[Device] = json.validate[Device]
 //  println("deviceResult: "+deviceResult)
 
-  //val residentResult: JsResult[Resident] = (json \ "residents")(1).validate[Resident]
-
-
-//  val jasonDevices : JsValue = Json.obj(
-//    "description" -> "My Setup",
-//    "devices" -> Json.arr(
-//      Json.obj(
-//        "id" -> 1,
-//        "description" -> "Thermometer",
-//        "deviceType" -> 1,
-//        "port" -> 1
-//      ),
-//      Json.obj(
-//        "id" -> 2,
-//        "description" -> "Pump",
-//        "deviceType" -> 4,
-//        "port" -> 1
-//      ),
-//      Json.obj(
-//        "id" -> 3,
-//        "description" -> "Heater",
-//        "deviceType" -> 2,
-//        "port" -> 1
-//      )
-//    )
-//  )
 
 /* ----------------------------------------------------------- */
 
@@ -89,39 +82,11 @@ object Sequencer{
   /*-------------------------------------------------*/
 
   import play.api.libs.json._
-
-  // Different ways of defining a Writes:
-
-  //Very simple Writes. Often impractical...
   implicit val devWrites = Json.writes[Device]
-
-//  //Define custom mapping... Not needed in this instance
-//  implicit val deviceWrites = new Writes[Device] {
-//    def writes(device: Device) = Json.obj(
-//      "id"          -> device.id,
-//      "description" -> device.description,
-//      "deviceType"  -> device.deviceType,
-//      "port"        -> device.port
-//    )
-//  }
-
-
-  // The above method wouldn't handle a Seq, so used this combinator pattern, instead...
-  // But as it turned out, the default, simple Writes did the job!
-//  implicit val devicesWrites: Writes[DeviceCollection] = (
-//      (JsPath \ "name").write[String] and
-//      (JsPath \ "description").write[String] and
-//      (JsPath \ "devices").write[Seq[Device]]
-//    )(unlift(DeviceCollection.unapply))
-
   implicit val devicesWrites = Json.writes[DeviceCollection]
 
   val isThisIt = Json.toJson(devices)
   println("---------> toJson" + isThisIt)
-
-
-
-
 
   /*-------------------------------------------------*/
 
