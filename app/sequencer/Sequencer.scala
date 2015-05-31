@@ -5,21 +5,26 @@ import play.api.libs.json._
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.io.Source
 
 object Sequencer{
 
   //working towards json definition...
-  val json: JsValue = Json.parse("""{
-    "name": "First setup",
-    "description": "My first setup",
-    "devices": [
-      {"id" : 1, "description": "Thermometer", "deviceType": 1,  "port": 1},
-      {"id" : 2, "description": "Pump",        "deviceType": 4,  "port": 1},
-      {"id" : 3, "description": "Heater",      "deviceType": 2,  "port": 1}
-    ]
-  }""")
+//  val json: JsValue = Json.parse("""{
+//    "name": "First setup",
+//    "description": "My first setup",
+//    "devices": [
+//      {"id" : 1, "description": "Thermometer", "deviceType": 1,  "port": 1},
+//      {"id" : 2, "description": "Pump",        "deviceType": 4,  "port": 1},
+//      {"id" : 3, "description": "Heater",      "deviceType": 2,  "port": 1}
+//    ]
+//  }""")
 
-//  println("json: "+Json.prettyPrint(json))
+  val source = Source.fromFile("deviceSetup.json", "UTF-8")
+  val json: JsValue = Json.parse(source.mkString)
+
+
+  println("json: "+Json.prettyPrint(json))
 
 
   import play.api.libs.functional.syntax._

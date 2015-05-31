@@ -1,0 +1,30 @@
+{
+  "name" : "Masher 1",
+  "description" : "My first set-up, for mashing",
+  "devices" : [ {
+    "id" : 1,
+    "description" : "Thermometer",
+    "deviceType" : 1,
+    "port" : 1
+  }, {
+    "id" : 2,
+    "description" : "Pump",
+    "deviceType" : 4,
+    "port" : 1
+  }, {
+    "id" : 3,
+    "description" : "Heater",
+    "deviceType" : 2,
+    "port" : 1
+  } ]
+  "Thermostat": {
+	"id": 4,
+	"name": "Boiler",
+	"deviceType": 5,
+	"port": None,
+	"thermometer:" 1, 
+	"heater" : 3)
+  }
+}
+
+
