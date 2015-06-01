@@ -17,7 +17,7 @@
     "deviceType" : 2,
     "port" : 1
   } ]
-  "Thermostat": {
+  "thermostat": {
 	"id": 4,
 	"name": "Boiler",
 	"deviceType": 5,

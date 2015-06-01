@@ -1,6 +1,8 @@
 package sequencer
 
-import model.{DeviceCollection, Thermostat, Device, Step}
+import akka.actor.Cancellable
+import controllers.ComponentManager
+import model._
 import play.api.libs.json._
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
@@ -29,22 +31,33 @@ object Sequencer{
 
   import play.api.libs.functional.syntax._
 
+  implicit val thermostatReads: Reads[Thermostat] = (
+    (JsPath \ "id").read[Int] and
+    (JsPath \ "description").read[String] and
+    (JsPath \ "deviceType").read[Int] and
+    (JsPath \ "cancellable").read[Option[Cancellable]] and
+    (JsPath \ "thermometer").read[Device] and
+    (JsPath \ "port").read[Device]
+    )(Thermostat.apply _)
+
   implicit val deviceReads: Reads[Device] = (
     (JsPath \ "id").read[Int] and
     (JsPath \ "description").read[String] and
     (JsPath \ "deviceType").read[Int] and
-    (JsPath \ "port").readNullable[Int]
+    (JsPath \ "cancellable").read[Option[Cancellable]] and
+    (JsPath \ "port").read[Int]
     )(Device.apply _)
 
-  implicit val deviceCollectionReads: Reads[DeviceCollection] = (
-      (JsPath \ "name").read[String] and
-      (JsPath \ "description").read[String] and
-      (JsPath \ "devices").read[List[Device]]
-    )(DeviceCollection.apply _)
+  implicit val componentCollectionReads: Reads[ComponentCollection] = (
+    (JsPath \ "name").read[String] and
+    (JsPath \ "description").read[String] and
+    (JsPath \ "devices").read[List[Device]] and
+    (JsPath \ "thermostat").read[List[Thermostat]]
+    )(ComponentCollection.apply _)
 
-  json.validate[DeviceCollection] match {
-    case s: JsSuccess[DeviceCollection] => {
-      val dc: DeviceCollection = s.get
+  json.validate[ComponentCollection] match {
+    case s: JsSuccess[ComponentCollection] => {
+      val dc: ComponentCollection = s.get
       println("---------> DeviceCollection read:" + dc)
     }
     case e: JsError => {
@@ -61,36 +74,30 @@ object Sequencer{
 /* ----------------------------------------------------------- */
 
   // Static device definition for now....
-  val component1 = Device(1,"Thermometer", Device.ANALOGUE_IN, Some(1))
-  val component2 = Device(2, "Pump", Device.DIGITAL_OUT, Some(1))
-  val component3 = Device(3, "Heater", Device.ANALOGUE_OUT, Some(1))
+  val device1 = Device(1,"Thermometer", Component.ANALOGUE_IN, None, 1)
+  val device2 = Device(2, "Pump", Component.DIGITAL_OUT, None, 1)
+  val device3 = Device(3, "Heater", Component.ANALOGUE_OUT, None, 1)
 
-  val lb = new ListBuffer[Device]()
-  lb += component1 += component2 += component3
-  val components = lb.toList
+  val lb = new ListBuffer[Component]()
+  lb += device1 += device2 += device3
+  val devices = lb.toList
 
-  def addThermostat(devices: List[Device], thermo: Option[Device]): List[Device] ={
-    thermo match {
-      case Some(thermostat) => thermostat :: devices
-      case _ => devices
-    }
-  }
-  val thermo = Thermostat(4, "Boiler", Device.MONITOR, None, component1, component3)
-  val allDevices = addThermostat(components, thermo)
+  val thermo = Thermostat(4, "Boiler", Component.MONITOR, None, device1, device3)
+  val thermos = List(thermo)
 
-  //create the case class of all devices
-  val devices = DeviceCollection ("Masher 1", "My first set-up, for mashing", allDevices)
-  println("devices created: " + devices)
+  val componentCollection = ComponentCollection ("Masher 1", "My first set-up, for mashing", devices, thermos)
+  println("componentCollection created: " + componentCollection)
 
 
 
   /*-------------------------------------------------*/
 
   import play.api.libs.json._
-  implicit val devWrites = Json.writes[Device]
-  implicit val devicesWrites = Json.writes[DeviceCollection]
+  implicit val deviceWrites = Json.writes[Device]
+  implicit val thermostatWrites = Json.writes[Thermostat]
+  implicit val componentCollectionWrites = Json.writes[ComponentCollection]
 
-  val isThisIt = Json.toJson(devices)
+  val isThisIt = Json.toJson(componentCollectionWrites)
   println("---------> toJson" + isThisIt)
 
   /*-------------------------------------------------*/
@@ -102,13 +109,13 @@ object Sequencer{
 
   // Static step definition for now....
   //  val step  = Step(device, stepType, temp, duration)
-  val stepDefn1 = Step(4, Step.SET_TEMP, Some(41), None)      // Set required thermostat temp to 41
+  val stepDefn1 = Step(104, Step.SET_TEMP, Some(41), None)      // Set required thermostat temp to 41
   val stepDefn2 = Step(2, Step.ON, None, None)                // Turn pump on
   val stepDefn3 = Step(1, Step.WAIT_TEMP, Some(41), None)     // Wait for thermometer to reach 41
-  val stepDefn4 = Step(4, Step.WAIT_TIME, None, Some(60*20))  // wait for 20 minutes
-  val stepDefn5 = Step(4, Step.SET_TEMP, Some(68), None)      // Set thermostat temp to 68
-  val stepDefn6 = Step(4, Step.WAIT_TIME, None, Some(60*20))  // wait for 20 minutes
-  val stepDefn7 = Step(4, Step.OFF, None, None)               // turn boiler off
+  val stepDefn4 = Step(104, Step.WAIT_TIME, None, Some(60*20))  // wait for 20 minutes
+  val stepDefn5 = Step(104, Step.SET_TEMP, Some(68), None)      // Set thermostat temp to 68
+  val stepDefn6 = Step(104, Step.WAIT_TIME, None, Some(60*20))  // wait for 20 minutes
+  val stepDefn7 = Step(104, Step.OFF, None, None)               // turn boiler off
   val stepDefn8 = Step(2, Step.OFF, None, None)               // turn pump off
 
   val p = new ListBuffer[Step]()
@@ -119,58 +126,75 @@ object Sequencer{
 
 
   //function to find the item of Equipment, for the given step
-  val getEquipment = (step:Step, deviceList:List[Device]) => {
-    deviceList.filter((device:Device) => device.id == step.device).head
+  val getComponentFromList = (step:Step, componentList:List[Component]) => {
+    componentList.filter((component:Component) => component.id == step.device).head
+  }
+
+  //function to find the item of Equipment, for the given step
+  val getComponentFromCollection = (step:Step, componentCollection:ComponentCollection) => {
+    val components:List[Component] = componentCollection.devices ::: componentCollection.thermostats
+    getComponentFromList(step, components)
   }
 
 
-  def runSequence:Unit = {
+  def runSequence():Unit = {
     Future {
       mySequence.foreach(step => {
-        val device: Device = getEquipment(step, allDevices)
-        println("step " + step + "to be serviced by " + device)
+        val component: Component = getComponentFromCollection(step, componentCollection)
+        println("step " + step + "to be serviced by " + component)
 
         step.eventType match {
-          case Step.ON => device.on() //Digital Out
-          case Step.OFF => device.off() //Digital/Analogue Out
-          case Step.SET_TEMP => runSetTemp(step, device) //Thermostat
-          case Step.WAIT_TEMP => runWaitTemp(step, device) //Thermometer
-          case Step.WAIT_TIME => runWaitTime(step, device) //Any
+          case Step.ON =>  ComponentManager.on(component)  //Digital Out
+          case Step.OFF => ComponentManager.off(component) //Digital/Analogue Out
+          case Step.SET_TEMP => runSetTemp(step, component) //Thermostat
+          case Step.WAIT_TEMP => runWaitTemp(step, component) //Thermometer
+          case Step.WAIT_TIME => runWaitTime(step, component) //Any
           case _ => {println("Bad Step Type")} //TODO report/log
         }
       })
     }
   }
 
-  def pauseSequence:Unit = {
-    Future {allDevices.foreach( device => device.pause())}
+  def pauseSequence():Unit = {
+    Future {
+      componentCollection.devices.foreach( device => ComponentManager.pause(device))
+      componentCollection.thermostats.foreach( thermostat => ComponentManager.pause(thermostat))
+    }
   }
 
-  def resumeSequence:Unit = {
-    Future {allDevices.foreach( device => device.resume())}
+  def resumeSequence():Unit = {
+    Future {
+      componentCollection.devices.foreach( device => ComponentManager.resume(device))
+      componentCollection.thermostats.foreach( thermostat => ComponentManager.resume(thermostat))
+    }
   }
 
-  def abortSequence:Unit = {
+  def abortSequence():Unit = {
     Future {}
   }
 
-  def runSetTemp(step:Step, device:Device): Unit ={
+  def runSetTemp(step:Step, component:Component): Unit ={
     step.temperature match {
-      case Some(temperature) => device.setThermostat (temperature)
+      case Some(temperature) =>{
+        component match {
+          case thermostat:Thermostat => ComponentManager.setThermostat(thermo,temperature)
+          case _ => println("Can't set thermostat on a : "+component + "in step "+ step)
+        }
+      }
       case _ => println("No temperature specified,  can't set temperature for: "+step)
     }
   }
 
-  def runWaitTemp(step:Step, device:Device): Unit ={
+  def runWaitTemp(step:Step, component:Component): Unit ={
     step.temperature match {
-      case Some(temperature) => device.waitTemperatureHeating(temperature)
+      case Some(temperature) => ComponentManager.waitTemperatureHeating(component, temperature)
       case _ => println("No temperature specified,  can't wait for temperature for: "+step)
     }
   }
 
-  def runWaitTime(step:Step, device:Device): Unit ={
+  def runWaitTime(step:Step, component:Component): Unit ={
     step.duration match {
-      case Some(duration) => device.waitTime(duration)
+      case Some(duration) => ComponentManager.waitTime(component, duration)
       case _ => println("No duration specified,  can't wait for: " + step)
     }
   }
