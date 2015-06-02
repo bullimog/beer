@@ -16,15 +16,12 @@
     "description" : "Heater",
     "deviceType" : 2,
     "port" : 1
+  } ],
+  "thermostats" : [ {
+    "id" : 4,
+    "description" : "Boiler",
+    "deviceType" : 5,
+    "thermometer" : 1,
+    "heater" : 3
   } ]
-  "thermostat": {
-	"id": 4,
-	"name": "Boiler",
-	"deviceType": 5,
-	"port": None,
-	"thermometer:" 1, 
-	"heater" : 3)
-  }
 }
-
-

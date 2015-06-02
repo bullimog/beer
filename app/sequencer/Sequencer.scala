@@ -3,6 +3,7 @@ package sequencer
 import akka.actor.Cancellable
 import controllers.ComponentManager
 import model._
+import play.api.libs.iteratee.Enumeratee
 import play.api.libs.json._
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
@@ -11,40 +12,20 @@ import scala.io.Source
 
 object Sequencer{
 
-  //working towards json definition...
-//  val json: JsValue = Json.parse("""{
-//    "name": "First setup",
-//    "description": "My first setup",
-//    "devices": [
-//      {"id" : 1, "description": "Thermometer", "deviceType": 1,  "port": 1},
-//      {"id" : 2, "description": "Pump",        "deviceType": 4,  "port": 1},
-//      {"id" : 3, "description": "Heater",      "deviceType": 2,  "port": 1}
-//    ]
-//  }""")
-
-  val source = Source.fromFile("deviceSetup.json", "UTF-8")
-  val json: JsValue = Json.parse(source.mkString)
-
-
-  println("json: "+Json.prettyPrint(json))
-
-
   import play.api.libs.functional.syntax._
 
   implicit val thermostatReads: Reads[Thermostat] = (
     (JsPath \ "id").read[Int] and
     (JsPath \ "description").read[String] and
     (JsPath \ "deviceType").read[Int] and
-    (JsPath \ "cancellable").read[Option[Cancellable]] and
-    (JsPath \ "thermometer").read[Device] and
-    (JsPath \ "port").read[Device]
+    (JsPath \ "thermometer").read[Int] and
+    (JsPath \ "heater").read[Int]
     )(Thermostat.apply _)
 
   implicit val deviceReads: Reads[Device] = (
     (JsPath \ "id").read[Int] and
     (JsPath \ "description").read[String] and
     (JsPath \ "deviceType").read[Int] and
-    (JsPath \ "cancellable").read[Option[Cancellable]] and
     (JsPath \ "port").read[Int]
     )(Device.apply _)
 
@@ -52,41 +33,41 @@ object Sequencer{
     (JsPath \ "name").read[String] and
     (JsPath \ "description").read[String] and
     (JsPath \ "devices").read[List[Device]] and
-    (JsPath \ "thermostat").read[List[Thermostat]]
+    (JsPath \ "thermostats").read[List[Thermostat]]
     )(ComponentCollection.apply _)
 
-  json.validate[ComponentCollection] match {
-    case s: JsSuccess[ComponentCollection] => {
-      val dc: ComponentCollection = s.get
-      println("---------> DeviceCollection read:" + dc)
-    }
-    case e: JsError => {
-      println("---------> Crap happened:" + e)
+  val source = Source.fromFile("deviceSetup.json", "UTF-8")
+  val json: JsValue = Json.parse(source.mkString)
+  println("read json: "+Json.prettyPrint(json))
+
+  def readComponents(json: JsValue):ComponentCollection = {
+    json.validate[ComponentCollection] match {
+      case s: JsSuccess[ComponentCollection] => {
+        s.get
+      }
+      case e: JsError => null  //TODO Need better handling for this
     }
   }
 
-
-
-//  val deviceResult: JsResult[Device] = json.validate[Device]
-//  println("deviceResult: "+deviceResult)
+  val componentCollection = readComponents(json)
 
 
 /* ----------------------------------------------------------- */
 
   // Static device definition for now....
-  val device1 = Device(1,"Thermometer", Component.ANALOGUE_IN, None, 1)
-  val device2 = Device(2, "Pump", Component.DIGITAL_OUT, None, 1)
-  val device3 = Device(3, "Heater", Component.ANALOGUE_OUT, None, 1)
-
-  val lb = new ListBuffer[Component]()
-  lb += device1 += device2 += device3
-  val devices = lb.toList
-
-  val thermo = Thermostat(4, "Boiler", Component.MONITOR, None, device1, device3)
-  val thermos = List(thermo)
-
-  val componentCollection = ComponentCollection ("Masher 1", "My first set-up, for mashing", devices, thermos)
-  println("componentCollection created: " + componentCollection)
+//  val device1 = Device(1,"Thermometer", Component.ANALOGUE_IN, 1)
+//  val device2 = Device(2, "Pump", Component.DIGITAL_OUT, 1)
+//  val device3 = Device(3, "Heater", Component.ANALOGUE_OUT, 1)
+//
+//  val lb = new ListBuffer[Device]()
+//  lb += device1 += device2 += device3
+//  val devices = lb.toList
+//
+//  val thermo = Thermostat(4, "Boiler", Component.MONITOR, 1, 3)
+//  val thermos = List(thermo)
+//
+//  val componentCollection = ComponentCollection ("Masher 1", "My first set-up, for mashing", devices, thermos)
+//  println("componentCollection created: " + componentCollection)
 
 
 
@@ -97,8 +78,17 @@ object Sequencer{
   implicit val thermostatWrites = Json.writes[Thermostat]
   implicit val componentCollectionWrites = Json.writes[ComponentCollection]
 
-  val isThisIt = Json.toJson(componentCollectionWrites)
+  val myVal = Json.toJson(componentCollection)
+  val isThisIt = Json.prettyPrint(myVal)
   println("---------> toJson" + isThisIt)
+
+
+
+  //println("json: "+Json.prettyPrint(json))
+
+
+
+
 
   /*-------------------------------------------------*/
 
@@ -177,7 +167,7 @@ object Sequencer{
     step.temperature match {
       case Some(temperature) =>{
         component match {
-          case thermostat:Thermostat => ComponentManager.setThermostat(thermo,temperature)
+          case thermostat:Thermostat => ComponentManager.setThermostat(componentCollection, thermostat, temperature)
           case _ => println("Can't set thermostat on a : "+component + "in step "+ step)
         }
       }
