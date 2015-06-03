@@ -18,7 +18,7 @@
     "port" : 1
   } ],
   "thermostats" : [ {
-    "id" : 4,
+    "id" : 104,
     "description" : "Boiler",
     "deviceType" : 5,
     "thermometer" : 1,

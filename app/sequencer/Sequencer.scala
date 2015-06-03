@@ -1,41 +1,18 @@
 package sequencer
 
-import akka.actor.Cancellable
 import controllers.ComponentManager
 import model._
-import play.api.libs.iteratee.Enumeratee
-import play.api.libs.json._
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.io.Source
+import play.api.libs.json._
 
 object Sequencer{
 
-  import play.api.libs.functional.syntax._
-
-  implicit val thermostatReads: Reads[Thermostat] = (
-    (JsPath \ "id").read[Int] and
-    (JsPath \ "description").read[String] and
-    (JsPath \ "deviceType").read[Int] and
-    (JsPath \ "thermometer").read[Int] and
-    (JsPath \ "heater").read[Int]
-    )(Thermostat.apply _)
-
-  implicit val deviceReads: Reads[Device] = (
-    (JsPath \ "id").read[Int] and
-    (JsPath \ "description").read[String] and
-    (JsPath \ "deviceType").read[Int] and
-    (JsPath \ "port").read[Int]
-    )(Device.apply _)
-
-  implicit val componentCollectionReads: Reads[ComponentCollection] = (
-    (JsPath \ "name").read[String] and
-    (JsPath \ "description").read[String] and
-    (JsPath \ "devices").read[List[Device]] and
-    (JsPath \ "thermostats").read[List[Thermostat]]
-    )(ComponentCollection.apply _)
-
+  /* ********************* */
+  /* Read in Device Config */
+  /* ********************* */
   val source = Source.fromFile("deviceSetup.json", "UTF-8")
   val json: JsValue = Json.parse(source.mkString)
   println("read json: "+Json.prettyPrint(json))
@@ -51,68 +28,46 @@ object Sequencer{
 
   val componentCollection = readComponents(json)
 
-
-/* ----------------------------------------------------------- */
-
-  // Static device definition for now....
-//  val device1 = Device(1,"Thermometer", Component.ANALOGUE_IN, 1)
-//  val device2 = Device(2, "Pump", Component.DIGITAL_OUT, 1)
-//  val device3 = Device(3, "Heater", Component.ANALOGUE_OUT, 1)
-//
-//  val lb = new ListBuffer[Device]()
-//  lb += device1 += device2 += device3
-//  val devices = lb.toList
-//
-//  val thermo = Thermostat(4, "Boiler", Component.MONITOR, 1, 3)
-//  val thermos = List(thermo)
-//
-//  val componentCollection = ComponentCollection ("Masher 1", "My first set-up, for mashing", devices, thermos)
-//  println("componentCollection created: " + componentCollection)
-
-
-
-  /*-------------------------------------------------*/
-
-  import play.api.libs.json._
-  implicit val deviceWrites = Json.writes[Device]
-  implicit val thermostatWrites = Json.writes[Thermostat]
-  implicit val componentCollectionWrites = Json.writes[ComponentCollection]
-
+  /* *********************** */
+  /* Write Out Device Config */
+  /* *********************** */
   val myVal = Json.toJson(componentCollection)
   val isThisIt = Json.prettyPrint(myVal)
   println("---------> toJson" + isThisIt)
 
 
+  /* *********************** */
+  /* Read In Step Sequence   */
+  /* *********************** */
 
-  //println("json: "+Json.prettyPrint(json))
+  //This method could be more generic, and less crap!!
+  def readSteps(json: JsValue):Sequence = {
+    json.validate[Sequence] match {
+      case s: JsSuccess[Sequence] => {
+        s.get
+      }
+      case e: JsError => println("jsError: "+e ); null  //TODO Need better handling for this
+    }
+  }
+
+  val stepSource = Source.fromFile("sequence1.json", "UTF-8")
+  val stepjson: JsValue = Json.parse(stepSource.mkString)
+  println("read from file json: "+Json.prettyPrint(stepjson))
+
+  val mySequence = readSteps(stepjson)
+  println("mySequence: "+ mySequence)
 
 
+  /* *********************** */
+  /* Write Out Step Sequence */
+  /* *********************** */
+
+  val myJsonSequence = Json.toJson(mySequence)
+  val prettyJson = Json.prettyPrint(myJsonSequence)
+  println("---------> JsonSeq" + prettyJson)
 
 
-
-  /*-------------------------------------------------*/
-
-
-
-
-
-
-  // Static step definition for now....
-  //  val step  = Step(device, stepType, temp, duration)
-  val stepDefn1 = Step(104, Step.SET_TEMP, Some(41), None)      // Set required thermostat temp to 41
-  val stepDefn2 = Step(2, Step.ON, None, None)                // Turn pump on
-  val stepDefn3 = Step(1, Step.WAIT_TEMP, Some(41), None)     // Wait for thermometer to reach 41
-  val stepDefn4 = Step(104, Step.WAIT_TIME, None, Some(60*20))  // wait for 20 minutes
-  val stepDefn5 = Step(104, Step.SET_TEMP, Some(68), None)      // Set thermostat temp to 68
-  val stepDefn6 = Step(104, Step.WAIT_TIME, None, Some(60*20))  // wait for 20 minutes
-  val stepDefn7 = Step(104, Step.OFF, None, None)               // turn boiler off
-  val stepDefn8 = Step(2, Step.OFF, None, None)               // turn pump off
-
-  val p = new ListBuffer[Step]()
-  p += stepDefn1 += stepDefn2 += stepDefn3 += stepDefn4 += stepDefn5 += stepDefn6 += stepDefn7 += stepDefn8
-  val mySequence = p.toList
-  println("sequences created: " + p)
-
+  /* *************************************** */
 
 
   //function to find the item of Equipment, for the given step
@@ -129,7 +84,7 @@ object Sequencer{
 
   def runSequence():Unit = {
     Future {
-      mySequence.foreach(step => {
+      mySequence.steps.foreach(step => {
         val component: Component = getComponentFromCollection(step, componentCollection)
         println("step " + step + "to be serviced by " + component)
 
