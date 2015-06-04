@@ -66,4 +66,10 @@ object ComponentCollection{
 
     /* Since this case class references Device and Thermostat, the Json.writes has to be defined last! */
     implicit val componentCollectionWrites = Json.writes[ComponentCollection]
+
+
+
+
+
+
 }

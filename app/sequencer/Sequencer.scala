@@ -62,8 +62,8 @@ object Sequencer{
   /* Write Out Step Sequence */
   /* *********************** */
 
-  val myJsonSequence = Json.toJson(mySequence)
-  val prettyJson = Json.prettyPrint(myJsonSequence)
+  val myJsonSequence:JsValue = Json.toJson(mySequence)
+  val prettyJson:String = Json.prettyPrint(myJsonSequence)
   println("---------> JsonSeq" + prettyJson)
 
 
@@ -91,7 +91,7 @@ object Sequencer{
         step.eventType match {
           case Step.ON =>  ComponentManager.on(component)  //Digital Out
           case Step.OFF => ComponentManager.off(component) //Digital/Analogue Out
-          case Step.SET_TEMP => runSetTemp(step, component) //Thermostat
+          case Step.SET_HEAT => runSetHeat(step, component) //Thermostat
           case Step.WAIT_HEAT => runWaitHeat(step, component) //Thermometer
           case Step.WAIT_TIME => runWaitTime(step, component) //Any
           case _ => {println("Bad Step Type")} //TODO report/log
@@ -118,17 +118,18 @@ object Sequencer{
     Future {}
   }
 
-  def runSetTemp(step:Step, component:Component): Unit ={
+  def runSetHeat(step:Step, component:Component): Unit ={
     step.temperature match {
       case Some(temperature) =>{
         component match {
-          case thermostat:Thermostat => ComponentManager.setThermostat(componentCollection, thermostat, temperature)
+          case thermostat:Thermostat => ComponentManager.setThermostatHeat(componentCollection, thermostat, temperature)
           case _ => println("Can't set thermostat on a : "+component + "in step "+ step)
         }
       }
       case _ => println("No temperature specified,  can't set temperature for: "+step)
     }
   }
+
 
   def runWaitHeat(step:Step, component:Component): Unit ={
     step.temperature match {

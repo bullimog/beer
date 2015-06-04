@@ -48,14 +48,14 @@ object ComponentManager {
 
 
 
-  def setThermostat(componentCollection:ComponentCollection, thermostat: Thermostat, temperature:Double) = {
+  def setThermostatHeat(componentCollection:ComponentCollection, thermostat: Thermostat, temperature:Double) = {
 
     //Thermostat setting
     //Start Akka Actor, to adjust element, according to temperature
     //val scheduler = system.actorOf(Props[BoilerActor], name = "scheduler")
     val thermometer = deviceFromId(componentCollection, thermostat.thermometer)
     val heater = deviceFromId(componentCollection, thermostat.heater)
-    val actorRef = system.actorOf(Props(new ThermostatActor(thermometer, heater, temperature)), name = "thermostat")
+    val actorRef = system.actorOf(Props(new ThermostatHeatActor(thermometer, heater, temperature)), name = "thermostat")
     val tickInterval  = new FiniteDuration(1, TimeUnit.SECONDS)
     var cancellable = Some(system.scheduler.schedule(tickInterval, tickInterval, actorRef, "tick")) //initialDelay, delay, Actor, Message
     println(thermostat.description+ " set thermostat to "+ temperature)
@@ -63,7 +63,7 @@ object ComponentManager {
 }
 
 
-class ThermostatActor(thermometer: Component, heater: Component, targetTemperature: Double) extends Actor {
+class ThermostatHeatActor(thermometer: Component, heater: Component, targetTemperature: Double) extends Actor {
   def receive = {
     case tick: String => {
       println("still going " + DateTime.now)

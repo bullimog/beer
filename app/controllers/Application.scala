@@ -17,8 +17,9 @@ object Beer extends App{
   val sequencer = Sequencer
 
   println("About to run sequence")
- // sequencer.runSequence
+  sequencer.runSequence
   println("Kicked off sequence")
-  //Thread.sleep(10000)
+  Thread.sleep(1000)
+  println("App End")
 
 }
