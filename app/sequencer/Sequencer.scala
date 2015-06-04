@@ -70,9 +70,9 @@ object Sequencer{
   /* *************************************** */
 
 
-  //function to find the item of Equipment, for the given step
+  //function to find the (first) item of Equipment, for the given step
   val getComponentFromList = (step:Step, componentList:List[Component]) => {
-    componentList.filter((component:Component) => component.id == step.device).head
+    componentList.filter(component => component.id == step.device).head
   }
 
   //function to find the item of Equipment, for the given step
@@ -92,7 +92,7 @@ object Sequencer{
           case Step.ON =>  ComponentManager.on(component)  //Digital Out
           case Step.OFF => ComponentManager.off(component) //Digital/Analogue Out
           case Step.SET_TEMP => runSetTemp(step, component) //Thermostat
-          case Step.WAIT_TEMP => runWaitTemp(step, component) //Thermometer
+          case Step.WAIT_HEAT => runWaitHeat(step, component) //Thermometer
           case Step.WAIT_TIME => runWaitTime(step, component) //Any
           case _ => {println("Bad Step Type")} //TODO report/log
         }
@@ -130,7 +130,7 @@ object Sequencer{
     }
   }
 
-  def runWaitTemp(step:Step, component:Component): Unit ={
+  def runWaitHeat(step:Step, component:Component): Unit ={
     step.temperature match {
       case Some(temperature) => ComponentManager.waitTemperatureHeating(component, temperature)
       case _ => println("No temperature specified,  can't wait for temperature for: "+step)

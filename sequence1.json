@@ -3,42 +3,31 @@
   "steps" : [ {
     "device" : 104,
     "eventType" : 3,
-    "temperature" : 41.0,
-    "duration" : 0
+    "temperature" : 41.0
   }, {
     "device" : 2,
-    "eventType" : 1,
-    "temperature" : 0,
-    "duration" : 0
+    "eventType" : 1
   }, {
     "device" : 1,
     "eventType" : 4,
-    "temperature" : 41.0,
-    "duration" : 0
+    "temperature" : 41.0
   }, {
     "device" : 104,
     "eventType" : 5,
-    "temperature" : 0,
     "duration" : 1200
   }, {
     "device" : 104,
     "eventType" : 3,
-    "temperature" : 68.0,
-    "duration" : 0
+    "temperature" : 68.0
   }, {
     "device" : 104,
     "eventType" : 5,
-    "temperature" : 0,
     "duration" : 1200
   }, {
     "device" : 104,
-    "eventType" : 2,
-    "temperature" : 0,
-    "duration" : 0
+    "eventType" : 2
   }, {
     "device" : 2,
-    "eventType" : 2,
-    "temperature" : 0,
-    "duration" : 0
+    "eventType" : 2
   } ]
 }
