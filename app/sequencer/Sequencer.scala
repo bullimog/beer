@@ -1,14 +1,14 @@
 package sequencer
 
-import controllers.ComponentManager
+import connector.k8055
+import controllers.{ComponentManagerK8055, ComponentManager}
 import model._
-import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.io.Source
 import play.api.libs.json._
 
-object Sequencer{
+class Sequencer extends k8055{
 
   /* ********************* */
   /* Read in Device Config */
@@ -82,6 +82,8 @@ object Sequencer{
   }
 
 
+  val componentManager = new ComponentManager with ComponentManagerK8055
+
   def runSequence():Unit = {
     Future {
       mySequence.steps.foreach(step => {
@@ -89,8 +91,8 @@ object Sequencer{
         println("step " + step + "to be serviced by " + component)
 
         step.eventType match {
-          case Step.ON =>  ComponentManager.on(component)  //Digital Out
-          case Step.OFF => ComponentManager.off(component) //Digital/Analogue Out
+          case Step.ON =>  componentManager.on(component)  //Digital Out
+          case Step.OFF => componentManager.off(component) //Digital/Analogue Out
           case Step.SET_HEAT => runSetHeat(step, component) //Thermostat
           case Step.WAIT_HEAT => runWaitHeat(step, component) //Thermometer
           case Step.WAIT_TIME => runWaitTime(step, component) //Any
@@ -102,15 +104,15 @@ object Sequencer{
 
   def pauseSequence():Unit = {
     Future {
-      componentCollection.devices.foreach( device => ComponentManager.pause(device))
-      componentCollection.thermostats.foreach( thermostat => ComponentManager.pause(thermostat))
+      componentCollection.devices.foreach( device => componentManager.pause(device))
+      componentCollection.thermostats.foreach( thermostat => componentManager.pause(thermostat))
     }
   }
 
   def resumeSequence():Unit = {
     Future {
-      componentCollection.devices.foreach( device => ComponentManager.resume(device))
-      componentCollection.thermostats.foreach( thermostat => ComponentManager.resume(thermostat))
+      componentCollection.devices.foreach( device => componentManager.resume(device))
+      componentCollection.thermostats.foreach( thermostat => componentManager.resume(thermostat))
     }
   }
 
@@ -122,7 +124,7 @@ object Sequencer{
     step.temperature match {
       case Some(temperature) =>{
         component match {
-          case thermostat:Thermostat => ComponentManager.setThermostatHeat(componentCollection, thermostat, temperature)
+          case thermostat:Thermostat => componentManager.setThermostatHeat(componentCollection, thermostat, temperature)
           case _ => println("Can't set thermostat on a : "+component + "in step "+ step)
         }
       }
@@ -133,14 +135,14 @@ object Sequencer{
 
   def runWaitHeat(step:Step, component:Component): Unit ={
     step.temperature match {
-      case Some(temperature) => ComponentManager.waitTemperatureHeating(component, temperature)
+      case Some(temperature) => componentManager.waitTemperatureHeating(component, temperature)
       case _ => println("No temperature specified,  can't wait for temperature for: "+step)
     }
   }
 
   def runWaitTime(step:Step, component:Component): Unit ={
     step.duration match {
-      case Some(duration) => ComponentManager.waitTime(component, duration)
+      case Some(duration) => componentManager.waitTime(component, duration)
       case _ => println("No duration specified,  can't wait for: " + step)
     }
   }

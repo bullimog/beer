@@ -1,6 +1,7 @@
 package controllers
 
 import akka.actor.ActorSystem
+import connector.{k8055Stub, k8055}
 import play.api._
 import play.api.mvc._
 import sequencer.Sequencer
@@ -14,7 +15,7 @@ object Application extends Controller {
 
 object Beer extends App{
   //instantiate Sequencer singleton Object
-  val sequencer = Sequencer
+  val sequencer = new Sequencer with k8055Stub
 
   println("About to run sequence")
   sequencer.runSequence

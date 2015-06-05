@@ -4,6 +4,7 @@ import play.api.libs.json.{Json, JsPath, Reads}
 import play.api.libs.functional.syntax._
 
 
+
 case class Step(device: Int, eventType:Int, temperature: Option[Double], duration: Option[Int]) {
   override def toString: String ={
     "##Step device:"+device+", eventType:"+eventType+", temperature:"+temperature+", duration:"+duration
