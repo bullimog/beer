@@ -1,6 +1,6 @@
 package sequencer
 
-import connector.k8055
+import connector.K8055
 import controllers.{ComponentManagerK8055, ComponentManager}
 import model._
 import scala.concurrent.Future
@@ -8,7 +8,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.io.Source
 import play.api.libs.json._
 
-class Sequencer extends k8055{
+class Sequencer{
 
   /* ********************* */
   /* Read in Device Config */

@@ -4,6 +4,7 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.{Props, Actor}
 import async.BeerAppActorSystem._
+import connector.{K8055Stub, K8055Board, K8055}
 import model.{Device, ComponentCollection, Thermostat, Component}
 import org.joda.time.DateTime
 
@@ -18,7 +19,7 @@ trait ComponentManager{
   def isOn(component:Component):Boolean
   def pause(component:Component)
   def resume(component:Component)
-  val deviceFromId = (componentCollection:ComponentCollection, id:Int) => {}
+  def deviceFromId(componentCollection:ComponentCollection, id:Int):Component
   def waitTemperatureHeating(component:Component, targetTemperature: Double):Unit
   def readTemperature(component:Component): Option[Double]
   def waitTime(component:Component, duration: Int)
@@ -30,14 +31,46 @@ trait ComponentManager{
 //Subtrait, with concrete implementation
 trait ComponentManagerK8055 extends ComponentManager{
 
-  override def on(component:Component) = {println(component.description+ " switched on")} //TODO
-  override def off(component:Component) = {println(component.description+ " switched off")} //TODO
-  override def isOn(component:Component):Boolean = {println(component.description+ " is being examined"); true} //TODO
+  val k8055:K8055 = new K8055 with K8055Stub //stub for now...
+
+  override def on(component:Component) = {
+    println(component.description+ " switched on")
+    component.deviceType match{
+      case Component.DIGITAL_OUT =>
+        component match{
+          case d:Device => k8055.setDigitalOut(d.port, true)
+        }
+    }
+  }
+
+  override def off(component:Component) = {
+    println(component.description+ " switched off")
+    component match{
+      case d:Device => k8055.setDigitalOut(d.port, false)
+      case _ =>
+    }
+  }
+  override def isOn(component:Component):Boolean = {
+    println(component.description+ " is being examined")
+    component.deviceType match{
+      case Component.DIGITAL_OUT =>
+        component match{
+          case d:Device => k8055.getDigitalOut(d.port)
+          case _ => false
+        }
+      case _ => false
+    }
+  }
+
   override def pause(component:Component) = {}  //TODO
   override def resume(component:Component) = {} //TODO
 
 
-  override val deviceFromId = (componentCollection:ComponentCollection, id:Int) => {
+//  val deviceFromIdFn = (componentCollection:ComponentCollection, id:Int) => {
+//    componentCollection.devices.filter((device:Device) => device.id == id).head
+//  }
+
+  override def deviceFromId(componentCollection:ComponentCollection, id:Int):Component = {
     componentCollection.devices.filter((device:Device) => device.id == id).head
   }
 
@@ -53,7 +86,14 @@ trait ComponentManagerK8055 extends ComponentManager{
 
   override def readTemperature(component:Component): Option[Double] = {
     println(component.description+ " read temperature")
-    None
+    component.deviceType match{
+      case Component.ANALOGUE_IN =>
+        component match{
+          case d:Device => Some(k8055.getAnalogueIn(d.port))
+          case _ => None
+        }
+      case _ => None
+    }
   }
 
   override def waitTime(component:Component, duration: Int) = {
@@ -63,8 +103,6 @@ trait ComponentManagerK8055 extends ComponentManager{
   }
 
   override def setPower(component:Component, power: Int) = {println(component.description+ " set power to " + power + "%")}
-
-
 
   override def setThermostatHeat(componentCollection:ComponentCollection, thermostat: Thermostat, temperature:Double) = {
 
