@@ -52,11 +52,11 @@ class ComponentManagerSpec extends Specification {
 //    override def isOn(component: Component): Boolean = ???
 //  }
 
-    val device1 = Device(1,"Thermometer", Component.ANALOGUE_IN, 1)
-    val device2 = Device(2, "Pump", Component.DIGITAL_OUT, 1)
-    val device3 = Device(3, "Heater", Component.ANALOGUE_OUT, 1)
+    val thermometer = Device(1,"Thermometer", Component.ANALOGUE_IN, 1)
+    val pump = Device(2, "Pump", Component.DIGITAL_OUT, 1)
+    val heater = Device(3, "Heater", Component.ANALOGUE_OUT, 1)
     val lb = new ListBuffer[Device]()
-    lb += device1 += device2 += device3
+    lb += thermometer += pump += heater
     val devices = lb.toList
     val thermo = Thermostat(4, "Boiler", Component.MONITOR, 1, 3)
     val thermos = List(thermo)
@@ -65,10 +65,10 @@ class ComponentManagerSpec extends Specification {
 
     "ComponentManager" should {
       "turn on and off, when instructed to do so" in {
-        componentManager.on(device2)
-        componentManager.isOn(device2) must equalTo(true)
-        componentManager.off(device2)
-        componentManager.isOn(device2) must equalTo(false)
+        componentManager.on(pump)
+        componentManager.isOn(pump) must equalTo(true)
+        componentManager.off(pump)
+        componentManager.isOn(pump) must equalTo(false)
       }
 
     "ComponentManager" should {
@@ -79,28 +79,39 @@ class ComponentManagerSpec extends Specification {
     }
 
     "ComponentManager" should {
-      "block the thread appropriately, until the desired heat has been reached" in {
-        componentManager.setTemperature(device1, 22)  //set the temperature of the thermometer
-        componentManager.waitTemperatureHeating(device1, 22)
-        componentManager.readTemperature(device1) must equalTo(Some(22))
+      "block the waitTemperatureHeating thread appropriately, until the desired heat has been reached" in {
+        componentManager.setTemperature(thermometer, 22)  //set the temperature of the thermometer
+        componentManager.waitTemperatureHeating(thermometer, 22)
+        componentManager.readTemperature(thermometer) must equalTo(Some(22))
 
-        componentManager.setTemperature(device1, 22)  //set the temperature of the thermometer
-        componentManager.waitTemperatureHeating(device1, 21)
-        componentManager.readTemperature(device1) must equalTo(Some(22))
+        componentManager.setTemperature(thermometer, 22)  //set the temperature of the thermometer
+        componentManager.waitTemperatureHeating(thermometer, 21)
+        componentManager.readTemperature(thermometer) must equalTo(Some(22))
 
 
-        componentManager.setTemperature(device1, 20)  //set the temperature of the thermometer
+        componentManager.setTemperature(thermometer, 20)  //set the temperature of the thermometer
         var finished:Boolean = false
         Future {
-          componentManager.waitTemperatureHeating(device1, 22)
+          componentManager.waitTemperatureHeating(thermometer, 22)
           finished  = true
         }
 
         Thread.sleep(3000)
-        componentManager.setTemperature(device1, 22)  //set the temperature of the thermometer, to finish the Wait
+        componentManager.setTemperature(thermometer, 22)  //set the temperature of the thermometer, to finish the Wait
         Thread.sleep(1000)
-        componentManager.readTemperature(device1) must equalTo(Some(22))
-        finished mustEqual(true)
+        componentManager.readTemperature(thermometer) must equalTo(Some(22))
+        finished mustEqual true
+      }
+    }
+
+    "ComponentManager" should {
+      "adjust power, when instructed to do so" in {
+        componentManager.setPower(heater, 100)
+        componentManager.getPower(heater) must equalTo(Some(100))
+        componentManager.setPower(heater, 50)
+        componentManager.getPower(heater) must equalTo(Some(50))
+        componentManager.setPower(heater, 0)
+        componentManager.getPower(heater) must equalTo(Some(0))
       }
     }
 

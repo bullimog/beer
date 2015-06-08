@@ -12,7 +12,9 @@ import scala.annotation.tailrec
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.ExecutionContext.Implicits.global
 
-// abstract base trait
+/***********************************************************************
+ ComponentManager: abstract base trait
+***********************************************************************/
 trait ComponentManager{
   def on(component:Component)
   def off(component:Component)
@@ -24,11 +26,13 @@ trait ComponentManager{
   def readTemperature(component:Component): Option[Double]
   def waitTime(component:Component, duration: Int)
   def setPower(component:Component, power: Int)
+  def getPower(component:Component):Option[Int]
   def setThermostatHeat(componentCollection:ComponentCollection, thermostat: Thermostat, temperature:Double)
 }
 
-
-//Subtrait, with concrete implementation
+/***********************************************************************
+ ComponentManagerK8055: sub-trait
+***********************************************************************/
 trait ComponentManagerK8055 extends ComponentManager{
 
   val k8055:K8055 = new K8055 with K8055Stub //stub for now...
@@ -76,8 +80,8 @@ trait ComponentManagerK8055 extends ComponentManager{
 
   @tailrec
   override final def waitTemperatureHeating(component:Component, targetTemperature: Double):Unit = {
-    print(component.description + " waiting for temperature: " + targetTemperature + "... ")
     val risingTemp:Double = readTemperature(component).getOrElse(-273)
+    println(component.description + s" comparing temperature: target $targetTemperature with readTemperature: $risingTemp ... ")
     if (risingTemp < targetTemperature) {
       Thread.sleep(1000)
       waitTemperatureHeating(component, targetTemperature)
@@ -90,19 +94,41 @@ trait ComponentManagerK8055 extends ComponentManager{
       case Component.ANALOGUE_IN =>
         component match{
           case d:Device => Some(k8055.getAnalogueIn(d.port))
-          case _ => None
+          case _ => println(" Can't read temperature, not a component"); None
         }
-      case _ => None
+      case _ => println(" Can't read temperature, not an Analogue In"); None
     }
   }
 
   override def waitTime(component:Component, duration: Int) = {
     print(component.description+ " waiting for "+ duration + " seconds...")
-    Thread.sleep(5000)
+    Thread.sleep(duration * 1000)
     println(" Done!")
   }
 
-  override def setPower(component:Component, power: Int) = {println(component.description+ " set power to " + power + "%")}
+  override def setPower(component:Component, power: Int) = {
+    println(component.description+ " set power to " + power + "%")
+    component.deviceType match{
+      case Component.ANALOGUE_OUT =>
+        component match{
+          case d:Device => Some(k8055.setAnalogueOut(d.port, power))
+          case _ => println(" Can't set power, not a component")
+        }
+      case _ => println(" Can't set power, not an Analogue Out")
+    }
+  }
+
+  override def getPower(component:Component): Option[Int] = {
+    println(component.description+ " read temperature")
+    component.deviceType match{
+      case Component.ANALOGUE_OUT =>
+        component match{
+          case d:Device => Some(k8055.getAnalogueOut(d.port))
+          case _ => println(" Can't get power, not a component"); None
+        }
+      case _ => println(" Can't get power, not an Analogue Out"); None
+    }
+  }
 
   override def setThermostatHeat(componentCollection:ComponentCollection, thermostat: Thermostat, temperature:Double) = {
 
@@ -120,7 +146,9 @@ trait ComponentManagerK8055 extends ComponentManager{
 
 //class ComponentManagerClass extends ComponentManagerK8055{}
 
-
+/***********************************************************************
+ ThermostatHeatActor: Akka Actor
+***********************************************************************/
 class ThermostatHeatActor(componentManager: ComponentManager, thermometer: Component, heater: Component, targetTemperature: Double) extends Actor {
   def receive = {
     case tick: String => {
