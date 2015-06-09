@@ -101,7 +101,7 @@ trait ComponentManagerK8055 extends ComponentManager{
   }
 
   override def waitTime(component:Component, duration: Int) = {
-    print(component.description+ " waiting for "+ duration + " seconds...")
+    println(component.description+ " waiting for "+ duration + " seconds...")
     Thread.sleep(duration * 1000)
     println(" Done!")
   }
@@ -131,7 +131,6 @@ trait ComponentManagerK8055 extends ComponentManager{
   }
 
   override def setThermostatHeat(componentCollection:ComponentCollection, thermostat: Thermostat, temperature:Double) = {
-
     //Thermostat setting
     //Start Akka Actor, to adjust element, according to temperature
     //val scheduler = system.actorOf(Props[BoilerActor], name = "scheduler")
@@ -162,23 +161,10 @@ class ThermostatHeatActor(componentManager: ComponentManager, thermometer: Compo
   }
 
   def calculateHeatSetting(tempDiff: Double): Int ={
+
     if(tempDiff > 2.0) 100
+    else if(tempDiff < 0) 0
     else (tempDiff * 50).toInt
   }
 }
 
-
-
-
-//class ThermometerActor(thermometer: Component, targetTemperature: Double) extends Actor {
-//  def receive = {
-//    case tick: String => {
-//      (ComponentManager.readTemperature(thermometer), thermometer.cancellable) match {
-//        case (Some(currentTemp), Some(cancellable)) => {
-//          if (currentTemp >= targetTemperature) cancellable.cancel()
-//        }
-//      }
-//    }
-//    case _ => println("unknown message")
-//  }
-//}
