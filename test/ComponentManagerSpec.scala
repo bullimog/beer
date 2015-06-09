@@ -15,6 +15,7 @@ class ComponentManagerSpec extends Specification {
 
   val componentManager = new ComponentManager with ComponentManagerK8055 {
 
+    //Need to stub setting temperature on thermometer
     def setTemperature(component:Component, value:Double): Unit = {
       println(component.description+ " setting temperature on stub")
       component.deviceType match{

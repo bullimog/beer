@@ -2,9 +2,9 @@ package connector
 
 import scala.collection.mutable
 
-/***********************************************************************/
-// K8055: abstract base trait
-/***********************************************************************/
+/***********************************************************************
+ K8055: abstract base trait
+************************************************************************/
 trait K8055 {
 //  var digitalIn: mutable.MutableList[Boolean]
 //  var digitalOut: mutable.MutableList[Boolean]
@@ -21,9 +21,9 @@ trait K8055 {
   def setAnalogueOut(d: Int, value: Int): Unit
 }
 
-/***********************************************************************/
-// K8055Stub: testing trait
-/***********************************************************************/
+/***********************************************************************
+ K8055Stub: testing trait
+************************************************************************/
 trait K8055Stub extends K8055{
   var digitalIn:mutable.MutableList[Boolean] = mutable.MutableList(false,false,false,false)
   var digitalOut:mutable.MutableList[Boolean] = mutable.MutableList(false,false,false,false,false,false,false,false)
@@ -60,9 +60,9 @@ trait K8055Stub extends K8055{
 
 
 
-/***********************************************************************/
-// K8055Board: trait for the real thing
-/***********************************************************************/
+/***********************************************************************
+ K8055Board: trait for the real thing
+************************************************************************/
 trait K8055Board extends K8055{
   //Real implementations here...
 }
