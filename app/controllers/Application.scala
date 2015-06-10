@@ -15,10 +15,13 @@ object Application extends Controller {
 
 object Beer extends App{
   //instantiate Sequencer singleton Object
+  val componentManager = new ComponentManager with ComponentManagerK8055
+  var componentCollection = controllers.ConfigIO.readComponentCollection("deviceSetup.json")
+  var sequence = controllers.ConfigIO.readSteps("sequence1.json")
   val sequencer = new Sequencer with K8055Stub
 
   println("About to run sequence")
-  sequencer.runSequence
+  sequencer.runSequence(componentManager, componentCollection, sequence)
   println("Kicked off sequence")
   Thread.sleep(1000)
   println("App End")

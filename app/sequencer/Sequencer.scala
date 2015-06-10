@@ -21,67 +21,62 @@ class Sequencer{
   }
 
 
-  val componentManager = new ComponentManager with ComponentManagerK8055
-  var componentCollection = controllers.ConfigIO.readComponentCollection("deviceSetup.json")
-  var mySequence = controllers.ConfigIO.readSteps("sequence1.json")
-
-  def runSequence():Unit = {
+  def runSequence(componentManager: ComponentManager, componentCollection: ComponentCollection, sequence: Sequence):Unit = {
     Future {
-      mySequence.steps.foreach(step => {
+      sequence.steps.foreach(step => {
         val component: Component = getComponentFromCollection(step, componentCollection)
         println("step " + step + "to be serviced by " + component)
 
         step.eventType match {
           case Step.ON =>  componentManager.on(component)  //Digital Out
           case Step.OFF => componentManager.off(component) //Digital/Analogue Out
-          case Step.SET_HEAT => runSetHeat(step, component) //Thermostat
-          case Step.WAIT_HEAT => runWaitHeat(step, component) //Thermometer
-          case Step.WAIT_TIME => runWaitTime(step, component) //Any
+          case Step.SET_HEAT => runSetHeat(step, component, componentManager, componentCollection) //Thermostat
+          case Step.WAIT_HEAT => runWaitHeat(step, component, componentManager) //Thermometer
+          case Step.WAIT_TIME => runWaitTime(step, component, componentManager) //Any
           case _ => {println("Bad Step Type")} //TODO report/log
         }
       })
     }
   }
 
-  def pauseSequence():Unit = {
-    Future {
-      componentCollection.devices.foreach( device => componentManager.pause(device))
-      componentCollection.thermostats.foreach( thermostat => componentManager.pause(thermostat))
-    }
-  }
+//  def pauseSequence():Unit = {
+//    Future {
+//      componentCollection.devices.foreach( device => componentManager.pause(device))
+//      componentCollection.thermostats.foreach( thermostat => componentManager.pause(thermostat))
+//    }
+//  }
+//
+//  def resumeSequence():Unit = {
+//    Future {
+//      componentCollection.devices.foreach( device => componentManager.resume(device))
+//      componentCollection.thermostats.foreach( thermostat => componentManager.resume(thermostat))
+//    }
+//  }
+//
+//  def abortSequence():Unit = {
+//    Future {}
+//  }
 
-  def resumeSequence():Unit = {
-    Future {
-      componentCollection.devices.foreach( device => componentManager.resume(device))
-      componentCollection.thermostats.foreach( thermostat => componentManager.resume(thermostat))
-    }
-  }
-
-  def abortSequence():Unit = {
-    Future {}
-  }
-
-  def runSetHeat(step:Step, component:Component): Unit ={
+  def runSetHeat(step:Step, component:Component, componentManager: ComponentManager, componentCollection: ComponentCollection): Unit ={
     step.temperature match {
-      case Some(temperature) =>{
+      case Some(temperature) =>
         component match {
-          case thermostat:Thermostat => componentManager.setThermostatHeat(componentCollection, thermostat, temperature)
-          case _ => println("Can't set thermostat on a : "+component + "in step "+ step)
+          case thermostat: Thermostat => componentManager.setThermostatHeat(componentCollection, thermostat, temperature)
+          case _ => println("Can't set thermostat on a : " + component + "in step " + step)
         }
-      }
       case _ => println("No temperature specified,  can't set temperature for: "+step)
     }
   }
 
 
-  def runWaitHeat(step:Step, component:Component): Unit ={
+  def runWaitHeat(step:Step, component:Component, componentManager: ComponentManager): Unit ={
     step.temperature match {
       case Some(temperature) => componentManager.waitTemperatureHeating(component, temperature)
       case _ => println("No temperature specified,  can't wait for temperature for: "+step)
     }
   }
 
-  def runWaitTime(step:Step, component:Component): Unit ={
+  def runWaitTime(step:Step, component:Component, componentManager: ComponentManager): Unit ={
     step.duration match {
       case Some(duration) => componentManager.waitTime(component, duration)
       case _ => println("No duration specified,  can't wait for: " + step)
