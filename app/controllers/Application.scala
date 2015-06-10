@@ -18,7 +18,7 @@ object Beer extends App{
   val componentManager = new ComponentManager with ComponentManagerK8055
   var componentCollection = controllers.ConfigIO.readComponentCollection("deviceSetup.json")
   var sequence = controllers.ConfigIO.readSteps("sequence1.json")
-  val sequencer = new Sequencer with K8055Stub
+  val sequencer = new Sequencer
 
   println("About to run sequence")
   sequencer.runSequence(componentManager, componentCollection, sequence)
