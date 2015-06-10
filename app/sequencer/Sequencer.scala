@@ -22,8 +22,8 @@ class Sequencer{
 
 
   val componentManager = new ComponentManager with ComponentManagerK8055
-  var componentCollection = controllers.ComponentIO.readComponentCollection("deviceSetup.json")
-  var mySequence = controllers.StepIO.readSteps("sequence1.json")
+  var componentCollection = controllers.ConfigIO.readComponentCollection("deviceSetup.json")
+  var mySequence = controllers.ConfigIO.readSteps("sequence1.json")
 
   def runSequence():Unit = {
     Future {
