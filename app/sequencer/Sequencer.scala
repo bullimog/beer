@@ -9,67 +9,6 @@ import scala.io.Source
 import play.api.libs.json._
 
 class Sequencer{
-
-  /* ********************* */
-  /* Read in Device Config */
-  /* ********************* */
-  val source = Source.fromFile("deviceSetup.json", "UTF-8")
-  val json: JsValue = Json.parse(source.mkString)
-  println("read json: "+Json.prettyPrint(json))
-
-  def readComponents(json: JsValue):ComponentCollection = {
-    json.validate[ComponentCollection] match {
-      case s: JsSuccess[ComponentCollection] => {
-        s.get
-      }
-      case e: JsError => null  //TODO Need better handling for this
-    }
-  }
-
-  val componentCollection = readComponents(json)
-
-  /* *********************** */
-  /* Write Out Device Config */
-  /* *********************** */
-  val myVal = Json.toJson(componentCollection)
-  val isThisIt = Json.prettyPrint(myVal)
-  println("---------> toJson" + isThisIt)
-
-
-  /* *********************** */
-  /* Read In Step Sequence   */
-  /* *********************** */
-
-  //This method could be more generic, and less crap!!
-  def readSteps(json: JsValue):Sequence = {
-    json.validate[Sequence] match {
-      case s: JsSuccess[Sequence] => {
-        s.get
-      }
-      case e: JsError => println("jsError: "+e ); null  //TODO Need better handling for this
-    }
-  }
-
-  val stepSource = Source.fromFile("sequence1.json", "UTF-8")
-  val stepjson: JsValue = Json.parse(stepSource.mkString)
-  println("read from file json: "+Json.prettyPrint(stepjson))
-
-  val mySequence = readSteps(stepjson)
-  println("mySequence: "+ mySequence)
-
-
-  /* *********************** */
-  /* Write Out Step Sequence */
-  /* *********************** */
-
-  val myJsonSequence:JsValue = Json.toJson(mySequence)
-  val prettyJson:String = Json.prettyPrint(myJsonSequence)
-  println("---------> JsonSeq" + prettyJson)
-
-
-  /* *************************************** */
-
-
   //function to find the (first) item of Equipment, for the given step
   val getComponentFromList = (step:Step, componentList:List[Component]) => {
     componentList.filter(component => component.id == step.device).head
@@ -83,6 +22,8 @@ class Sequencer{
 
 
   val componentManager = new ComponentManager with ComponentManagerK8055
+  var componentCollection = controllers.ComponentIO.readComponentCollection("deviceSetup.json")
+  var mySequence = controllers.StepIO.readSteps("sequence1.json")
 
   def runSequence():Unit = {
     Future {

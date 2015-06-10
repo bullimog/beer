@@ -66,7 +66,11 @@ trait ComponentManagerK8055 extends ComponentManager{
     }
   }
 
+  //Switch all components (pump heater) off. Remember state...
+
   override def pause(component:Component) = {}  //TODO
+
+
   override def resume(component:Component) = {} //TODO
 
 
@@ -148,7 +152,8 @@ trait ComponentManagerK8055 extends ComponentManager{
 /***********************************************************************
  ThermostatHeatActor: Akka Actor
 ***********************************************************************/
-class ThermostatHeatActor(componentManager: ComponentManager, thermometer: Component, heater: Component, targetTemperature: Double) extends Actor {
+class ThermostatHeatActor(componentManager: ComponentManager, thermometer: Component,
+                          heater: Component, targetTemperature: Double) extends Actor {
   def receive = {
     case tick: String => {
       println("still going " + DateTime.now)
@@ -161,10 +166,9 @@ class ThermostatHeatActor(componentManager: ComponentManager, thermometer: Compo
   }
 
   def calculateHeatSetting(tempDiff: Double): Int ={
-
     if(tempDiff > 2.0) 100
     else if(tempDiff < 0) 0
-    else (tempDiff * 50).toInt
+      else (tempDiff * 50).toInt
   }
 }
 

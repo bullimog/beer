@@ -14,7 +14,6 @@ import scala.concurrent.Future
 class ComponentManagerSpec extends Specification {
 
   val componentManager = new ComponentManager with ComponentManagerK8055 {
-
     //Need to stub setting temperature on thermometer
     def setTemperature(component:Component, value:Double): Unit = {
       println(component.description+ " setting temperature on stub")
@@ -27,8 +26,6 @@ class ComponentManagerSpec extends Specification {
         case _ => println(component.description+ " Can only fake set temperature on a Analogue In")
       }
     }
-
-
   }
 
   val thermometer = Device(1,"Thermometer", Component.ANALOGUE_IN, 1)
