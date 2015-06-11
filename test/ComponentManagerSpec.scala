@@ -1,11 +1,9 @@
+import connector.{K8055Stub, K8055}
 import controllers.{ComponentManagerK8055, ComponentManager}
 import model.{ComponentCollection, Thermostat, Device, Component}
 import org.specs2.mutable._
 import org.specs2.runner._
 import org.junit.runner._
-
-import play.api.test._
-import play.api.test.Helpers._
 
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
@@ -15,6 +13,7 @@ class ComponentManagerSpec extends Specification {
 
   val componentManager = new ComponentManager with ComponentManagerK8055 {
     //Need to stub setting temperature on thermometer
+    override val k8055:K8055 = new K8055 with K8055Stub //stub for now...
     def setTemperature(component:Component, value:Double): Unit = {
       println(component.description+ " setting temperature on stub")
       component.deviceType match{

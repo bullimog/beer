@@ -35,7 +35,7 @@ trait ComponentManager{
 ***********************************************************************/
 trait ComponentManagerK8055 extends ComponentManager{
 
-  val k8055:K8055 = new K8055 with K8055Stub //stub for now...
+  val k8055:K8055
 
   override def on(component:Component) = {
     println(component.description+ " switched on")
@@ -156,7 +156,7 @@ class ThermostatHeatActor(componentManager: ComponentManager, thermometer: Compo
                           heater: Component, targetTemperature: Double) extends Actor {
   def receive = {
     case tick: String => {
-      println("still going " + DateTime.now)
+      //println("still going " + DateTime.now)
       componentManager.readTemperature(thermometer) match {
         case Some(currentTemp) => componentManager.setPower(heater, calculateHeatSetting(targetTemperature - currentTemp))
         case _ => componentManager.off(heater) //to be safe!

@@ -15,7 +15,9 @@ object Application extends Controller {
 
 object Beer extends App{
   //instantiate Sequencer singleton Object
-  val componentManager = new ComponentManager with ComponentManagerK8055
+  val componentManager = new ComponentManager with ComponentManagerK8055{
+    override val k8055:K8055 = new K8055 with K8055Stub //stub for now...
+  }
   var componentCollection = controllers.ConfigIO.readComponentCollection("deviceSetup.json")
   var sequence = controllers.ConfigIO.readSteps("sequence1.json")
   val sequencer = new Sequencer
