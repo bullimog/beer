@@ -37,7 +37,6 @@ implicit val deviceReads: Reads[Device] = (
 
 case class Thermostat(override val id: Int, override val description: String,
                       override val deviceType: Int, thermometer:Int, heater:Int) extends Component
-//                      override val deviceType: Int, thermometer:Device, heater:Device) extends Component
 object Thermostat{
 //  implicit val thermostatFmt = Json.format[Thermostat]
 implicit val thermostatReads: Reads[Thermostat] = (
