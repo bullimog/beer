@@ -8,6 +8,7 @@ import org.junit.runner._
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
 
+
 @RunWith(classOf[JUnitRunner])
 class ComponentManagerSpec extends Specification {
 
@@ -129,7 +130,10 @@ class ComponentManagerSpec extends Specification {
       componentManager.getPower(heater) must equalTo(Some(0))
       componentManager.setTemperature(thermometer, 43)
       Thread.sleep(2000)
+      componentManager.stopThermostats()
       componentManager.getPower(heater) must equalTo(Some(0))
+
+
     }
   }
 }

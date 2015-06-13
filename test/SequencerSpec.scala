@@ -70,6 +70,7 @@ class SequencerSpec extends Specification {
       componentManager.getPower(heater) must equalTo(Some(100))
       componentManager.setTemperature(thermometer, 68)  //set the temperature of the thermometer, to finish the Wait
       Thread.sleep(7000)
+      componentManager.stopThermostats()
       componentManager.getPower(heater) must equalTo(Some(0))
       componentManager.isOn(pump) must equalTo(false)
     }

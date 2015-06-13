@@ -27,5 +27,6 @@ object Beer extends App{
   println("Kicked off sequence")
   Thread.sleep(1000)
   println("App End")
+  componentManager.stopThermostats()
 
 }

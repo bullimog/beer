@@ -4,9 +4,8 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.{ActorRef, Cancellable, Props, Actor}
 import async.BeerAppActorSystem._
-import connector.{K8055Stub, K8055Board, K8055}
+import connector.K8055
 import model.{Device, ComponentCollection, Thermostat, Component}
-import org.joda.time.DateTime
 
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -29,6 +28,7 @@ trait ComponentManager{
   def setPower(component:Component, power: Int)
   def getPower(component:Component):Option[Int]
   def setThermostatHeat(componentCollection:ComponentCollection, thermostat: Thermostat, temperature:Double)
+  def stopThermostats
 
   var cancellable:Option[Cancellable] = None
   var actorRef:ActorRef = null
@@ -145,24 +145,12 @@ trait ComponentManagerK8055 extends ComponentManager{
   }
 
   override def setThermostatHeat(componentCollection:ComponentCollection, thermostat: Thermostat, temperature:Double) = {
-//    println(s"started ComponentManager.setThermostatHeat on $thermostat")
-    //Thermostat setting
-    //Start Akka Actor, to adjust element, according to temperature
-    //val scheduler = system.actorOf(Props[BoilerActor], name = "scheduler")
     val thermometer = deviceFromId(componentCollection, thermostat.thermometer)
     val heater = deviceFromId(componentCollection, thermostat.heater)
-//    val actorRef = system.actorOf(Props(new ThermostatHeatActor(this, thermometer, heater, temperature)), name = "thermostat")
-//    val tickInterval  = new FiniteDuration(1, TimeUnit.SECONDS)
-//    var cancellable = Some(system.scheduler.schedule(tickInterval, tickInterval, actorRef, "tick")) //initialDelay, delay, Actor, Message
-//    println(thermostat.description+ " set thermostat to "+ temperature)
-//    println("cont...")
     cancellable match{
       case None => startThermostats(componentCollection)
       case _ =>
     }
-
-    //thermostatHeatActor.setThermostat(thermometer, heater, temperature)
-//    println(s"ComponentManager.setThermostatHeat on $thermostat")
     actorRef ! (thermometer, heater, temperature)
   }
 
@@ -170,16 +158,13 @@ trait ComponentManagerK8055 extends ComponentManager{
     actorRef = system.actorOf(Props(new ThermostatHeatActor(this, componentCollection)), name = "thermostat")
     val tickInterval  = new FiniteDuration(1, TimeUnit.SECONDS)
     cancellable = Some(system.scheduler.schedule(tickInterval, tickInterval, actorRef, "tick")) //initialDelay, delay, Actor, Message
+  }
 
-//    componentCollection.thermostats.foreach(thermostat =>{
-//      val thermometer = deviceFromId(componentCollection, thermostat.thermometer)
-//      val heater = deviceFromId(componentCollection, thermostat.heater)
-//      thermostatHeatActor.addThermostat(thermometer, heater, -273)
-//    })
+  override def stopThermostats()={
+    actorRef ! "stop"
+    //cancellable = None
   }
 }
-
-//class ComponentManagerClass extends ComponentManagerK8055{}
 
 /***********************************************************************
  ThermostatHeatActor: Akka Actor
@@ -208,7 +193,7 @@ class ThermostatHeatActor(componentManager: ComponentManager, componentCollectio
   }
 
   def receive = {
-    case tick: String => {
+    case "tick" => {
       //println("still going " + DateTime.now)
       thermostats.foreach( thermostat => {
         val thermometer = thermostat._1
@@ -223,6 +208,9 @@ class ThermostatHeatActor(componentManager: ComponentManager, componentCollectio
     case (thermometer:Component, heater:Component, temperature:Double) => {
 //      println("Received a setThermostat")
       setThermostat(thermometer, heater, temperature)
+    }
+    case "stop" => {
+      context.stop(self)
     }
     case _ => println("unknown message")
   }
