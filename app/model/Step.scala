@@ -7,7 +7,19 @@ import play.api.libs.functional.syntax._
 
 case class Step(device: Int, eventType:Int, temperature: Option[Double], duration: Option[Int]) {
   override def toString: String ={
-    "##Step device:"+device+", eventType:"+eventType+", temperature:"+temperature+", duration:"+duration
+    "##Step device:"+device+", eventType:"+decode+", temperature:"+temperature+", duration:"+duration
+  }
+
+  def decode:String ={
+    eventType match {
+      case Step.ON => "On"
+      case Step.OFF => "Off"
+      case Step.SET_HEAT => "Set Heat"
+      case Step.WAIT_HEAT => "Wait Heat"
+      case Step.WAIT_TIME => "Wait Time"
+      case Step.SET_COOL => "Set Cool"
+      case Step.WAIT_ON => "Wait On"
+    }
   }
 }
 

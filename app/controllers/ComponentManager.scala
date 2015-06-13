@@ -98,7 +98,7 @@ trait ComponentManagerK8055 extends ComponentManager{
   }
 
   override def readTemperature(component:Component): Option[Double] = {
-    println(component.description+ " read temperature")
+    //println(component.description+ " read temperature")
     component.deviceType match{
       case Component.ANALOGUE_IN =>
         component match{
@@ -116,11 +116,16 @@ trait ComponentManagerK8055 extends ComponentManager{
   }
 
   override def setPower(component:Component, power: Int) = {
-    println(component.description+ " set power to " + power + "%")
+
     component.deviceType match{
       case Component.ANALOGUE_OUT =>
         component match{
-          case d:Device => Some(k8055.setAnalogueOut(d.port, power))
+          case d:Device => {
+            if(k8055.getAnalogueOut(d.port) != power){
+              println(component.description+ " updating power to " + power + " from "+k8055.getAnalogueOut(d.port))
+              Some(k8055.setAnalogueOut(d.port, power))
+            }
+          }
           case _ => println(" Can't set power, not a component")
         }
       case _ => println(" Can't set power, not an Analogue Out")
@@ -128,7 +133,7 @@ trait ComponentManagerK8055 extends ComponentManager{
   }
 
   override def getPower(component:Component): Option[Int] = {
-    println(component.description+ " read temperature")
+    println(component.description+ " read power")
     component.deviceType match{
       case Component.ANALOGUE_OUT =>
         component match{
@@ -140,6 +145,7 @@ trait ComponentManagerK8055 extends ComponentManager{
   }
 
   override def setThermostatHeat(componentCollection:ComponentCollection, thermostat: Thermostat, temperature:Double) = {
+//    println(s"started ComponentManager.setThermostatHeat on $thermostat")
     //Thermostat setting
     //Start Akka Actor, to adjust element, according to temperature
     //val scheduler = system.actorOf(Props[BoilerActor], name = "scheduler")
@@ -149,14 +155,18 @@ trait ComponentManagerK8055 extends ComponentManager{
 //    val tickInterval  = new FiniteDuration(1, TimeUnit.SECONDS)
 //    var cancellable = Some(system.scheduler.schedule(tickInterval, tickInterval, actorRef, "tick")) //initialDelay, delay, Actor, Message
 //    println(thermostat.description+ " set thermostat to "+ temperature)
-    cancellable match{ case None => startThermostats(componentCollection)}
+//    println("cont...")
+    cancellable match{
+      case None => startThermostats(componentCollection)
+      case _ =>
+    }
 
     //thermostatHeatActor.setThermostat(thermometer, heater, temperature)
+//    println(s"ComponentManager.setThermostatHeat on $thermostat")
     actorRef ! (thermometer, heater, temperature)
   }
 
   def startThermostats(componentCollection:ComponentCollection) {
-//    val actorRef = system.actorOf(Props(thermostatHeatActor), name = "thermostatHeatActor")
     actorRef = system.actorOf(Props(new ThermostatHeatActor(this, componentCollection)), name = "thermostat")
     val tickInterval  = new FiniteDuration(1, TimeUnit.SECONDS)
     cancellable = Some(system.scheduler.schedule(tickInterval, tickInterval, actorRef, "tick")) //initialDelay, delay, Actor, Message
@@ -166,8 +176,6 @@ trait ComponentManagerK8055 extends ComponentManager{
 //      val heater = deviceFromId(componentCollection, thermostat.heater)
 //      thermostatHeatActor.addThermostat(thermometer, heater, -273)
 //    })
-
-  //  actorRef ! ""
   }
 }
 
@@ -181,19 +189,22 @@ class ThermostatHeatActor(componentManager: ComponentManager, componentCollectio
   var thermostats:mutable.MutableList[(Component, Component, Double)] = mutable.MutableList()
 
   //populate thermostat List
+//  println("Constructing the ThermostatHeatActor...")
   componentCollection.thermostats.foreach(thermostat =>{
     val thermometer = componentManager.deviceFromId(componentCollection, thermostat.thermometer)
     val heater = componentManager.deviceFromId(componentCollection, thermostat.heater)
-    addThermostat(thermometer, heater, -273)
+    addThermostat(thermometer, heater, -273)  //low default target temp.
   })
 
   private def addThermostat(thermometer: Component, heater: Component, targetTemperature:Double): Unit ={
     thermostats += ((thermometer, heater, targetTemperature))
+//    println("Added thermostat..." + thermostats)
   }
 
   private def setThermostat(thermometer: Component, heater: Component, targetTemperature:Double): Unit ={
-    thermostats.filter(t => (t._1 != thermometer) && t._2 != heater)
-    thermostats += ((thermometer, heater, targetTemperature))
+    thermostats = thermostats.filter(t => (t._1 != thermometer) && t._2 != heater) //remove old one
+    thermostats += ((thermometer, heater, targetTemperature)) //add new one
+//    println("set thermostats..." + thermostats)
   }
 
   def receive = {
@@ -209,7 +220,10 @@ class ThermostatHeatActor(componentManager: ComponentManager, componentCollectio
         }
       })
     }
-    case (thermometer:Component, heater:Component, temperature:Double) => setThermostat(thermometer, heater, temperature)
+    case (thermometer:Component, heater:Component, temperature:Double) => {
+//      println("Received a setThermostat")
+      setThermostat(thermometer, heater, temperature)
+    }
     case _ => println("unknown message")
   }
 

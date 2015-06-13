@@ -25,7 +25,7 @@ class Sequencer{
     Future {
       sequence.steps.foreach(step => {
         val component: Component = getComponentFromCollection(step, componentCollection)
-        println("step " + step + "to be serviced by " + component)
+        println("step " + step + " to be serviced by " + component)
 
         step.eventType match {
           case Step.ON =>  componentManager.on(component)  //Digital Out
@@ -58,6 +58,7 @@ class Sequencer{
 //  }
 
   def runSetHeat(step:Step, component:Component, componentManager: ComponentManager, componentCollection: ComponentCollection): Unit ={
+//    println(s"runSetHeat on $component")
     step.temperature match {
       case Some(temperature) =>
         component match {

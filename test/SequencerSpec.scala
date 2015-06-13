@@ -46,7 +46,7 @@ class SequencerSpec extends Specification {
   val stepDefn3 = Step(1, Step.WAIT_HEAT, Some(41), None)     // Wait for thermometer to reach 41
   val stepDefn4 = Step(104, Step.WAIT_TIME, None, Some(5))  // wait for 5 seconds
   val stepDefn5 = Step(104, Step.SET_HEAT, Some(68), None)      // Set thermostat temp to 68
-  val stepDefn6 = Step(104, Step.WAIT_TIME, None, Some(60*20))  // wait for 20 minutes
+  val stepDefn6 = Step(104, Step.WAIT_TIME, None, Some(5))  // wait for 5 seconds
   val stepDefn7 = Step(104, Step.OFF, None, None)               // turn boiler off
   val stepDefn8 = Step(2, Step.OFF, None, None)               // turn pump off
 
@@ -58,7 +58,6 @@ class SequencerSpec extends Specification {
 
   "Sequencer" should {
     "run defined sequence" in {
-      println("running tests for this thing")
       sequencer.runSequence(componentManager, componentCollection, sequence) //Future
       Thread.sleep(3000)
       componentManager.getPower(heater) must equalTo(Some(100))
@@ -70,7 +69,7 @@ class SequencerSpec extends Specification {
       Thread.sleep(7000) // Wait for WAIT_TIME
       componentManager.getPower(heater) must equalTo(Some(100))
       componentManager.setTemperature(thermometer, 68)  //set the temperature of the thermometer, to finish the Wait
-      Thread.sleep(1000)
+      Thread.sleep(7000)
       componentManager.getPower(heater) must equalTo(Some(0))
       componentManager.isOn(pump) must equalTo(false)
     }

@@ -49,7 +49,7 @@ trait K8055Stub extends K8055{
     //println(s"K8055:setting port: $port : $value $portList")
     if((portList.length > port) && (port>=0)) {
       portList(port-1) = value
-      //println(s"K8055:set port: $port : $value $portList")
+      //println(s"K8055.setPort: p:$port : v:$value on: $portList")
     }else println(s"K8055:couldn't set port: $port in List: $portList")
   }
   override def setDigitalOut(i:Int, value:Boolean): Unit ={ setPort(digitalOut, i, value)}

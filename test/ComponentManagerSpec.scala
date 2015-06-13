@@ -15,7 +15,7 @@ class ComponentManagerSpec extends Specification {
     //Need to stub setting temperature on thermometer
     override val k8055:K8055 = new K8055 with K8055Stub //stub for now...
     def setTemperature(component:Component, value:Double): Unit = {
-      println(component.description+ " setting temperature on stub")
+      println(component.description+ " setting temperature on stub to "+value)
       component.deviceType match{
         case Component.ANALOGUE_IN =>
           component match{
