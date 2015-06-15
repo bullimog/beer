@@ -1,18 +1,25 @@
 @(message: String)
 
 @main("Welcome to Play") {
-
+<div style="width:400px;">
 <fieldset>
     <legend>Boiler</legend>
-        Thermostat:
-        <input type="text" size="5" value="22">c
-        Thermometer: 19c
-        Heater:
-        <input type="text" size="5" value="100">%
-    </div>
-    <div class="form-field">
-        <button type="submit" class="button" value="Next">@Messages("breakfast.menu.next")</button>
-    </div>
+    <p>
+        <label>Thermostat:</label>
+        <input type="number" min="0" max="100" value="22" size="3">&deg;c
+    </p>
+    <p>
+        <label>Thermometer:</label>
+        <input readonly type="number" min="0" max="100" value="22" size="3">&deg;c
+    </p>
+    <p>
+        <label>Heater:</label>
+        <input type="number" min="0" max="100" maxlength="3" value="100">%
+    </p>
 </fieldset>
 
+    <p class="form-field">
+        <button type="submit" class="button" value="Next">@Messages("Start")</button>
+    </p>
+</div>
 }
