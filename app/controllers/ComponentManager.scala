@@ -171,47 +171,52 @@ trait ComponentManagerK8055 extends ComponentManager{
 ***********************************************************************/
 class ThermostatHeatActor(componentManager: ComponentManager, componentCollection: ComponentCollection) extends Actor {
 
-  var thermostats:mutable.MutableList[(Component, Component, Double)] = mutable.MutableList()
+  // List(thermometer, heater, targetTemp, enabled)
+  var thermostats:mutable.MutableList[(Component, Component, Double, Boolean)] = mutable.MutableList()
 
   //populate thermostat List
 //  println("Constructing the ThermostatHeatActor...")
   componentCollection.thermostats.foreach(thermostat =>{
     val thermometer = componentManager.deviceFromId(componentCollection, thermostat.thermometer)
     val heater = componentManager.deviceFromId(componentCollection, thermostat.heater)
-    addThermostat(thermometer, heater, -273)  //low default target temp.
+    addThermostat(thermometer, heater, -273, true)  //low default target temp.
   })
 
-  private def addThermostat(thermometer: Component, heater: Component, targetTemperature:Double): Unit ={
-    thermostats += ((thermometer, heater, targetTemperature))
+  private def addThermostat(thermometer: Component, heater: Component, targetTemperature:Double, enabled:Boolean): Unit ={
+    thermostats += ((thermometer, heater, targetTemperature, enabled))
 //    println("Added thermostat..." + thermostats)
   }
 
-  private def setThermostat(thermometer: Component, heater: Component, targetTemperature:Double): Unit ={
+  private def setThermostat(thermometer: Component, heater: Component, targetTemperature:Double): Unit = {
     thermostats = thermostats.filter(t => (t._1 != thermometer) && t._2 != heater) //remove old one
-    thermostats += ((thermometer, heater, targetTemperature)) //add new one
-//    println("set thermostats..." + thermostats)
+    thermostats += ((thermometer, heater, targetTemperature, true)) //add new one
+    //    println("set thermostats..." + thermostats)
+  }
+
+  private def disableThermostat(thermometer: Component, heater: Component): Unit ={
+    thermostats = thermostats.filter(t => (t._1 != thermometer) && t._2 != heater) //remove old one
+    thermostats += ((thermometer, heater, -273, false)) //add new one
   }
 
   def receive = {
     case "tick" => {
-      //println("still going " + DateTime.now)
       thermostats.foreach( thermostat => {
-        val thermometer = thermostat._1
         val heater = thermostat._2
-        val targetTemperature = thermostat._3
-        componentManager.readTemperature(thermometer) match {
-          case Some(currentTemp) => componentManager.setPower(heater, calculateHeatSetting(targetTemperature - currentTemp))
-          case _ => componentManager.off(heater) //to be safe!
-        }
+        val enabled = thermostat._4
+        if(enabled){
+          val thermometer = thermostat._1
+          val targetTemperature = thermostat._3
+
+          componentManager.readTemperature(thermometer) match {
+           case Some(currentTemp) => componentManager.setPower(heater, calculateHeatSetting(targetTemperature - currentTemp))
+           case _ => componentManager.off(heater) //to be safe!
+          }
+        }else componentManager.off(heater)
       })
     }
-    case (thermometer:Component, heater:Component, temperature:Double) => {
-//      println("Received a setThermostat")
-      setThermostat(thermometer, heater, temperature)
-    }
-    case "stop" => {
-      context.stop(self)
-    }
+    case (thermometer:Component, heater:Component, temperature:Double) => {setThermostat(thermometer, heater, temperature)}
+    case (thermometer:Component, heater:Component, enabled:Boolean) => {disableThermostat(thermometer, heater)}
+    case "stop" => {context.stop(self)}
     case _ => println("unknown message")
   }
 

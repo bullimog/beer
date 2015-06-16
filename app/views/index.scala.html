@@ -2,11 +2,36 @@
 
 @main("Welcome to Play") {
 <div style="width:400px;">
-<fieldset>
-    <legend>Boiler</legend>
+    <fieldset>
+        <legend>Thermostats</legend>
+        <fieldset>
+            <legend>Boiler</legend>
+        <p>
+            <label></label>
+            <input type="radio" name="boiler" value="on" checked>On
+            <input type="radio" name="boiler" value="off" checked>Off
+        </p>
+        <p>
+            <label>Temperature:</label>
+            <input type="number" min="0" max="100" value="22" size="3">&deg;c
+        </p>
+        <p>
+            <label>Thermometer:</label>
+            <input readonly type="number" min="0" max="100" value="22" size="3">&deg;c
+        </p>
+        <p>
+            <label>Heater:</label>
+            <input readonly type="number" min="0" max="100" maxlength="3" value="100">%
+        </p>
+        </fieldset>
+    </fieldset>
+
+    <fieldset>
+        <legend>Devices</legend>
     <p>
-        <label>Thermostat:</label>
-        <input type="number" min="0" max="100" value="22" size="3">&deg;c
+        <label>Pump:</label>
+        <input type="radio" name="pump" value="on" checked>On
+        <input type="radio" name="pump" value="off" checked>Off
     </p>
     <p>
         <label>Thermometer:</label>
@@ -16,10 +41,28 @@
         <label>Heater:</label>
         <input type="number" min="0" max="100" maxlength="3" value="100">%
     </p>
-</fieldset>
+    </fieldset>
+
+
+    <fieldset>
+        <legend>Program</legend>
+        <table>
+            <tr><th>#</th></th><th>Component</th><th>Action</th><th>Data</th></tr>
+            <tr><td>1</td><td>Boiler</td><td>Set Temperature<td>41</td></tr>
+            <tr><td>2</td><td>Pump</td><td>Switch On<td></td></tr>
+            <tr><td>3</td><td>Thermometer</td><td>Wait for Temperature<td>41</td></tr>
+            <tr><td>4</td><td>Boiler</td><td>Wait for Duration<td>20m</td></tr>
+            <tr><td>5</td><td>Boiler</td><td>Set Thermostat<td>58</td></tr>
+            <tr><td>6</td><td>Boiler</td><td>Wait for Duration<td>20m</td></tr>
+            <tr><td>7</td><td>Boiler</td><td>Switch Off<td></td></tr>
+            <tr><td>8</td><td>Pump</td><td>Switch Off<td></td></tr>
+        </table>
+    </fieldset>
+
 
     <p class="form-field">
         <button type="submit" class="button" value="Next">@Messages("Start")</button>
     </p>
+
 </div>
 }
