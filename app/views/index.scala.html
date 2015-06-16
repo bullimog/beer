@@ -1,6 +1,7 @@
-@(message: String)
 
-@main("Welcome to Play") {
+@(sequence: model.Sequence)
+
+@main("Beer Title") {
 <div style="width:400px;">
     <fieldset>
         <legend>Thermostats</legend>
@@ -48,11 +49,20 @@
         <legend>Program</legend>
         <table>
             <tr><th>#</th></th><th>Component</th><th>Action</th><th>Data</th></tr>
-            <tr><td>1</td><td>Boiler</td><td>Set Temperature<td>41</td></tr>
+
+            @sequence.steps.map {step =>
+            <tr>
+                <td>id</td>
+                <td>@step.device</td>
+                <td>@step.eventType</td>
+            </tr>
+            }
+
+            <tr><td>1</td><td>Boiler</td><td>Set Temperature<td>41c</td></tr>
             <tr><td>2</td><td>Pump</td><td>Switch On<td></td></tr>
-            <tr><td>3</td><td>Thermometer</td><td>Wait for Temperature<td>41</td></tr>
+            <tr><td>3</td><td>Thermometer</td><td>Wait for Temperature<td>41c</td></tr>
             <tr><td>4</td><td>Boiler</td><td>Wait for Duration<td>20m</td></tr>
-            <tr><td>5</td><td>Boiler</td><td>Set Thermostat<td>58</td></tr>
+            <tr><td>5</td><td>Boiler</td><td>Set Thermostat<td>58c</td></tr>
             <tr><td>6</td><td>Boiler</td><td>Wait for Duration<td>20m</td></tr>
             <tr><td>7</td><td>Boiler</td><td>Switch Off<td></td></tr>
             <tr><td>8</td><td>Pump</td><td>Switch Off<td></td></tr>
