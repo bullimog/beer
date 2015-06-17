@@ -58,3 +58,6 @@ object Sequence {
   implicit val sequenceWrites = Json.writes[Sequence]
 }
 
+case class readableStep(deviceId: Int, deviceDesc: String, eventType:String, temperature: Option[Double], duration: Option[Int]){}
+
+
