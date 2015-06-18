@@ -3,4 +3,4 @@ p     { display: table-row;  }
 label { display: table-cell; }
 input { display: table-cell; }
 th    {text-align: left;     }
-td    {padding: 3px;        }
+td    {padding: 4px;        }

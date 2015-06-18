@@ -1,5 +1,5 @@
 
-@(sequence: model.Sequence)
+@(sequence: model.FriendlySequence)
 
 @main("Beer Title") {
 <div style="width:400px;">
@@ -18,11 +18,11 @@
         </p>
         <p>
             <label>Thermometer:</label>
-            <input readonly type="number" min="0" max="100" value="22" size="3">&deg;c
+            20 &deg;c
         </p>
         <p>
             <label>Heater:</label>
-            <input readonly type="number" min="0" max="100" maxlength="3" value="100">%
+            100%
         </p>
         </fieldset>
     </fieldset>
@@ -36,7 +36,7 @@
     </p>
     <p>
         <label>Thermometer:</label>
-        <input readonly type="number" min="0" max="100" value="22" size="3">&deg;c
+        22 &deg;c
     </p>
     <p>
         <label>Heater:</label>
@@ -48,24 +48,13 @@
     <fieldset>
         <legend>Program</legend>
         <table>
-            <tr><th>#</th></th><th>Component</th><th>Action</th><th>Data</th></tr>
-
-            @sequence.steps.map {step =>
+            <tr><th>Component</th><th>Action</th></tr>
+            @sequence.friendlySteps.map {step =>
             <tr>
-                <td>id</td>
-                <td>@step.device</td>
-                <td>@step.eventType</td>
+                <td>@step.deviceDesc</td>
+                <td>@step.eventDesc @step.temperature @step.duration</td>
             </tr>
             }
-
-            <tr><td>1</td><td>Boiler</td><td>Set Temperature<td>41c</td></tr>
-            <tr><td>2</td><td>Pump</td><td>Switch On<td></td></tr>
-            <tr><td>3</td><td>Thermometer</td><td>Wait for Temperature<td>41c</td></tr>
-            <tr><td>4</td><td>Boiler</td><td>Wait for Duration<td>20m</td></tr>
-            <tr><td>5</td><td>Boiler</td><td>Set Thermostat<td>58c</td></tr>
-            <tr><td>6</td><td>Boiler</td><td>Wait for Duration<td>20m</td></tr>
-            <tr><td>7</td><td>Boiler</td><td>Switch Off<td></td></tr>
-            <tr><td>8</td><td>Pump</td><td>Switch Off<td></td></tr>
         </table>
     </fieldset>
 

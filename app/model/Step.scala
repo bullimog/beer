@@ -14,11 +14,11 @@ case class Step(device: Int, eventType:Int, temperature: Option[Double], duratio
     eventType match {
       case Step.ON => "On"
       case Step.OFF => "Off"
-      case Step.SET_HEAT => "Set Heat"
-      case Step.WAIT_HEAT => "Wait Heat"
-      case Step.WAIT_TIME => "Wait Time"
-      case Step.SET_COOL => "Set Cool"
-      case Step.WAIT_ON => "Wait On"
+      case Step.SET_HEAT => "Set Required Heat to "
+      case Step.WAIT_HEAT => "Wait for Temperature "
+      case Step.WAIT_TIME => "Wait for Duration "
+      case Step.SET_COOL => "Set Required Cool to "
+      case Step.WAIT_ON => "Wait For"
     }
   }
 }
@@ -58,6 +58,9 @@ object Sequence {
   implicit val sequenceWrites = Json.writes[Sequence]
 }
 
-case class readableStep(deviceId: Int, deviceDesc: String, eventType:String, temperature: Option[Double], duration: Option[Int]){}
+case class FriendlyStep(deviceId: Int, deviceDesc: String, eventType:Int, eventDesc: String,
+                        temperature: Option[Double], duration: Option[Int])
+
+case class FriendlySequence(description:String, friendlySteps:List[FriendlyStep])
 
 

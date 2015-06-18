@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit
 import akka.actor.{ActorRef, Cancellable, Props, Actor}
 import async.BeerAppActorSystem._
 import connector.K8055
-import model.{Device, ComponentCollection, Thermostat, Component}
+import model._
 
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -32,7 +32,10 @@ trait ComponentManager{
 
   var cancellable:Option[Cancellable] = None
   var actorRef:ActorRef = null
-//  val thermostatHeatActor:ThermostatHeatActor = new ThermostatHeatActor(this)
+  def getComponentFromList(step:Step, componentList:List[Component]):Component
+
+  //function to find the item of Equipment, for the given step
+  def getComponentFromCollection(step:Step, componentCollection:ComponentCollection):Component
 }
 
 /***********************************************************************
@@ -78,12 +81,24 @@ trait ComponentManagerK8055 extends ComponentManager{
 
   override def resume(component:Component) = {} //TODO
 
+  //function to find the (first) item of Equipment, for the given step
+  override def getComponentFromList(step:Step, componentList:List[Component]):Component = {
+    componentList.filter(component => component.id == step.device).head
+  }
+
+  //function to find the item of Equipment, for the given step
+  override def getComponentFromCollection(step:Step, componentCollection:ComponentCollection):Component = {
+    val components:List[Component] = componentCollection.devices ::: componentCollection.thermostats
+    getComponentFromList(step, components)
+  }
 
 //  val deviceFromIdFn = (componentCollection:ComponentCollection, id:Int) => {
 //    componentCollection.devices.filter((device:Device) => device.id == id).head
 //  }
 
   override def deviceFromId(componentCollection:ComponentCollection, id:Int):Component = {
+    println("componentCollection="+componentCollection)
+    println("step.device="+id)
     componentCollection.devices.filter((device:Device) => device.id == id).head
   }
 

@@ -9,22 +9,22 @@ import scala.io.Source
 import play.api.libs.json._
 
 class Sequencer{
-  //function to find the (first) item of Equipment, for the given step
-  val getComponentFromList = (step:Step, componentList:List[Component]) => {
-    componentList.filter(component => component.id == step.device).head
-  }
-
-  //function to find the item of Equipment, for the given step
-  val getComponentFromCollection = (step:Step, componentCollection:ComponentCollection) => {
-    val components:List[Component] = componentCollection.devices ::: componentCollection.thermostats
-    getComponentFromList(step, components)
-  }
+//  //function to find the (first) item of Equipment, for the given step
+//  val getComponentFromList = (step:Step, componentList:List[Component]) => {
+//    componentList.filter(component => component.id == step.device).head
+//  }
+//
+//  //function to find the item of Equipment, for the given step
+//  val getComponentFromCollection = (step:Step, componentCollection:ComponentCollection) => {
+//    val components:List[Component] = componentCollection.devices ::: componentCollection.thermostats
+//    getComponentFromList(step, components)
+//  }
 
 
   def runSequence(componentManager: ComponentManager, componentCollection: ComponentCollection, sequence: Sequence):Unit = {
     Future {
       sequence.steps.foreach(step => {
-        val component: Component = getComponentFromCollection(step, componentCollection)
+        val component: Component = componentManager.getComponentFromCollection(step, componentCollection)
         println("step " + step + " to be serviced by " + component)
 
         step.eventType match {

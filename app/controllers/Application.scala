@@ -2,18 +2,40 @@ package controllers
 
 import akka.actor.ActorSystem
 import connector.{K8055Stub, K8055}
+import model._
 import play.api._
 import play.api.mvc._
 import sequencer.Sequencer
+
+import scala.collection.mutable.ListBuffer
 
 object Application extends Controller {
 
   def index = Action {
     val sequence = controllers.ConfigIO.readSteps("sequence1.json")
+    val componentCollection = controllers.ConfigIO.readComponentCollection("deviceSetup.json")
+    //val components:List[Component] = componentCollection.devices ::: componentCollection.thermostats
+
+
     val componentManager = new ComponentManager with ComponentManagerK8055{
       override val k8055:K8055 = new K8055 with K8055Stub //stub for now...
     }
-    Ok(views.html.index(sequence))
+
+
+    Ok(views.html.index(sequenceToReadableSequence(sequence, componentManager, componentCollection)))
+  }
+
+
+  def sequenceToReadableSequence(sequence: Sequence, componentManager: ComponentManager,
+                                 componentCollection: ComponentCollection): FriendlySequence ={
+    val lbFSteps = new ListBuffer[FriendlyStep]()
+    sequence.steps.foreach(step => {
+      lbFSteps += FriendlyStep(step.device,
+        componentManager.getComponentFromCollection(step, componentCollection).description,
+        step.eventType, step.decode, step.temperature, step.duration)
+    }
+    )
+    FriendlySequence(sequence.description, lbFSteps.toList)
   }
 }
 
