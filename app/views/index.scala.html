@@ -50,9 +50,9 @@
         <table>
             <tr><th>Component</th><th>Action</th></tr>
             @sequence.friendlySteps.map {step =>
-            <tr>
-                <td>@step.deviceDesc</td>
-                <td>@step.eventDesc @step.temperature @step.duration</td>
+            <tr id="step@step.stepId">
+                <td id="stepDevice@step.stepId">@step.deviceDesc</td>
+                <td id="stepDesc@step.stepId">@step.eventDesc @step.temperature @step.duration</td>
             </tr>
             }
         </table>
@@ -62,6 +62,12 @@
     <p class="form-field">
         <button type="submit" class="button" value="Next">@Messages("Start")</button>
     </p>
-
 </div>
 }
+
+<script type="text/javascript">
+   $("#step1").addClass("ran");
+   $("#step2").addClass("ran");
+   $("#step3").addClass("running");
+   $("#step4").addClass("to-run");
+</script>

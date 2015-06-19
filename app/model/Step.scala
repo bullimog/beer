@@ -58,7 +58,7 @@ object Sequence {
   implicit val sequenceWrites = Json.writes[Sequence]
 }
 
-case class FriendlyStep(deviceId: Int, deviceDesc: String, eventType:Int, eventDesc: String,
+case class FriendlyStep(stepId:Int, deviceId: Int, deviceDesc: String, eventType:Int, eventDesc: String,
                         temperature: Option[Double], duration: Option[Int])
 
 case class FriendlySequence(description:String, friendlySteps:List[FriendlyStep])

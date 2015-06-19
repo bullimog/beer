@@ -4,3 +4,6 @@ label { display: table-cell; }
 input { display: table-cell; }
 th    {text-align: left;     }
 td    {padding: 4px;        }
+.running {color: red}
+.to-run {color: black}
+.ran {color: gray}

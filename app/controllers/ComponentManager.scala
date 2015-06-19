@@ -124,10 +124,13 @@ trait ComponentManagerK8055 extends ComponentManager{
     }
   }
 
-  override def waitTime(component:Component, duration: Int) = {
+  @tailrec
+  final override def waitTime(component:Component, duration: Int) = {
     println(component.description+ " waiting for "+ duration + " seconds...")
-    Thread.sleep(duration * 1000)
-    println(" Done!")
+    if(duration > 0) {
+      Thread.sleep(1000)
+      waitTime(component, duration - 1)
+    }
   }
 
   override def setPower(component:Component, power: Int) = {

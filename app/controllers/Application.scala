@@ -14,7 +14,6 @@ object Application extends Controller {
   def index = Action {
     val sequence = controllers.ConfigIO.readSteps("sequence1.json")
     val componentCollection = controllers.ConfigIO.readComponentCollection("deviceSetup.json")
-    //val components:List[Component] = componentCollection.devices ::: componentCollection.thermostats
 
 
     val componentManager = new ComponentManager with ComponentManagerK8055{
@@ -29,12 +28,13 @@ object Application extends Controller {
   def sequenceToReadableSequence(sequence: Sequence, componentManager: ComponentManager,
                                  componentCollection: ComponentCollection): FriendlySequence ={
     val lbFSteps = new ListBuffer[FriendlyStep]()
+    var n = 1
     sequence.steps.foreach(step => {
-      lbFSteps += FriendlyStep(step.device,
+      lbFSteps += FriendlyStep(n, step.device,
         componentManager.getComponentFromCollection(step, componentCollection).description,
         step.eventType, step.decode, step.temperature, step.duration)
-    }
-    )
+      n = n +1
+    })
     FriendlySequence(sequence.description, lbFSteps.toList)
   }
 }
