@@ -65,7 +65,8 @@
 
 
     <p class="form-field">
-        <button type="submit" class="button" value="Next">@Messages("Start")</button>
+        <button id="startButton" onclick="startSequencer()" class="button" value="Next">@Messages("Start")</button>
+        <button id="stopButton" onclick="stopSequencer()" class="button" value="Next">@Messages("Abort")</button>
     </p>
 </div>
 }
@@ -75,28 +76,53 @@
    <!--$(".program").children().css({"color": "red", "border": "2px solid red"});-->
 
 
-
-
    function highlightSteps(current){
-     var steps = $(".program").children().children();
-     for(var i=1; i<current; i++){$("#"+steps[i].id).addClass("ran");}
-     $("#step"+current).addClass("running");
-     for(var i=current+1; i<steps.length; i++){$("#"+steps[i].id).addClass("to-run");}
+       if(current > 0) {
+         var steps = $(".program").children().children();
+         for(var i=1; i<current; i++){$("#"+steps[i].id).addClass("ran");}
+         $("#step"+current).addClass("running");
+         for(var i=current+1; i<steps.length; i++){$("#"+steps[i].id).addClass("to-run");}
+       }
    }
 
+   function highlightButtons(running){
+
+     if(running=="true"){
+        $("#startButton").addClass("btn-disable")
+        $("#startButton").removeClass("btn-enable")
+        $("#stopButton").addClass("btn-enable")
+        $("#stopButton").removeClass("btn-disable")
+     }
+     else{
+        $("#startButton").addClass("btn-enable")
+        $("#startButton").removeClass("btn-disable")
+        $("#stopButton").addClass("btn-disable")
+        $("#stopButton").removeClass("btn-enable")
+     }
+   }
+
+
+  function startSequencer(){jsRoutes.controllers.Application.startSequencer(null).ajax();};
+  function stopSequencer(){jsRoutes.controllers.Application.stopSequencer(null).ajax();};
+
 $(function() {sequencerStatusCall();});
+
+
 
 var sequencerStatusCall = function() {
     var ajaxCallBack = {
         success : onSuccess,
         error : onError
     }
-
     jsRoutes.controllers.Application.sequencerStatus().ajax(ajaxCallBack);
+
+    setTimeout(sequencerStatusCall, 2000);
 };
 
-var  onSuccess = function(data) {
-    highlightSteps(data)
+var  onSuccess = function(status) {
+    var aStatus = status.split(":");
+    highlightButtons(aStatus[0])
+    highlightSteps(aStatus[1])
 }
 
 var onError = function(error) {

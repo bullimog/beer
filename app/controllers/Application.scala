@@ -25,21 +25,27 @@ object Application extends Controller {
   }
 
 
-  def sequencerStatus() = Action { implicit request => {
-    Sequencer.runSequence(componentManager, componentCollection, sequence)
-    Ok(Sequencer.currentStep.toString)
-  }}
 
-  def startSequencer() = Action { implicit request =>
-    Ok(Sequencer.currentStep.toString)
+  //Ajax Services
+  def sequencerStatus() = Action { implicit request =>
+    Ok(Sequencer.running.toString+":"+Sequencer.currentStep.toString)
   }
-
-
-
+  def startSequencer() = Action { implicit request =>
+    Sequencer.runSequence(componentManager, componentCollection, sequence)
+    Ok("Started")
+  }
+  def stopSequencer() = Action { implicit request =>
+    Sequencer.abortSequence(componentManager)
+    Ok("Stopped")
+  }
 
   def javascriptRoutes = Action { implicit request =>
-    Ok(Routes.javascriptRouter("jsRoutes") (routes.javascript.Application.sequencerStatus)).as("text/javascript")
+    Ok(Routes.javascriptRouter("jsRoutes") (routes.javascript.Application.sequencerStatus,
+                                            routes.javascript.Application.startSequencer,
+                                            routes.javascript.Application.stopSequencer)).as("text/javascript")
   }
+
+
 
   def friendlySequenceToJSON(fs:ReadableSequence):String = {
     import play.api.libs.json._

@@ -5,6 +5,8 @@
 # Home page
 GET     /                           controllers.Application.index
 GET     /sequencerStatus/           controllers.Application.sequencerStatus
+GET     /startSequencer/            controllers.Application.startSequencer
+GET     /stopSequencer/             controllers.Application.stopSequencer
 GET     /javascriptRoutes           controllers.Application.javascriptRoutes
 
 # Map static resources from the /public folder to the /assets URL path

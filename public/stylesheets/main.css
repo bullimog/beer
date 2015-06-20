@@ -4,6 +4,24 @@ label { display: table-cell; }
 input { display: table-cell; }
 th    {text-align: left;     }
 td    {padding: 4px;        }
+
 .running {color: red; font-weight:bold}
 .to-run {color: black; background-color: green}
 .ran {color: gray; font-weight:lighter}
+
+.btn-disable
+        {
+        cursor: fdefault;
+        pointer-events: fnone;
+        /*Button disabled - CSS color class*/
+        color: #c0c0c0;
+        background-color: #ffffff;
+        }
+
+.btn-enable
+        {
+        cursor: fdefault;
+        pointer-events: fauto;
+        color: #000000;
+        background-color: #c0c0c0;
+        }

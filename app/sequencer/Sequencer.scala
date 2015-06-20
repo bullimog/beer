@@ -10,7 +10,9 @@ import play.api.libs.json._
 
 object Sequencer{
 
-  var currentStep = 0
+  //Some mutable state about the Sequencer
+  var currentStep:Int = 0
+  var running:Boolean = false
 //  //function to find the (first) item of Equipment, for the given step
 //  val getComponentFromList = (step:Step, componentList:List[Component]) => {
 //    componentList.filter(component => component.id == step.device).head
@@ -25,20 +27,22 @@ object Sequencer{
 
   def runSequence(componentManager: ComponentManager, componentCollection: ComponentCollection, sequence: Sequence):Unit = {
     Future {
+      running = true
       sequence.steps.foreach(step => {
         val component: Component = componentManager.getComponentFromCollection(step, componentCollection)
         println("step " + step + " to be serviced by " + component)
         currentStep = step.id
 
-        step.eventType match {
-          case Step.ON =>  componentManager.on(component)  //Digital Out
-          case Step.OFF => componentManager.off(component) //Digital/Analogue Out
-          case Step.SET_HEAT => runSetHeat(step, component, componentManager, componentCollection) //Thermostat
-          case Step.WAIT_HEAT => runWaitHeat(step, component, componentManager) //Thermometer
-          case Step.WAIT_TIME => runWaitTime(step, component, componentManager) //Any
+        (step.eventType, running) match {
+          case (Step.ON, true) =>  componentManager.on(component)  //Digital Out
+          case (Step.OFF, true) => componentManager.off(component) //Digital/Analogue Out
+          case (Step.SET_HEAT, true) => runSetHeat(step, component, componentManager, componentCollection) //Thermostat
+          case (Step.WAIT_HEAT, true) => runWaitHeat(step, component, componentManager) //Thermometer
+          case (Step.WAIT_TIME, true) => runWaitTime(step, component, componentManager) //Any
           case _ => {println("Bad Step Type")} //TODO report/log
         }
       })
+      running = false
     }
   }
 
@@ -56,9 +60,12 @@ object Sequencer{
 //    }
 //  }
 //
-//  def abortSequence():Unit = {
-//    Future {}
-//  }
+  def abortSequence(componentManager: ComponentManager):Unit = {
+    Future {
+      running = false
+      componentManager.stopThermostats
+    }
+  }
 
   def runSetHeat(step:Step, component:Component, componentManager: ComponentManager, componentCollection: ComponentCollection): Unit ={
 //    println(s"runSetHeat on $component")

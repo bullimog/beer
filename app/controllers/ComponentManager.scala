@@ -6,6 +6,7 @@ import akka.actor.{ActorRef, Cancellable, Props, Actor}
 import async.BeerAppActorSystem._
 import connector.K8055
 import model._
+import sequencer.Sequencer
 
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -28,7 +29,7 @@ trait ComponentManager{
   def setPower(component:Component, power: Int)
   def getPower(component:Component):Option[Int]
   def setThermostatHeat(componentCollection:ComponentCollection, thermostat: Thermostat, temperature:Double)
-  def stopThermostats
+  def stopThermostats()
 
   var cancellable:Option[Cancellable] = None
   var actorRef:ActorRef = null
@@ -106,7 +107,7 @@ trait ComponentManagerK8055 extends ComponentManager{
   override final def waitTemperatureHeating(component:Component, targetTemperature: Double):Unit = {
     val risingTemp:Double = readTemperature(component).getOrElse(-273)
     println(component.description + s" comparing temperature: target $targetTemperature with readTemperature: $risingTemp ... ")
-    if (risingTemp < targetTemperature) {
+    if ((risingTemp < targetTemperature) && Sequencer.running) {
       Thread.sleep(1000)
       waitTemperatureHeating(component, targetTemperature)
     }
@@ -127,7 +128,7 @@ trait ComponentManagerK8055 extends ComponentManager{
   @tailrec
   final override def waitTime(component:Component, duration: Int) = {
     println(component.description+ " waiting for "+ duration + " seconds...")
-    if(duration > 0) {
+    if((duration > 0) &&  Sequencer.running) {
       Thread.sleep(1000)
       waitTime(component, duration - 1)
     }
