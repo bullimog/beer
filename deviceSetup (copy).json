@@ -16,11 +16,6 @@
     "description" : "Heater",
     "deviceType" : 2,
     "port" : 1
-  }, {
-    "id" : 4,
-    "description" : "Clock",
-    "deviceType" : 0,
-    "port" : 0
   } ],
   "thermostats" : [ {
     "id" : 104,

@@ -11,31 +11,54 @@ import scala.collection.mutable.ListBuffer
 
 object Application extends Controller {
 
+  val componentManager = new ComponentManager with ComponentManagerK8055{
+    override val k8055:K8055 = new K8055 with K8055Stub //stub for now...
+  }
+
+  val sequence = controllers.ConfigIO.readSteps("sequence1.json")
+  val componentCollection = controllers.ConfigIO.readComponentCollection("deviceSetup.json")
+
   def index = Action {
-    val sequence = controllers.ConfigIO.readSteps("sequence1.json")
-    val componentCollection = controllers.ConfigIO.readComponentCollection("deviceSetup.json")
-
-
-    val componentManager = new ComponentManager with ComponentManagerK8055{
-      override val k8055:K8055 = new K8055 with K8055Stub //stub for now...
-    }
-
-
+    val fs:ReadableSequence = sequenceToReadableSequence(sequence, componentManager, componentCollection)
+    //println("friendlySequenceToJSON = " + friendlySequenceToJSON(fs))
     Ok(views.html.index(sequenceToReadableSequence(sequence, componentManager, componentCollection)))
   }
 
 
+  def sequencerStatus() = Action { implicit request => {
+    Sequencer.runSequence(componentManager, componentCollection, sequence)
+    Ok(Sequencer.currentStep.toString)
+  }}
+
+  def startSequencer() = Action { implicit request =>
+    Ok(Sequencer.currentStep.toString)
+  }
+
+
+
+
+  def javascriptRoutes = Action { implicit request =>
+    Ok(Routes.javascriptRouter("jsRoutes") (routes.javascript.Application.sequencerStatus)).as("text/javascript")
+  }
+
+  def friendlySequenceToJSON(fs:ReadableSequence):String = {
+    import play.api.libs.json._
+    implicit val devWrites = Json.writes[ReadableStep]
+    implicit val devicesWrites = Json.writes[ReadableSequence]
+
+
+    Json.toJson(fs).toString()
+  }
+
   def sequenceToReadableSequence(sequence: Sequence, componentManager: ComponentManager,
-                                 componentCollection: ComponentCollection): FriendlySequence ={
-    val lbFSteps = new ListBuffer[FriendlyStep]()
-    var n = 1
+                                 componentCollection: ComponentCollection): ReadableSequence ={
+    val lbFSteps = new ListBuffer[ReadableStep]()
     sequence.steps.foreach(step => {
-      lbFSteps += FriendlyStep(n, step.device,
+      lbFSteps += ReadableStep(step.id, step.device,
         componentManager.getComponentFromCollection(step, componentCollection).description,
         step.eventType, step.decode, step.temperature, step.duration)
-      n = n +1
     })
-    FriendlySequence(sequence.description, lbFSteps.toList)
+    ReadableSequence(sequence.description, lbFSteps.toList, 0)
   }
 }
 
@@ -46,10 +69,10 @@ object Beer extends App{
   }
   var componentCollection = controllers.ConfigIO.readComponentCollection("deviceSetup.json")
   val sequence = controllers.ConfigIO.readSteps("sequence1.json")
-  val sequencer = new Sequencer
+  //val sequencer = new Sequencer
 
   println("About to run sequence")
-  sequencer.runSequence(componentManager, componentCollection, sequence)
+  Sequencer.runSequence(componentManager, componentCollection, sequence)
   println("Kicked off sequence")
   Thread.sleep(1000)
   println("App End")

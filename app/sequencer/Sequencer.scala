@@ -8,7 +8,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.io.Source
 import play.api.libs.json._
 
-class Sequencer{
+object Sequencer{
+
+  var currentStep = 0
 //  //function to find the (first) item of Equipment, for the given step
 //  val getComponentFromList = (step:Step, componentList:List[Component]) => {
 //    componentList.filter(component => component.id == step.device).head
@@ -26,6 +28,7 @@ class Sequencer{
       sequence.steps.foreach(step => {
         val component: Component = componentManager.getComponentFromCollection(step, componentCollection)
         println("step " + step + " to be serviced by " + component)
+        currentStep = step.id
 
         step.eventType match {
           case Step.ON =>  componentManager.on(component)  //Digital Out

@@ -1,5 +1,5 @@
 
-@(sequence: model.FriendlySequence)
+@(sequence: model.ReadableSequence)
 
 @main("Beer Title") {
 <div style="width:400px;">
@@ -42,15 +42,20 @@
         <label>Heater:</label>
         <input type="number" min="0" max="100" maxlength="3" value="100">%
     </p>
+        <p>
+            <label>Timer:</label>
+            0 seconds
+        </p>
     </fieldset>
 
 
     <fieldset>
         <legend>Program</legend>
-        <table>
-            <tr><th>Component</th><th>Action</th></tr>
+        <table class="program">
+            <tr><th>#</th><th>Component</th><th>Action</th></tr>
             @sequence.friendlySteps.map {step =>
             <tr id="step@step.stepId">
+                <td>@step.stepId</td>
                 <td id="stepDevice@step.stepId">@step.deviceDesc</td>
                 <td id="stepDesc@step.stepId">@step.eventDesc @step.temperature @step.duration</td>
             </tr>
@@ -66,8 +71,37 @@
 }
 
 <script type="text/javascript">
-   $("#step1").addClass("ran");
-   $("#step2").addClass("ran");
-   $("#step3").addClass("running");
-   $("#step4").addClass("to-run");
+
+   <!--$(".program").children().css({"color": "red", "border": "2px solid red"});-->
+
+
+
+
+   function highlightSteps(current){
+     var steps = $(".program").children().children();
+     for(var i=1; i<current; i++){$("#"+steps[i].id).addClass("ran");}
+     $("#step"+current).addClass("running");
+     for(var i=current+1; i<steps.length; i++){$("#"+steps[i].id).addClass("to-run");}
+   }
+
+$(function() {sequencerStatusCall();});
+
+var sequencerStatusCall = function() {
+    var ajaxCallBack = {
+        success : onSuccess,
+        error : onError
+    }
+
+    jsRoutes.controllers.Application.sequencerStatus().ajax(ajaxCallBack);
+};
+
+var  onSuccess = function(data) {
+    highlightSteps(data)
+}
+
+var onError = function(error) {
+    alert(error);
+}
+
+
 </script>

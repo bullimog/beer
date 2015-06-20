@@ -14,6 +14,7 @@ trait Component{
 }
 
 object Component {
+  val TIMER = 0
   val ANALOGUE_IN = 1
   val ANALOGUE_OUT = 2
   val DIGITAL_IN = 3
@@ -23,6 +24,7 @@ object Component {
 
 case class Device(override val id: Int, override val description: String,
                   override val deviceType: Int, port:Int) extends Component
+
 object Device{
 //  implicit val deviceFmt = Json.format[Device]
 implicit val deviceReads: Reads[Device] = (
