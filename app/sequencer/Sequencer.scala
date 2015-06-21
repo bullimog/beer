@@ -27,6 +27,7 @@ object Sequencer{
 
   def runSequence(componentManager: ComponentManager, componentCollection: ComponentCollection, sequence: Sequence):Unit = {
     Future {
+      currentStep = 0
       running = true
       sequence.steps.foreach(step => {
         val component: Component = componentManager.getComponentFromCollection(step, componentCollection)

@@ -21,7 +21,8 @@ object Application extends Controller {
   def index = Action {
     val fs:ReadableSequence = sequenceToReadableSequence(sequence, componentManager, componentCollection)
     //println("friendlySequenceToJSON = " + friendlySequenceToJSON(fs))
-    Ok(views.html.index(sequenceToReadableSequence(sequence, componentManager, componentCollection)))
+    Ok(views.html.index(sequenceToReadableSequence(sequence, componentManager, componentCollection),
+                        componentCollection))
   }
 
 
@@ -47,14 +48,14 @@ object Application extends Controller {
 
 
 
-  def friendlySequenceToJSON(fs:ReadableSequence):String = {
-    import play.api.libs.json._
-    implicit val devWrites = Json.writes[ReadableStep]
-    implicit val devicesWrites = Json.writes[ReadableSequence]
-
-
-    Json.toJson(fs).toString()
-  }
+//  def friendlySequenceToJSON(fs:ReadableSequence):String = {
+//    import play.api.libs.json._
+//    implicit val devWrites = Json.writes[ReadableStep]
+//    implicit val devicesWrites = Json.writes[ReadableSequence]
+//
+//
+//    Json.toJson(fs).toString()
+//  }
 
   def sequenceToReadableSequence(sequence: Sequence, componentManager: ComponentManager,
                                  componentCollection: ComponentCollection): ReadableSequence ={

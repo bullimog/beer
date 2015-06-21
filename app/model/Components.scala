@@ -14,12 +14,12 @@ trait Component{
 }
 
 object Component {
-  val TIMER = 0
-  val ANALOGUE_IN = 1
-  val ANALOGUE_OUT = 2
-  val DIGITAL_IN = 3
-  val DIGITAL_OUT = 4
-  val MONITOR = 5
+  val TIMER = 0         // Clock
+  val ANALOGUE_IN = 1   // Thermometer
+  val ANALOGUE_OUT = 2  // Heater
+  val DIGITAL_IN = 3    // Button
+  val DIGITAL_OUT = 4   // Pump
+  val MONITOR = 5       // Thermostat
 }
 
 case class Device(override val id: Int, override val description: String,

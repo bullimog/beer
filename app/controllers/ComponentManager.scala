@@ -107,7 +107,7 @@ trait ComponentManagerK8055 extends ComponentManager{
   override final def waitTemperatureHeating(component:Component, targetTemperature: Double):Unit = {
     val risingTemp:Double = readTemperature(component).getOrElse(-273)
     println(component.description + s" comparing temperature: target $targetTemperature with readTemperature: $risingTemp ... ")
-    if ((risingTemp < targetTemperature) && Sequencer.running) {
+    if ((risingTemp < targetTemperature) && Sequencer.running) {   //TODO tight coupling with Sequencer. :(
       Thread.sleep(1000)
       waitTemperatureHeating(component, targetTemperature)
     }
@@ -128,7 +128,7 @@ trait ComponentManagerK8055 extends ComponentManager{
   @tailrec
   final override def waitTime(component:Component, duration: Int) = {
     println(component.description+ " waiting for "+ duration + " seconds...")
-    if((duration > 0) &&  Sequencer.running) {
+    if((duration > 0) &&  Sequencer.running) {  //TODO tight coupling with Sequencer. :(
       Thread.sleep(1000)
       waitTime(component, duration - 1)
     }
