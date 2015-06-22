@@ -45,7 +45,7 @@ trait K8055 {
 trait K8055Stub extends K8055{
   var digitalIn:mutable.MutableList[Boolean] = mutable.MutableList(false,false,false,false,false)
   var digitalOut:mutable.MutableList[Boolean] = mutable.MutableList(false,false,false,false,false,false,false,false)
-  var analogueIn:mutable.MutableList[Double] = mutable.MutableList(0.0,0.0)
+  var analogueIn:mutable.MutableList[Double] = mutable.MutableList(41.0,0.0)
   var analogueOut:mutable.MutableList[Int] = mutable.MutableList(0,0)
 
 

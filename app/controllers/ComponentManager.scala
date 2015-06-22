@@ -48,7 +48,7 @@ trait ComponentManagerK8055 extends ComponentManager{
   val k8055:K8055
 
   override def on(component:Component) = {
-    println(component.description+ " switched on")
+    //println(component.description+ " switched on")
     component.deviceType match{
       case Component.DIGITAL_OUT =>
         component match{
@@ -58,14 +58,14 @@ trait ComponentManagerK8055 extends ComponentManager{
   }
 
   override def off(component:Component) = {
-    println(component.description+ " switched off")
+    //println(component.description+ " switched off")
     component match{
       case d:Device => k8055.setDigitalOut(d.port, false)
       case _ =>
     }
   }
   override def isOn(component:Component):Boolean = {
-    println(component.description+ " is being examined")
+    //println(component.description+ " is being examined")
     component.deviceType match{
       case Component.DIGITAL_OUT =>
         component match{
@@ -99,14 +99,14 @@ trait ComponentManagerK8055 extends ComponentManager{
 //  }
 
   override def deviceFromId(componentCollection:ComponentCollection, id:Int):Component = {
-    println("componentCollection="+componentCollection)
-    println("step.device="+id)
+    //println("componentCollection="+componentCollection)
+    //println("step.device="+id)
     componentCollection.devices.filter((device:Device) => device.id == id).head
   }
 
   override def reachedTemperatureHeating(component:Component, targetTemperature: Double):Boolean = {
     val risingTemp:Double = readTemperature(component).getOrElse(-273)
-    println(component.description + s" comparing temperature: target $targetTemperature with readTemperature: $risingTemp ... ")
+    //println(component.description + s" comparing temperature: target $targetTemperature with readTemperature: $risingTemp ... ")
     risingTemp >= targetTemperature
   }
 
@@ -158,7 +158,7 @@ trait ComponentManagerK8055 extends ComponentManager{
   }
 
   override def getPower(component:Component): Option[Int] = {
-    println(component.description+ " read power")
+    //println(component.description+ " read power")
     component.deviceType match{
       case Component.ANALOGUE_OUT =>
         component match{
@@ -225,7 +225,7 @@ class ThermostatHeatActor(componentManager: ComponentManager, componentCollectio
 
   def receive = {
     case "tick" => {
-      println("tick!")
+      //println("tick!")
       thermostats.foreach( thermostat => {
         val heater = thermostat._2
         val enabled = thermostat._4

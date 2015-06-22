@@ -76,11 +76,11 @@ object Sequencer{
 class SequencerActor(sequence: Sequence, componentManager: ComponentManager, componentCollection: ComponentCollection) extends Actor {
   def receive = {
     case "sequence" => {
-      println("sequence step...")
+      //println("sequence step...")
 
       val step:Step = getStepFromList(Sequencer.currentStep, sequence.steps)
       val component: Component = componentManager.getComponentFromCollection(step, componentCollection)
-      println("step " + step + " to be serviced by " + component)
+      //println("step " + step + " to be serviced by " + component)
 
       step.eventType match {
         case (Step.ON) =>  componentManager.on(component); Sequencer.currentStep +=1      //Digital Out
@@ -97,7 +97,7 @@ class SequencerActor(sequence: Sequence, componentManager: ComponentManager, com
   }
 
   def getStepFromList(id:Int, stepList:List[Step]):Step = {
-    println(s"finding: $id in $stepList")
+    //TODO: Need to work out what happens if id is not in list
     stepList.filter(step => step.id == id).head
   }
 }

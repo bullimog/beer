@@ -73,12 +73,24 @@
 
 
    function highlightSteps(current){
-       if(current > 0) {
-         var steps = $(".program").children().children();
-         for(var i=1; i<current; i++){$("#"+steps[i].id).addClass("ran");}
-         $("#step"+current).addClass("running");
-         for(var i=current+1; i<steps.length; i++){$("#"+steps[i].id).addClass("to-run");}
+     if(current > 0) {
+       var steps = $(".program").children().children();
+       for(var i=1; i<current; i++){
+         $("#"+steps[i].id).removeClass("to-run");
+         $("#"+steps[i].id).removeClass("running");
+         $("#"+steps[i].id).addClass("ran");
        }
+
+       $("#step"+current).removeClass("to-run");
+       $("#step"+current).addClass("running");
+       $("#step"+current).removeClass("ran");
+
+       for(var i=current+1; i<steps.length; i++){
+          $("#"+steps[i].id).addClass("to-run");
+          $("#"+steps[i].id).removeClass("running");
+          $("#"+steps[i].id).removeClass("ran");
+       }
+     }
    }
 
   function highlightStartStopButtons(running){
@@ -97,7 +109,7 @@
   }
 
   function updateDevices(ss){
-    for(i=0; i<ss.componentStatuses.length; i++){
+     for(i=0; i<ss.componentStatuses.length; i++){
         var compId = ss.componentStatuses[i].componentId
         var compType = ss.componentStatuses[i].componentType
         var compValue = ss.componentStatuses[i].componentValue
@@ -113,9 +125,7 @@
             break;
           }
         }
-
-
-    }
+     }
   }
 
   function startSequencer(){jsRoutes.controllers.Application.startSequencer(null).ajax();};
