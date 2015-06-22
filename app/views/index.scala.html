@@ -116,16 +116,24 @@
         //console.debug("comp: "+ compId + " - "  + compType +" - " + compValue);
 
         switch(compType){
-          case 0: {$("#device-val"+compId).text(compValue+" seconds"); break;} //TIMER
-          case 1: {$("#device-val"+compId).text(compValue+" \xB0c"); break;}   //ANALOGUE_IN
-          case 2: {$("#device-val"+compId).val(compValue); break;}             //ANALOGUE OUT
-          case 4: {                                                            //DIGITAL_OUT
+          case 0: {$("#device-val"+compId).text(formatTimer(compValue)); break;} //TIMER
+          case 1: {$("#device-val"+compId).text(compValue+" \xB0c"); break;}     //ANALOGUE_IN
+          case 2: {$("#device-val"+compId).val(compValue); break;}               //ANALOGUE OUT
+          case 4: {                                                              //DIGITAL_OUT
             if(compValue == "true") $("#device-true"+compId).prop("checked", true)
             else $("#device-false"+compId).prop("checked", true);
             break;
           }
         }
      }
+  }
+
+  function formatTimer(totalSeconds){
+    hours = Math.floor(totalSeconds / 3600);
+    totalSeconds %= 3600;
+    mins= Math.floor(totalSeconds / 60);
+    secs = totalSeconds % 60;
+    return (""+hours+":"+mins+":"+secs)
   }
 
   function startSequencer(){jsRoutes.controllers.Application.startSequencer(null).ajax();};
@@ -142,7 +150,7 @@ var sequencerStatusCall = function() {
     }
     jsRoutes.controllers.Application.sequencerStatus().ajax(ajaxCallBack);
 
-    setTimeout(sequencerStatusCall, 2000);
+    setTimeout(sequencerStatusCall, 1000);
 };
 
 var  onSuccess = function(strSequenceStatus) {

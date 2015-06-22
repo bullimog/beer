@@ -9,21 +9,19 @@ object Timer {
   var step = -1
 
   def waitingFor(stepId:Int):Boolean={
-    //println("##waitingFor: "+step)
     stepId == step
   }
 
   def setTimer(stepId:Int, duration: Int): Unit ={
     finishTime = DateTime.now.plusSeconds(duration)
-    //println(s"##setTimer: step=$stepId and duration=$duration and finishTime=$finishTime")
     step = stepId
   }
 
-  def remainingTime():Int= {
+  def remainingTime():String= {
     val period = new Period(DateTime.now, finishTime, PeriodType.seconds())
-    //println("##remainingTime: "+period.getSeconds)
-    if(period.getSeconds > 0) period.getSeconds
-    else 0
+    if(period.getSeconds > 0) period.getSeconds.toString
+    else "0"
+
   }
 
   def finished(stepId:Int):Boolean={
