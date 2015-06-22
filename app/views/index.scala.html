@@ -29,16 +29,14 @@
         <legend>Devices</legend>
     @componentCollection.devices.map {device =>
         <p id="device@device.id">
-            <label id="deviceDesc@device.id">@device.id: @device.description</label>
-
+            <label id="deviceDesc@device.id">@device.id: @device.description:</label>
             @{device.deviceType match {
-            case 0 => Html("<span name=\"device" + device.id + "\"> 0 seconds </span>")
-            case 1 => Html("<span name=\"device" + device.id + "\"> 0 &deg;c </span>")
-            case 2 => Html("<input name=\"device" + device.id + "\" type=\"number\" min=\"0\" max=\"100\" maxlength=\"3\" value=\"0\">%")
+            case 0 => Html("<span id=\"device-val" + device.id + "\"> 0 seconds </span>")
+            case 1 => Html("<span id=\"device-val" + device.id + "\"> 0 &deg;c </span>")
+            case 2 => Html("<input id=\"device-val" + device.id + "\" type=\"number\" min=\"0\" max=\"100\" maxlength=\"3\" value=\"0\">%")
             case 3 => Html("<span>Button</span>")
-            case 4 => Html("<input type=\"radio\" name=\"device" + device.id + "\" value=\"on\">On "+
-                                  "<input type=\"radio\" name=\"device" + device.id + "\" value=\"off\"  checked>Off ")
-
+            case 4 => Html("<input type=\"radio\" name=\"device-name"+device.id+"\" id=\"device-true" + device.id + "\" value=\"true\">On "+
+                           "<input type=\"radio\" name=\"device-name"+device.id+"\" id=\"device-false" + device.id + "\" value=\"false\"  checked>Off ")
             case _ => "Not implemented"
             }}
         </p>
@@ -83,22 +81,42 @@
        }
    }
 
-   function highlightStartStopButtons(running){
+  function highlightStartStopButtons(running){
+    if(running=="true"){
+       $("#startButton").addClass("btn-disable")
+       $("#startButton").removeClass("btn-enable")
+       $("#stopButton").addClass("btn-enable")
+       $("#stopButton").removeClass("btn-disable")
+    }
+    else{
+       $("#startButton").addClass("btn-enable")
+       $("#startButton").removeClass("btn-disable")
+       $("#stopButton").addClass("btn-disable")
+       $("#stopButton").removeClass("btn-enable")
+    }
+  }
 
-     if(running=="true"){
-        $("#startButton").addClass("btn-disable")
-        $("#startButton").removeClass("btn-enable")
-        $("#stopButton").addClass("btn-enable")
-        $("#stopButton").removeClass("btn-disable")
-     }
-     else{
-        $("#startButton").addClass("btn-enable")
-        $("#startButton").removeClass("btn-disable")
-        $("#stopButton").addClass("btn-disable")
-        $("#stopButton").removeClass("btn-enable")
-     }
-   }
+  function updateDevices(ss){
+    for(i=0; i<ss.componentStatuses.length; i++){
+        var compId = ss.componentStatuses[i].componentId
+        var compType = ss.componentStatuses[i].componentType
+        var compValue = ss.componentStatuses[i].componentValue
+        //console.debug("comp: "+ compId + " - "  + compType +" - " + compValue);
 
+        switch(compType){
+          case 0: {$("#device-val"+compId).text(compValue+" seconds"); break;} //TIMER
+          case 1: {$("#device-val"+compId).text(compValue+" \xB0c"); break;}   //ANALOGUE_IN
+          case 2: {$("#device-val"+compId).val(compValue); break;}             //ANALOGUE OUT
+          case 4: {                                                            //DIGITAL_OUT
+            if(compValue == "true") $("#device-true"+compId).prop("checked", true)
+            else $("#device-false"+compId).prop("checked", true);
+            break;
+          }
+        }
+
+
+    }
+  }
 
   function startSequencer(){jsRoutes.controllers.Application.startSequencer(null).ajax();};
   function stopSequencer(){jsRoutes.controllers.Application.stopSequencer(null).ajax();};
@@ -117,15 +135,16 @@ var sequencerStatusCall = function() {
     setTimeout(sequencerStatusCall, 2000);
 };
 
-var  onSuccess = function(status) {
-    var aStatus = status.split(":");
-    highlightStartStopButtons(aStatus[0])
-    highlightSteps(aStatus[1])
+var  onSuccess = function(strSequenceStatus) {
+    var ss = JSON.parse(strSequenceStatus);
+    highlightStartStopButtons(ss.running)
+    highlightSteps(ss.currentStep)
+    updateDevices(ss)
 }
 
 var onError = function(error) {
     console.debug("Error of ajax Call");
-    //console.debug(error);
+    console.debug(error);
 }
 
 

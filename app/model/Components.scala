@@ -67,10 +67,9 @@ object ComponentCollection{
 
     /* Since this case class references Device and Thermostat, the Json.writes has to be defined last! */
     implicit val componentCollectionWrites = Json.writes[ComponentCollection]
+}
 
-
-
-
-
-
+case class ComponentStatus(componentId:Int, componentType:Int, componentValue:String)
+object  ComponentStatus {
+  implicit val formats=Json.writes[ComponentStatus]
 }

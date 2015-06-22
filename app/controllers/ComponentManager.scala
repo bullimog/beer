@@ -23,9 +23,10 @@ trait ComponentManager{
   def pause(component:Component)
   def resume(component:Component)
   def deviceFromId(componentCollection:ComponentCollection, id:Int):Component
-  def waitTemperatureHeating(component:Component, targetTemperature: Double):Unit
+  def reachedTemperatureHeating(component:Component, targetTemperature: Double):Boolean
   def readTemperature(component:Component): Option[Double]
-  def waitTime(component:Component, duration: Int)
+//  def waitTime(component:Component, duration: Int)
+//  def getTime(component:Component): Int
   def setPower(component:Component, power: Int)
   def getPower(component:Component):Option[Int]
   def setThermostatHeat(componentCollection:ComponentCollection, thermostat: Thermostat, temperature:Double)
@@ -103,14 +104,10 @@ trait ComponentManagerK8055 extends ComponentManager{
     componentCollection.devices.filter((device:Device) => device.id == id).head
   }
 
-  @tailrec
-  override final def waitTemperatureHeating(component:Component, targetTemperature: Double):Unit = {
+  override def reachedTemperatureHeating(component:Component, targetTemperature: Double):Boolean = {
     val risingTemp:Double = readTemperature(component).getOrElse(-273)
     println(component.description + s" comparing temperature: target $targetTemperature with readTemperature: $risingTemp ... ")
-    if ((risingTemp < targetTemperature) && Sequencer.running) {   //TODO tight coupling with Sequencer. :(
-      Thread.sleep(1000)
-      waitTemperatureHeating(component, targetTemperature)
-    }
+    risingTemp >= targetTemperature
   }
 
   override def readTemperature(component:Component): Option[Double] = {
@@ -125,17 +122,26 @@ trait ComponentManagerK8055 extends ComponentManager{
     }
   }
 
-  @tailrec
-  final override def waitTime(component:Component, duration: Int) = {
-    println(component.description+ " waiting for "+ duration + " seconds...")
-    if((duration > 0) &&  Sequencer.running) {  //TODO tight coupling with Sequencer. :(
-      Thread.sleep(1000)
-      waitTime(component, duration - 1)
-    }
-  }
+//  override def waitTime(component:Component, duration: Int) = {
+//    k8055.setTime(duration)
+//    waitTime2(component)
+//  }
+//
+//  @tailrec
+//  private def waitTime2(component:Component):Unit = {
+//    println(component.description+ " waiting for "+ k8055.getTime() + " seconds..."+ "sequencer running:"+Sequencer.running)
+//    if((k8055.getTime() > 0) &&  Sequencer.running) {  //TODO tight coupling with Sequencer. :(
+//      Thread.sleep(1000)
+//      waitTime2(component)
+//    }
+//  }
+//
+//  override def getTime(component: Component):Int = {
+//    k8055.getTime()
+//  }
+
 
   override def setPower(component:Component, power: Int) = {
-
     component.deviceType match{
       case Component.ANALOGUE_OUT =>
         component match{
@@ -219,6 +225,7 @@ class ThermostatHeatActor(componentManager: ComponentManager, componentCollectio
 
   def receive = {
     case "tick" => {
+      println("tick!")
       thermostats.foreach( thermostat => {
         val heater = thermostat._2
         val enabled = thermostat._4

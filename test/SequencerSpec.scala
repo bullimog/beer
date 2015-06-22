@@ -34,7 +34,7 @@ class SequencerSpec extends Specification {
   val thermometer = Device(1,"Thermometer", Component.ANALOGUE_IN, 1)
   val pump = Device(2, "Pump", Component.DIGITAL_OUT, 1)
   val heater = Device(3, "Heater", Component.ANALOGUE_OUT, 1)
-  val timer = Device(4, "Timer", Component.TIMER, 0)
+  val timer = Device(4, "Clock", Component.TIMER, 0)
   val lb = new ListBuffer[Device]()
   lb += thermometer += pump += heater += timer
   val devices = lb.toList
@@ -45,9 +45,9 @@ class SequencerSpec extends Specification {
   val stepDefn1 = Step(1, 104, Step.SET_HEAT, Some(41), None)    // Set required thermostat temp to 41
   val stepDefn2 = Step(2, 2, Step.ON, None, None)                // Turn pump on
   val stepDefn3 = Step(3, 1, Step.WAIT_HEAT, Some(41), None)     // Wait for thermometer to reach 41
-  val stepDefn4 = Step(4, 4, Step.WAIT_TIME, None, Some(5))    // wait for 5 seconds
+  val stepDefn4 = Step(4, 4, Step.WAIT_TIME, None, Some(20))      // wait for 5 seconds
   val stepDefn5 = Step(5, 104, Step.SET_HEAT, Some(68), None)    // Set thermostat temp to 68
-  val stepDefn6 = Step(6, 4, Step.WAIT_TIME, None, Some(5))    // wait for 5 seconds
+  val stepDefn6 = Step(6, 4, Step.WAIT_TIME, None, Some(5))      // wait for 5 seconds
   val stepDefn7 = Step(7, 104, Step.OFF, None, None)             // turn boiler off
   val stepDefn8 = Step(8, 2, Step.OFF, None, None)               // turn pump off
 
@@ -60,17 +60,17 @@ class SequencerSpec extends Specification {
   "Sequencer" should {
     "run defined sequence" in {
       Sequencer.runSequence(componentManager, componentCollection, sequence) //Future
-      Thread.sleep(3000)
-      componentManager.getPower(heater) must equalTo(Some(100))
-      componentManager.isOn(pump) must equalTo(true)
+      Thread.sleep(2000)
+      componentManager.getPower(heater) must equalTo(Some(100))  //Step1
+      componentManager.isOn(pump) must equalTo(true)             //Step2
       Thread.sleep(1000)
-      componentManager.setTemperature(thermometer, 41)  //set the temperature of the thermometer, to finish the Wait
-      Thread.sleep(1000)
+      componentManager.setTemperature(thermometer, 41)  //set the temperature of the thermometer, to finish step 3
+      Thread.sleep(10000) // Wait for WAIT_TIME Step 4
       componentManager.getPower(heater) must equalTo(Some(0))
-      Thread.sleep(7000) // Wait for WAIT_TIME
+      Thread.sleep(9000) // Wait for WAIT_TIME
       componentManager.getPower(heater) must equalTo(Some(100))
       componentManager.setTemperature(thermometer, 68)  //set the temperature of the thermometer, to finish the Wait
-      Thread.sleep(7000)
+      Thread.sleep(9000)
       componentManager.stopThermostats()
       componentManager.getPower(heater) must equalTo(Some(0))
       componentManager.isOn(pump) must equalTo(false)

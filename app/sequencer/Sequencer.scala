@@ -1,70 +1,37 @@
 package sequencer
 
-import connector.K8055
-import controllers.{ComponentManagerK8055, ComponentManager}
+import java.util.concurrent.TimeUnit
+
+import akka.actor.{Props, Actor}
+import async.BeerAppActorSystem._
+import controllers.ComponentManager
 import model._
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.FiniteDuration
 import scala.io.Source
 import play.api.libs.json._
 
 object Sequencer{
 
   //Some mutable state about the Sequencer
-  var currentStep:Int = 0
+  var currentStep:Int = 1
   var running:Boolean = false
-//  //function to find the (first) item of Equipment, for the given step
-//  val getComponentFromList = (step:Step, componentList:List[Component]) => {
-//    componentList.filter(component => component.id == step.device).head
-//  }
-//
-//  //function to find the item of Equipment, for the given step
-//  val getComponentFromCollection = (step:Step, componentCollection:ComponentCollection) => {
-//    val components:List[Component] = componentCollection.devices ::: componentCollection.thermostats
-//    getComponentFromList(step, components)
-//  }
-
 
   def runSequence(componentManager: ComponentManager, componentCollection: ComponentCollection, sequence: Sequence):Unit = {
-    Future {
-      currentStep = 0
-      running = true
-      sequence.steps.foreach(step => {
-        val component: Component = componentManager.getComponentFromCollection(step, componentCollection)
-        println("step " + step + " to be serviced by " + component)
-        currentStep = step.id
-
-        (step.eventType, running) match {
-          case (Step.ON, true) =>  componentManager.on(component)  //Digital Out
-          case (Step.OFF, true) => componentManager.off(component) //Digital/Analogue Out
-          case (Step.SET_HEAT, true) => runSetHeat(step, component, componentManager, componentCollection) //Thermostat
-          case (Step.WAIT_HEAT, true) => runWaitHeat(step, component, componentManager) //Thermometer
-          case (Step.WAIT_TIME, true) => runWaitTime(step, component, componentManager) //Any
-          case _ => {println("Bad Step Type")} //TODO report/log
-        }
-      })
-      running = false
-    }
+    currentStep = 1
+    running = true
+    val actorRef = system.actorOf(Props(new SequencerActor(sequence, componentManager, componentCollection)), name = "sequencer")
+    val tickInterval  = new FiniteDuration(1, TimeUnit.SECONDS)
+    val cancellable = Some(system.scheduler.schedule(tickInterval, tickInterval, actorRef, "sequence")) //initialDelay, delay, Actor, Message
   }
 
-//  def pauseSequence():Unit = {
-//    Future {
-//      componentCollection.devices.foreach( device => componentManager.pause(device))
-//      componentCollection.thermostats.foreach( thermostat => componentManager.pause(thermostat))
-//    }
-//  }
-//
-//  def resumeSequence():Unit = {
-//    Future {
-//      componentCollection.devices.foreach( device => componentManager.resume(device))
-//      componentCollection.thermostats.foreach( thermostat => componentManager.resume(thermostat))
-//    }
-//  }
-//
+
   def abortSequence(componentManager: ComponentManager):Unit = {
     Future {
       running = false
       componentManager.stopThermostats
+      //stop SequenceActor
     }
   }
 
@@ -83,19 +50,57 @@ object Sequencer{
 
   def runWaitHeat(step:Step, component:Component, componentManager: ComponentManager): Unit ={
     step.temperature match {
-      case Some(temperature) => componentManager.waitTemperatureHeating(component, temperature)
+      case Some(temperature) => {
+        if (componentManager.reachedTemperatureHeating(component, temperature)) currentStep +=1
+      }
       case _ => println("No temperature specified,  can't wait for temperature for: "+step)
     }
   }
 
-  def runWaitTime(step:Step, component:Component, componentManager: ComponentManager): Unit ={
-    step.duration match {
-      case Some(duration) => componentManager.waitTime(component, duration)
-      case _ => println("No duration specified,  can't wait for: " + step)
+  def runWaitTime(step:Step, component:Component): Unit ={
+    if(Timer.waitingFor(step.id)) {
+      if(Timer.finished(step.id)){currentStep += 1}
+    }
+    else{
+      step.duration match {
+        case Some (duration) => { Timer.setTimer( step.id, step.duration.getOrElse(0))}
+        case _ => println ("No duration specified,  can't wait for: " + step)
+      }
     }
   }
 }
 
+/***********************************************************************
+ SequencerActor: Akka Actor
+ ***********************************************************************/
+class SequencerActor(sequence: Sequence, componentManager: ComponentManager, componentCollection: ComponentCollection) extends Actor {
+  def receive = {
+    case "sequence" => {
+      println("sequence step...")
+
+      val step:Step = getStepFromList(Sequencer.currentStep, sequence.steps)
+      val component: Component = componentManager.getComponentFromCollection(step, componentCollection)
+      println("step " + step + " to be serviced by " + component)
+
+      step.eventType match {
+        case (Step.ON) =>  componentManager.on(component); Sequencer.currentStep +=1      //Digital Out
+        case (Step.OFF) => componentManager.off(component); Sequencer.currentStep +=1     //Digital/Analogue Out
+        case (Step.SET_HEAT) => {                                                         //Thermostat
+            Sequencer.runSetHeat(step, component, componentManager, componentCollection)
+            Sequencer.currentStep +=1
+        }
+        case (Step.WAIT_HEAT) => Sequencer.runWaitHeat(step, component, componentManager) //Thermometer
+        case (Step.WAIT_TIME) => Sequencer.runWaitTime(step, component) //Any
+        case _ => {println("Bad Step Type")} //TODO report/log
+      }
+    }
+  }
+
+  def getStepFromList(id:Int, stepList:List[Step]):Step = {
+    println(s"finding: $id in $stepList")
+    stepList.filter(step => step.id == id).head
+  }
+}
 
 //object StepIndexer {
 //  var lastId: Int = 0

@@ -1,6 +1,9 @@
 package connector
 
+import scala.annotation.tailrec
 import scala.collection.mutable
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /***********************************************************************
  K8055: abstract base trait
@@ -10,6 +13,7 @@ trait K8055 {
 //  var digitalOut: mutable.MutableList[Boolean]
 //  var analogueIn: mutable.MutableList[Double]
 //  var analogueOut: mutable.MutableList[Double]
+  var timer:Int = 0
 
   def setDigitalOut(d: Int, state: Boolean): Unit
   def getDigitalOut(d: Int): Boolean
@@ -19,6 +23,20 @@ trait K8055 {
   def getDigitalIn(d: Int): Boolean
   def getAnalogueOut(d: Int): Int
   def setAnalogueOut(d: Int, value: Int): Unit
+//  def getTime(): Int ={timer}
+//  def setTime(value:Int):Unit ={
+//    timer = value
+//    Future {runTimer()}
+//  }
+//
+//  @tailrec  //TODO: Could Akka do this better?
+//  final def runTimer():Unit = {
+//    if(timer > 0) {
+//      timer = timer - 1
+//      Thread.sleep(1000)
+//      runTimer()
+//    }
+//  }
 }
 
 /***********************************************************************
@@ -44,7 +62,6 @@ trait K8055Stub extends K8055{
   override def getAnalogueIn(i:Int): Double ={getPort(analogueIn,i).getOrElse(0)}
   override def getAnalogueOut(i:Int): Int ={getPort(analogueOut,i).getOrElse(0)}
 
-
   def setPort[T](portList:mutable.MutableList[T], port:Int, value:T):Unit ={
     //println(s"K8055:setting port: $port : $value $portList")
     if((portList.length > port) && (port>=0)) {
@@ -56,6 +73,7 @@ trait K8055Stub extends K8055{
   override def setDigitalIn(i:Int, value:Boolean): Unit ={ setPort(digitalIn, i, value)}
   override def setAnalogueIn(i:Int, value:Double): Unit ={ setPort(analogueIn, i, value)}
   override def setAnalogueOut(i:Int, value:Int): Unit ={ setPort(analogueOut, i, value)}
+
 }
 
 

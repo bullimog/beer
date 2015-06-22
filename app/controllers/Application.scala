@@ -4,8 +4,10 @@ import akka.actor.ActorSystem
 import connector.{K8055Stub, K8055}
 import model._
 import play.api._
+import play.api.libs.json.Json
 import play.api.mvc._
 import sequencer.Sequencer
+
 
 import scala.collection.mutable.ListBuffer
 
@@ -27,10 +29,38 @@ object Application extends Controller {
 
 
 
-  //Ajax Services
+  /******************* Ajax Services ********************
+  ********************************************************/
   def sequencerStatus() = Action { implicit request =>
-    Ok(Sequencer.running.toString+":"+Sequencer.currentStep.toString)
+    val ss = SequenceStatus(Sequencer.running, Sequencer.currentStep, compileComponentsStatuses())
+    //Ok(Sequencer.running.toString+":"+Sequencer.currentStep.toString)
+    Ok(Json.toJson(ss).toString())
   }
+
+//  def friendlySequenceToJSON(fs:ReadableSequence):String = {
+//    import play.api.libs.json._
+//    implicit val devWrites = Json.writes[ReadableStep]
+//    implicit val devicesWrites = Json.writes[ReadableSequence]
+//    Json.toJson(fs).toString()
+//  }
+
+
+  def compileComponentsStatuses():List[ComponentStatus] = {
+    var componentStatuses:ListBuffer[ComponentStatus] = ListBuffer[ComponentStatus]()
+    componentCollection.devices.foreach( device => {
+      var cs = ComponentStatus(device.id, device.deviceType, componentManager.isOn(device).toString)
+      device.deviceType match{
+        case Component.TIMER => cs = ComponentStatus(device.id, device.deviceType, Timer.remainingTime().toString)
+        case Component.ANALOGUE_IN => cs = ComponentStatus(device.id, device.deviceType, componentManager.readTemperature(device).getOrElse(0)toString)
+        case Component.ANALOGUE_OUT => cs = ComponentStatus(device.id, device.deviceType, componentManager.getPower(device).getOrElse(0).toString)
+        case Component.DIGITAL_IN => cs = ComponentStatus(device.id, device.deviceType, componentManager.isOn(device).toString)
+        case Component.DIGITAL_OUT => cs = ComponentStatus(device.id, device.deviceType, componentManager.isOn(device).toString)
+      }
+      componentStatuses += cs
+    })
+    componentStatuses.toList
+  }
+
   def startSequencer() = Action { implicit request =>
     Sequencer.runSequence(componentManager, componentCollection, sequence)
     Ok("Started")
@@ -45,17 +75,6 @@ object Application extends Controller {
                                             routes.javascript.Application.startSequencer,
                                             routes.javascript.Application.stopSequencer)).as("text/javascript")
   }
-
-
-
-//  def friendlySequenceToJSON(fs:ReadableSequence):String = {
-//    import play.api.libs.json._
-//    implicit val devWrites = Json.writes[ReadableStep]
-//    implicit val devicesWrites = Json.writes[ReadableSequence]
-//
-//
-//    Json.toJson(fs).toString()
-//  }
 
   def sequenceToReadableSequence(sequence: Sequence, componentManager: ComponentManager,
                                  componentCollection: ComponentCollection): ReadableSequence ={
