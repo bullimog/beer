@@ -67,6 +67,7 @@ object Application extends Controller {
   }
   def stopSequencer() = Action { implicit request =>
     Sequencer.abortSequence(componentManager)
+
     Ok("Stopped")
   }
 

@@ -2,7 +2,7 @@ package sequencer
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{Props, Actor}
+import akka.actor.{ActorRef, Props, Actor}
 import async.BeerAppActorSystem._
 import controllers.ComponentManager
 import model._
@@ -17,11 +17,12 @@ object Sequencer{
   //Some mutable state about the Sequencer
   var currentStep:Int = 1
   var running:Boolean = false
+  var actorRef:ActorRef = null
 
   def runSequence(componentManager: ComponentManager, componentCollection: ComponentCollection, sequence: Sequence):Unit = {
     currentStep = 1
     running = true
-    val actorRef = system.actorOf(Props(new SequencerActor(sequence, componentManager, componentCollection)), name = "sequencer")
+    actorRef = system.actorOf(Props(new SequencerActor(sequence, componentManager, componentCollection)), name = "sequencer")
     val tickInterval  = new FiniteDuration(1, TimeUnit.SECONDS)
     val cancellable = Some(system.scheduler.schedule(tickInterval, tickInterval, actorRef, "sequence")) //initialDelay, delay, Actor, Message
   }
@@ -30,8 +31,9 @@ object Sequencer{
   def abortSequence(componentManager: ComponentManager):Unit = {
     Future {
       running = false
-      componentManager.stopThermostats
-      //stop SequenceActor
+      componentManager.stopThermostats()
+      Timer.reset()
+      actorRef ! "stop"
     }
   }
 
@@ -94,6 +96,11 @@ class SequencerActor(sequence: Sequence, componentManager: ComponentManager, com
         case _ => {println("Bad Step Type")} //TODO report/log
       }
     }
+    case "stop" => {
+      context.stop(self)
+      Sequencer.currentStep =1
+    }
+    case _ => println("unknown message")
   }
 
   def getStepFromList(id:Int, stepList:List[Step]):Step = {

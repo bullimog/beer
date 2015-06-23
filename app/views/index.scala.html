@@ -72,29 +72,29 @@
    <!--$(".program").children().css({"color": "red", "border": "2px solid red"});-->
 
 
-   function highlightSteps(current){
-     if(current > 0) {
-       var steps = $(".program").children().children();
-       for(var i=1; i<current; i++){
-         $("#"+steps[i].id).removeClass("to-run");
+  function highlightSteps(current){
+    if(current > 0) {
+      var steps = $(".program").children().children();
+      for(var i=1; i<current; i++){
+        $("#"+steps[i].id).removeClass("to-run");
+        $("#"+steps[i].id).removeClass("running");
+        $("#"+steps[i].id).addClass("ran");
+      }
+
+      $("#step"+current).removeClass("to-run");
+      $("#step"+current).addClass("running");
+      $("#step"+current).removeClass("ran");
+
+      for(var i=current+1; i<steps.length; i++){
+         $("#"+steps[i].id).addClass("to-run");
          $("#"+steps[i].id).removeClass("running");
-         $("#"+steps[i].id).addClass("ran");
-       }
-
-       $("#step"+current).removeClass("to-run");
-       $("#step"+current).addClass("running");
-       $("#step"+current).removeClass("ran");
-
-       for(var i=current+1; i<steps.length; i++){
-          $("#"+steps[i].id).addClass("to-run");
-          $("#"+steps[i].id).removeClass("running");
-          $("#"+steps[i].id).removeClass("ran");
-       }
-     }
-   }
+         $("#"+steps[i].id).removeClass("ran");
+      }
+    }
+  }
 
   function highlightStartStopButtons(running){
-    if(running=="true"){
+    if(running==true){
        $("#startButton").addClass("btn-disable")
        $("#startButton").removeClass("btn-enable")
        $("#stopButton").addClass("btn-enable")
@@ -117,8 +117,8 @@
 
         switch(compType){
           case 0: {$("#device-val"+compId).text(formatTimer(compValue)); break;} //TIMER
-          case 1: {$("#device-val"+compId).text(compValue+" \xB0c"); break;}     //ANALOGUE_IN
-          case 2: {$("#device-val"+compId).val(compValue); break;}               //ANALOGUE OUT
+          case 1: {$("#device-val"+compId).text(compValue+" \xB0c"); break;}     //ANALOGUE_IN / Thermometer
+          case 2: {$("#device-val"+compId).val(compValue); break;}               //ANALOGUE OUT / Heater
           case 4: {                                                              //DIGITAL_OUT
             if(compValue == "true") $("#device-true"+compId).prop("checked", true)
             else $("#device-false"+compId).prop("checked", true);
@@ -133,7 +133,12 @@
     totalSeconds %= 3600;
     mins= Math.floor(totalSeconds / 60);
     secs = totalSeconds % 60;
-    return (""+hours+":"+mins+":"+secs)
+    return (""+padZero(hours)+":"+padZero(mins)+":"+padZero(secs))
+  }
+
+  function padZero(num){
+    if(num<10) return "0"+num
+    else return num
   }
 
   function startSequencer(){jsRoutes.controllers.Application.startSequencer(null).ajax();};

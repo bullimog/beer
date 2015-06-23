@@ -21,12 +21,16 @@ object Timer {
     val period = new Period(DateTime.now, finishTime, PeriodType.seconds())
     if(period.getSeconds > 0) period.getSeconds.toString
     else "0"
-
   }
 
   def finished(stepId:Int):Boolean={
     if(waitingFor(stepId)) finishTime.isBeforeNow
     else true
+  }
+
+  def reset():Unit = {
+    finishTime = DateTime.now
+    step = -1
   }
 
 }
