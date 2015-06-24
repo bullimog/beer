@@ -14,9 +14,9 @@ case class Step(id: Int, device: Int, eventType:Int, temperature: Option[Double]
     eventType match {
       case Step.ON => "On"
       case Step.OFF => "Off"
-      case Step.SET_HEAT => "Set Required Heat to "
-      case Step.WAIT_HEAT => "Wait for Temperature "
-      case Step.WAIT_TIME => "Wait for Duration "
+      case Step.SET_HEAT => "Set Thermostat to "
+      case Step.WAIT_HEAT => "Wait until temperature rises to "
+      case Step.WAIT_TIME => "Wait for "
       case Step.SET_COOL => "Set Required Cool to "
       case Step.WAIT_ON => "Wait For"
     }
@@ -60,7 +60,7 @@ object Sequence {
 }
 
 case class ReadableStep(stepId:Int, deviceId: Int, deviceDesc: String, eventType:Int, eventDesc: String,
-                        temperature: Option[Double], duration: Option[Int])
+                        temperature: Option[String], duration: Option[String])
 
 case class ReadableSequence(description:String, friendlySteps:List[ReadableStep], currentStep:Int)
 
