@@ -197,6 +197,7 @@ trait ComponentManagerK8055 extends ComponentManager{
 class ThermostatHeatActor(componentManager: ComponentManager, componentCollection: ComponentCollection) extends Actor {
 
   // List(thermometer, heater, targetTemp, enabled)
+  ////Need to move this state out of here, so it is accessible from elsewhere.
   var thermostats:mutable.MutableList[(Component, Component, Double, Boolean)] = mutable.MutableList()
 
   //populate thermostat List

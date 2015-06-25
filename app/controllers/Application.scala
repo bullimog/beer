@@ -33,18 +33,10 @@ object Application extends Controller {
   /** ***************** Ajax Services ********************
     * *******************************************************/
   def sequencerStatus() = Action { implicit request =>
-    val ss = SequenceStatus(Sequencer.running, Sequencer.currentStep, compileComponentsStatuses())
+    val ss = SequenceStatus(Sequencer.running, Sequencer.currentStep, compileComponentsStatuses(), compileThermostatStatuses())
     //Ok(Sequencer.running.toString+":"+Sequencer.currentStep.toString)
     Ok(Json.toJson(ss).toString())
   }
-
-  //  def friendlySequenceToJSON(fs:ReadableSequence):String = {
-  //    import play.api.libs.json._
-  //    implicit val devWrites = Json.writes[ReadableStep]
-  //    implicit val devicesWrites = Json.writes[ReadableSequence]
-  //    Json.toJson(fs).toString()
-  //  }
-
 
   def compileComponentsStatuses(): List[ComponentStatus] = {
     var componentStatuses: ListBuffer[ComponentStatus] = ListBuffer[ComponentStatus]()
@@ -60,6 +52,23 @@ object Application extends Controller {
       componentStatuses += cs
     })
     componentStatuses.toList
+  }
+
+  //case class Thermostat(override val id: Int, override val description: String,
+  //                      override val deviceType: Int, thermometer:Int, heater:Int) extends Component
+  //case class ComponentStatus(componentId:Int, componentType:Int, componentValue:String)
+
+  def compileThermostatStatuses(): List[ComponentStatus] = {
+    var thermostatStatuses: ListBuffer[ComponentStatus] = ListBuffer[ComponentStatus]()
+    componentCollection.thermostats.foreach(thermostat => {
+      //Need to sort out ThermostatActor Mutable state
+//      var stat = ComponentStatus(thermostat.id, thermostat.deviceType, componentManager.isOn(thermostat).toString)
+//      var statTemp = ComponentStatus(thermostat.id, thermostat.deviceType, componentManager.getPower(thermostat).toString)
+//      var thermometer = ComponentStatus(thermostat.id, thermostat.deviceType, componentManager.readTemperature(thermostat).getOrElse(0) toString)
+//      var heater = ComponentStatus(thermostat.id, thermostat.deviceType, componentManager.getPower(thermostat).getOrElse(0).toString)
+//      thermostatStatuses += stat += statTemp += thermometer += heater
+    })
+    thermostatStatuses.toList
   }
 
   def startSequencer() = Action { implicit request =>

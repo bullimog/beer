@@ -65,7 +65,8 @@ case class ReadableStep(stepId:Int, deviceId: Int, deviceDesc: String, eventType
 case class ReadableSequence(description:String, friendlySteps:List[ReadableStep], currentStep:Int)
 
 
-case class SequenceStatus(running:Boolean, currentStep:Int, componentStatuses:List[ComponentStatus])
+case class SequenceStatus(running:Boolean, currentStep:Int, componentStatuses:List[ComponentStatus],
+                          thermostatStatuses:List[ComponentStatus])
 object  SequenceStatus {
   implicit val formats=Json.writes[SequenceStatus]
 }
