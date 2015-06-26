@@ -38,6 +38,9 @@ trait ComponentManager{
 
   //function to find the item of Equipment, for the given step
   def getComponentFromCollection(step:Step, componentCollection:ComponentCollection):Component
+
+  var thermostats:mutable.MutableList[(Component, Component, Double, Boolean)] = mutable.MutableList()
+
 }
 
 /***********************************************************************
@@ -176,13 +179,38 @@ trait ComponentManagerK8055 extends ComponentManager{
       case None => startThermostats(componentCollection)
       case _ =>
     }
-    actorRef ! (thermometer, heater, temperature)
+    setThermostat(thermometer, heater, temperature)
+  }
+
+  private def populateThermostatList(componentCollection:ComponentCollection): Unit = {
+    componentCollection.thermostats.foreach(thermostat => {
+      val thermometer = deviceFromId(componentCollection, thermostat.thermometer)
+      val heater = deviceFromId(componentCollection, thermostat.heater)
+      addThermostat(thermometer, heater, -273, true) //low default target temp.
+    })
+  }
+
+  private def addThermostat(thermometer: Component, heater: Component, targetTemperature:Double, enabled:Boolean): Unit ={
+    thermostats += ((thermometer, heater, targetTemperature, enabled))
+    //    println("Added thermostat..." + thermostats)
   }
 
   def startThermostats(componentCollection:ComponentCollection) {
     actorRef = system.actorOf(Props(new ThermostatHeatActor(this, componentCollection)), name = "thermostat")
     val tickInterval  = new FiniteDuration(1, TimeUnit.SECONDS)
     cancellable = Some(system.scheduler.schedule(tickInterval, tickInterval, actorRef, "tick")) //initialDelay, delay, Actor, Message
+  }
+
+  private def setThermostat(thermometer: Component, heater: Component, targetTemperature:Double): Unit = {
+    thermostats = thermostats.filter(t => (t._1 != thermometer) && t._2 != heater) //remove old one
+    thermostats += ((thermometer, heater, targetTemperature, true)) //add new one
+    //    println("set thermostats..." + thermostats)
+  }
+
+  //TODO Employ this method!!
+  private def disableThermostat(thermometer: Component, heater: Component): Unit ={
+    thermostats = thermostats.filter(t => (t._1 != thermometer) && t._2 != heater) //remove old one
+    thermostats += ((thermometer, heater, -273, false)) //add new one
   }
 
   override def stopThermostats()={
@@ -198,36 +226,36 @@ class ThermostatHeatActor(componentManager: ComponentManager, componentCollectio
 
   // List(thermometer, heater, targetTemp, enabled)
   ////Need to move this state out of here, so it is accessible from elsewhere.
-  var thermostats:mutable.MutableList[(Component, Component, Double, Boolean)] = mutable.MutableList()
+//  var thermostats:mutable.MutableList[(Component, Component, Double, Boolean)] = mutable.MutableList()
 
   //populate thermostat List
 //  println("Constructing the ThermostatHeatActor...")
-  componentCollection.thermostats.foreach(thermostat =>{
-    val thermometer = componentManager.deviceFromId(componentCollection, thermostat.thermometer)
-    val heater = componentManager.deviceFromId(componentCollection, thermostat.heater)
-    addThermostat(thermometer, heater, -273, true)  //low default target temp.
-  })
+//  componentCollection.thermostats.foreach(thermostat =>{
+//    val thermometer = componentManager.deviceFromId(componentCollection, thermostat.thermometer)
+//    val heater = componentManager.deviceFromId(componentCollection, thermostat.heater)
+//    addThermostat(thermometer, heater, -273, true)  //low default target temp.
+//  })
 
-  private def addThermostat(thermometer: Component, heater: Component, targetTemperature:Double, enabled:Boolean): Unit ={
-    thermostats += ((thermometer, heater, targetTemperature, enabled))
-//    println("Added thermostat..." + thermostats)
-  }
+//  private def addThermostat(thermometer: Component, heater: Component, targetTemperature:Double, enabled:Boolean): Unit ={
+//    componentManager.thermostats += ((thermometer, heater, targetTemperature, enabled))
+////    println("Added thermostat..." + thermostats)
+//  }
 
-  private def setThermostat(thermometer: Component, heater: Component, targetTemperature:Double): Unit = {
-    thermostats = thermostats.filter(t => (t._1 != thermometer) && t._2 != heater) //remove old one
-    thermostats += ((thermometer, heater, targetTemperature, true)) //add new one
-    //    println("set thermostats..." + thermostats)
-  }
-
-  private def disableThermostat(thermometer: Component, heater: Component): Unit ={
-    thermostats = thermostats.filter(t => (t._1 != thermometer) && t._2 != heater) //remove old one
-    thermostats += ((thermometer, heater, -273, false)) //add new one
-  }
+//  private def setThermostat(thermometer: Component, heater: Component, targetTemperature:Double): Unit = {
+//    componentManager.thermostats = componentManager.thermostats.filter(t => (t._1 != thermometer) && t._2 != heater) //remove old one
+//    componentManager.thermostats += ((thermometer, heater, targetTemperature, true)) //add new one
+//    //    println("set thermostats..." + thermostats)
+//  }
+//
+//  private def disableThermostat(thermometer: Component, heater: Component): Unit ={
+//    componentManager.thermostats = componentManager.thermostats.filter(t => (t._1 != thermometer) && t._2 != heater) //remove old one
+//    componentManager.thermostats += ((thermometer, heater, -273, false)) //add new one
+//  }
 
   def receive = {
     case "tick" => {
       //println("tick!")
-      thermostats.foreach( thermostat => {
+      componentManager.thermostats.foreach( thermostat => {
         val heater = thermostat._2
         val enabled = thermostat._4
         if(enabled){
@@ -241,8 +269,8 @@ class ThermostatHeatActor(componentManager: ComponentManager, componentCollectio
         }else componentManager.off(heater)
       })
     }
-    case (thermometer:Component, heater:Component, temperature:Double) => {setThermostat(thermometer, heater, temperature)}
-    case (thermometer:Component, heater:Component, enabled:Boolean) => {disableThermostat(thermometer, heater)}
+//    case (thermometer:Component, heater:Component, temperature:Double) => {setThermostat(thermometer, heater, temperature)}
+//    case (thermometer:Component, heater:Component, enabled:Boolean) => {disableThermostat(thermometer, heater)}
     case "stop" => {context.stop(self)}
     case _ => println("unknown message")
   }
