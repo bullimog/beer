@@ -22,6 +22,9 @@ object Application extends Controller {
   val sequence = controllers.ConfigIO.readSteps("sequence1.json")
   val componentCollection = controllers.ConfigIO.readComponentCollection("deviceSetup.json")
 
+  //initialise the thermostat data...
+  componentManager.initThermostats(componentCollection)
+
   def index = Action {
     //val fs:ReadableSequence = sequenceToReadableSequence(sequence, componentManager, componentCollection)
     //println("friendlySequenceToJSON = " + friendlySequenceToJSON(fs))
@@ -58,15 +61,17 @@ object Application extends Controller {
   //                      override val deviceType: Int, thermometer:Int, heater:Int) extends Component
   //case class ComponentStatus(componentId:Int, componentType:Int, componentValue:String)
 
-  def compileThermostatStatuses(): List[ComponentStatus] = {
-    var thermostatStatuses: ListBuffer[ComponentStatus] = ListBuffer[ComponentStatus]()
+  def compileThermostatStatuses(): List[ThermostatStatus] = {
+    var thermostatStatuses: ListBuffer[ThermostatStatus] = ListBuffer[ThermostatStatus]()
     componentCollection.thermostats.foreach(thermostat => {
-      //Need to sort out ThermostatActor Mutable state
-//      var stat = ComponentStatus(thermostat.id, thermostat.deviceType, componentManager.isOn(thermostat).toString)
-//      var statTemp = ComponentStatus(thermostat.id, thermostat.deviceType, componentManager.getPower(thermostat).toString)
-//      var thermometer = ComponentStatus(thermostat.id, thermostat.deviceType, componentManager.readTemperature(thermostat).getOrElse(0) toString)
-//      var heater = ComponentStatus(thermostat.id, thermostat.deviceType, componentManager.getPower(thermostat).getOrElse(0).toString)
-//      thermostatStatuses += stat += statTemp += thermometer += heater
+      val enabled:Boolean = componentManager.getThermostatEnabled(thermostat)
+      val temperature:Double = componentManager.getThermostatHeat(thermostat)
+      val thermometer:Component = componentManager.deviceFromId(componentCollection, thermostat.thermometer)
+      val heater:Component = componentManager.deviceFromId(componentCollection, thermostat.heater)
+      val thermometerStatus = ComponentStatus(thermometer.id, Component.ANALOGUE_IN, componentManager.readTemperature(thermometer).getOrElse(0) toString)
+      val heaterStatus = ComponentStatus(heater.id, heater.deviceType, componentManager.getPower(heater).getOrElse(0).toString)
+      val thermostatStatus = ThermostatStatus(thermostat.id, enabled, temperature, thermometerStatus, heaterStatus)
+      thermostatStatuses += thermostatStatus
     })
     thermostatStatuses.toList
   }

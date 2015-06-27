@@ -66,7 +66,7 @@ case class ReadableSequence(description:String, friendlySteps:List[ReadableStep]
 
 
 case class SequenceStatus(running:Boolean, currentStep:Int, componentStatuses:List[ComponentStatus],
-                          thermostatStatuses:List[ComponentStatus])
+                          thermostatStatuses:List[ThermostatStatus])
 object  SequenceStatus {
   implicit val formats=Json.writes[SequenceStatus]
 }

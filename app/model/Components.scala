@@ -73,3 +73,9 @@ case class ComponentStatus(componentId:Int, componentType:Int, componentValue:St
 object  ComponentStatus {
   implicit val formats=Json.writes[ComponentStatus]
 }
+
+case class ThermostatStatus(componentId:Int, enabled:Boolean, temperature:Double,
+                            thermometerStatus:ComponentStatus, heaterStatus:ComponentStatus)
+object  ThermostatStatus {
+  implicit val formats=Json.writes[ThermostatStatus]
+}
