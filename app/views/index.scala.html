@@ -9,17 +9,17 @@
         <fieldset>
             <legend>@thermostat.description</legend>
         <p> <label>Enabled:</label>
-            @Html("<input type=\"radio\" name=\"thermostat-enabled" + thermostat.id + "\" value=\"on\">On "+
-            "<input type=\"radio\" name=\"thermostat-enabled" + thermostat.id + "\" value=\"off\" checked>Off ")
+            @Html("<input type=\"radio\" name=\"thermostat-enabled"+thermostat.id+"\" id=\"thermostat-true"+thermostat.id + "\" value=\"on\">On "+
+                  "<input type=\"radio\" name=\"thermostat-enabled"+thermostat.id+"\" id=\"thermostat-false"+thermostat.id + "\" value=\"off\" checked>Off ")
         </p>
         <p><label>Temperature:</label>
-            @Html("<input name=\"thermostat-temperature" + thermostat.id + "\" type=\"number\" min=\"0\" max=\"100\" maxlength=\"3\" value=\"0\">&deg;c")
+            @Html("<input id=\"thermostat-temperature" + thermostat.id + "\" type=\"number\" min=\"0\" max=\"100\" maxlength=\"3\" value=\"0\">&deg;c")
         </p>
         <p><label>Thermometer:</label>
-            @Html("<span name=\"thermostat-thermometer" + thermostat.id + "\"> 0 &deg;c </span>")
+            @Html("<span id=\"thermostat-thermometer" + thermostat.id + "\"> 0 &deg;c </span>")
         </p>
         <p><label>Heater:</label>
-            @Html("<span name=\"thermostat-heater" + thermostat.id + "\"> 0 % </span>")
+            @Html("<span id=\"thermostat-heater" + thermostat.id + "\"> 0 % </span>")
         </p>
         </fieldset>
         }
@@ -35,8 +35,8 @@
             case 1 => Html("<span id=\"device-val" + device.id + "\"> 0 &deg;c </span>")
             case 2 => Html("<input id=\"device-val" + device.id + "\" type=\"number\" min=\"0\" max=\"100\" maxlength=\"3\" value=\"0\">%")
             case 3 => Html("<span>Button</span>")
-            case 4 => Html("<input type=\"radio\" name=\"device-name"+device.id+"\" id=\"device-true" + device.id + "\" value=\"true\">On "+
-                           "<input type=\"radio\" name=\"device-name"+device.id+"\" id=\"device-false" + device.id + "\" value=\"false\"  checked>Off ")
+            case 4 => Html("<input type=\"radio\" name=\"device-name"+device.id+"\" id=\"device-true"+device.id + "\" value=\"true\">On "+
+                           "<input type=\"radio\" name=\"device-name"+device.id+"\" id=\"device-false"+device.id + "\" value=\"false\"  checked>Off ")
             case _ => "Not implemented"
             }}
         </p>
@@ -141,6 +141,23 @@
     else return num
   }
 
+  function updateThermostats(ss){
+    for(i=0; i<ss.thermostatStatuses.length; i++){
+       var thermostatId = ss.thermostatStatuses[i].componentId
+       var thermostatEnabled = ss.thermostatStatuses[i].enabled
+       var thermostatTemp = ss.thermostatStatuses[i].temperature
+       var thermometerTemp = ss.thermostatStatuses[i].thermometerStatus.componentValue
+       var heaterPower = ss.thermostatStatuses[i].heaterStatus.componentValue
+
+       if(thermostatEnabled) $("#thermostat-true"+thermostatId).prop("checked", true)
+            else $("#thermostat-false"+thermostatId).prop("checked", true);
+
+       $("#thermostat-temperature"+thermostatId).val(thermostatTemp);
+       $("#thermostat-thermometer"+thermostatId).text(thermometerTemp+" \xB0c");
+       $("#thermostat-heater"+thermostatId).val(heaterPower);
+    }
+  }
+
   function startSequencer(){jsRoutes.controllers.Application.startSequencer(null).ajax();};
   function stopSequencer(){jsRoutes.controllers.Application.stopSequencer(null).ajax();};
 
@@ -163,10 +180,11 @@ var  onSuccess = function(strSequenceStatus) {
     highlightStartStopButtons(ss.running)
     highlightSteps(ss.currentStep)
     updateDevices(ss)
+    updateThermostats(ss)
 }
 
 var onError = function(error) {
-    console.debug("Error of ajax Call");
+    console.debug("Error in ajax Call");
     console.debug(error);
 }
 
