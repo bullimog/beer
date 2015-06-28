@@ -32,12 +32,21 @@ object Application extends Controller {
       componentCollection))
   }
 
+  def sequenceToReadableSequence(sequence: Sequence, componentManager: ComponentManager,
+                                 componentCollection: ComponentCollection): ReadableSequence = {
+    val lbFSteps = new ListBuffer[ReadableStep]()
+    sequence.steps.foreach(step => {
+      lbFSteps += ReadableStep(step.id, step.device,
+        componentManager.getComponentFromCollection(step, componentCollection).description,
+        step.eventType, step.decode, formatTemperature(step.temperature), formatPeriod(step.duration))
+    })
+    ReadableSequence(sequence.description, lbFSteps.toList, 0)
+  }
 
   /** ***************** Ajax Services ********************
     * *******************************************************/
   def sequencerStatus() = Action { implicit request =>
     val ss = SequenceStatus(Sequencer.running, Sequencer.currentStep, compileComponentsStatuses(), compileThermostatStatuses())
-    //Ok(Sequencer.running.toString+":"+Sequencer.currentStep.toString)
     Ok(Json.toJson(ss).toString())
   }
 
@@ -87,24 +96,19 @@ object Application extends Controller {
     Ok("Stopped")
   }
 
+  def switchComponentOn(): Unit ={
+
+  }
+
   def javascriptRoutes = Action { implicit request =>
     Ok(Routes.javascriptRouter("jsRoutes")(routes.javascript.Application.sequencerStatus,
       routes.javascript.Application.startSequencer,
       routes.javascript.Application.stopSequencer)).as("text/javascript")
   }
 
-  def sequenceToReadableSequence(sequence: Sequence, componentManager: ComponentManager,
-                                 componentCollection: ComponentCollection): ReadableSequence = {
-    val lbFSteps = new ListBuffer[ReadableStep]()
-    sequence.steps.foreach(step => {
-      lbFSteps += ReadableStep(step.id, step.device,
-        componentManager.getComponentFromCollection(step, componentCollection).description,
-        step.eventType, step.decode, formatTemperature(step.temperature), formatPeriod(step.duration))
-    })
-    ReadableSequence(sequence.description, lbFSteps.toList, 0)
-  }
 
-  def formatPeriod(seconds: Option[Int]): Option[String] = {
+
+  private def formatPeriod(seconds: Option[Int]): Option[String] = {
     seconds match {
       case Some(secs) => {
         val period: Period = Period.seconds(secs)
@@ -114,16 +118,18 @@ object Application extends Controller {
     }
   }
 
-  def formatTemperature(temperature: Option[Double]): Option[String] = {
+  private def formatTemperature(temperature: Option[Double]): Option[String] = {
     temperature match {
-      case Some(temp) => {
-        Some("" + temp + " \u00b0c")  //degree symbol
-      }
+      case Some(temp) => Some("" + temp + " \u00b0c")  //degree symbol
       case None => None
     }
   }
 }
 
+
+/**********************************************************
+  For testing...
+ *********************************************************/
 object Beer extends App{
   //instantiate Sequencer singleton Object
   val componentManager = new ComponentManager with ComponentManagerK8055{
