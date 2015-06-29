@@ -110,7 +110,15 @@ object Application extends Controller {
     try{
       componentManager.setThermostatEnabled(componentCollection, thermostat, state.toBoolean)
     }catch{
-      case e:Exception => componentManager.setThermostatHeat(componentCollection, thermostat, state.toDouble)
+      case e:Exception => {
+        val current:Double = componentManager.getThermostatHeat(thermostat)
+        state match{
+          case "ddown" => componentManager.setThermostatHeat(componentCollection, thermostat, current - 10)
+          case "down" => componentManager.setThermostatHeat(componentCollection, thermostat, current - 1)
+          case "up" => componentManager.setThermostatHeat(componentCollection, thermostat, current + 1)
+          case "dup" => componentManager.setThermostatHeat(componentCollection, thermostat, current + 10)
+        }
+      }
     }
   }
 
@@ -122,8 +130,23 @@ object Application extends Controller {
           case _ => componentManager.off(device)
         }
       }
-      case Component.ANALOGUE_OUT => { componentManager.setPower(device,state.toInt)}
+      case Component.ANALOGUE_OUT => {
+        val current:Int = componentManager.getPower(device).getOrElse(0)
+        state match{
+          case "ddown" => componentManager.setPower(device, limitPercent(current - 10))
+          case "down" => componentManager.setPower(device, limitPercent(current - 1))
+          case "up" => componentManager.setPower(device, limitPercent(current + 1))
+          case "dup" => componentManager.setPower(device, limitPercent(current +10))
+        }
+      }
     }
+  }
+
+
+  private def limitPercent(in:Int):Int = {
+    if(in > 100) 100
+    else if (in < 0) 0
+    else in
   }
 
   def javascriptRoutes = Action { implicit request =>

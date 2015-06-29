@@ -2,7 +2,7 @@
 @(sequence: model.ReadableSequence, componentCollection: model.ComponentCollection)
 
 @main("Beer Title") {
-<div style="width:400px;">
+<div style="width:400px;" xmlns="http://www.w3.org/1999/html">
     <fieldset>
         <legend>Thermostats</legend>
         @componentCollection.thermostats.map {thermostat =>
@@ -13,9 +13,13 @@
                   "<input type=\"radio\" name=\"thermostat-enabled"+thermostat.id+"\" id=\"thermostat-false"+thermostat.id + "\" value=\"false\" onclick=\"makeCall('"+thermostat.id+"', 'false')\" checked>Off ")
         </p>
         <p><label>Temperature:</label>
-            @Html("<input id=\"thermostat-temperature" + thermostat.id + "\" type=\"number\" min=\"0\" max=\"100\" maxlength=\"3\" value=\"0\" onchange=\"makeCall('"+thermostat.id+"', this.value)\">&deg;c")
+            @Html("<button id=\"device-down\"+thermostat.id class=\"button\" onclick=\"makeCall('"+thermostat.id+"', 'ddown')\"><<</button>" +
+            "<button id=\"-\"  class=\"button\" value=\"Next\" onclick=\"makeCall('"+thermostat.id+"', 'down')\"><</button> " +
+            "<span id=\"thermostat-temperature" + thermostat.id + "\"> 0 &deg;c </span>" +
+            " <button id=\"+\"  class=\"button\" value=\"Next\" onclick=\"makeCall('"+thermostat.id+"', 'up')\">></button>" +
+            "<button id=\"+\"  class=\"button\" value=\"Next\" onclick=\"makeCall('"+thermostat.id+"', 'dup')\">>></button>")
         </p>
-        <p><label>Thermometer:</label>
+        <p><label>Thermometer:&nbsp;</label>
             @Html("<span id=\"thermostat-thermometer" + thermostat.id + "\"> 0 &deg;c </span>")
         </p>
         <p><label>Heater:</label>
@@ -29,15 +33,21 @@
         <legend>Devices</legend>
     @componentCollection.devices.map {device =>
         <p id="device@device.id">
-            <label id="deviceDesc@device.id">@device.id: @device.description:</label>
+            <label id="deviceDesc@device.id">@device.id: @device.description:&nbsp;</label>
             @{device.deviceType match {
-            case 0 => Html("<span id=\"device-val" + device.id + "\"> 0 seconds </span>")
-            case 1 => Html("<span id=\"device-val" + device.id + "\"> 0 &deg;c </span>")
-            case 2 => Html("<input id=\"device-val" + device.id + "\" type=\"number\" min=\"0\" max=\"100\" maxlength=\"3\" value=\"0\" onchange=\"makeCall('"+device.id+"', this.value)\">%")
-            case 3 => Html("<span>Button</span>")
-            case 4 => Html("<input type=\"radio\" name=\"device-name"+device.id+"\" id=\"device-true"+device.id + "\" value=\"true\" onclick=\"makeCall('"+device.id+"', 'true')\">On "+
+                case 0 => Html("<span id=\"device-val"+device.id + "\"> 0 seconds </span>")
+                case 1 => Html("<span id=\"device-val"+device.id + "\"> 0 &deg;c </span>")
+                case 2 => {
+                    Html("<button id=\"device-down\"+device.id class=\"button\" onclick=\"makeCall('"+device.id+"', 'ddown')\"><<</button>" +
+                    "<button id=\"-\"  class=\"button\" value=\"Next\" onclick=\"makeCall('"+device.id+"', 'down')\"><</button> " +
+                    "<span id=\"device-val" + device.id + "\"> 0 % </span>" +
+                    " <button id=\"+\"  class=\"button\" value=\"Next\" onclick=\"makeCall('"+device.id+"', 'up')\">></button>" +
+                    "<button id=\"+\"  class=\"button\" value=\"Next\" onclick=\"makeCall('"+device.id+"', 'dup')\">>></button>")
+                }
+                case 3 => Html("<span>Button</span>")
+                case 4 => Html("<input type=\"radio\" name=\"device-name"+device.id+"\" id=\"device-true"+device.id + "\" value=\"true\" onclick=\"makeCall('"+device.id+"', 'true')\">On "+
                            "<input type=\"radio\" name=\"device-name"+device.id+"\" id=\"device-false"+device.id + "\" value=\"false\" onclick=\"makeCall('"+device.id+"', 'false')\" checked>Off ")
-            case _ => Html("<b>Bad Device</b>")
+                case _ => Html("<b>Bad Device</b>")
             }}
         </p>
         }

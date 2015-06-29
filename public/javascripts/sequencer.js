@@ -45,7 +45,7 @@
         switch(compType){
           case 0: {$("#device-val"+compId).text(formatTimer(compValue)); break;} //TIMER
           case 1: {$("#device-val"+compId).text(compValue+" \xB0c"); break;}     //ANALOGUE_IN / Thermometer
-          case 2: {$("#device-val"+compId).val(compValue); break;}               //ANALOGUE OUT / Heater
+          case 2: {$("#device-val"+compId).text(compValue+" %"); break;}         //ANALOGUE OUT / Heater
           case 4: {                                                              //DIGITAL_OUT
             if(compValue == "true") $("#device-true"+compId).prop("checked", true)
             else $("#device-false"+compId).prop("checked", true);
@@ -79,9 +79,9 @@
        if(thermostatEnabled) $("#thermostat-true"+thermostatId).prop("checked", true)
             else $("#thermostat-false"+thermostatId).prop("checked", true);
 
-       $("#thermostat-temperature"+thermostatId).val(thermostatTemp);
+       $("#thermostat-temperature"+thermostatId).text(thermostatTemp+" \xB0c");
        $("#thermostat-thermometer"+thermostatId).text(thermometerTemp+" \xB0c");
-       $("#thermostat-heater"+thermostatId).val(heaterPower);
+       $("#thermostat-heater"+thermostatId).text(heaterPower+" %");
     }
   }
 
