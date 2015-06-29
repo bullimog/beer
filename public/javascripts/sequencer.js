@@ -88,7 +88,19 @@
   function startSequencer(){jsRoutes.controllers.Application.startSequencer(null).ajax();};
   function stopSequencer(){jsRoutes.controllers.Application.stopSequencer(null).ajax();};
 
-$(function() {sequencerStatusCall();});
+$(function() {
+    console.debug("Initialising...")
+    sequencerStatusCall();
+});
+
+function initEvents(){
+
+}
+
+function makeCall(componentId, state){
+    console.debug("componentId="+componentId+ "   state="+state)
+    jsRoutes.controllers.Application.setComponentState(componentId, state).ajax();
+}
 
 
 

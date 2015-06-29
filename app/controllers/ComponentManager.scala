@@ -22,7 +22,7 @@ trait ComponentManager{
   def isOn(component:Component):Boolean
   def pause(component:Component)
   def resume(component:Component)
-  def deviceFromId(componentCollection:ComponentCollection, id:Int):Component
+  def componentFromId(componentCollection:ComponentCollection, id:Int):Component
   def reachedTemperatureHeating(component:Component, targetTemperature: Double):Boolean
   def readTemperature(component:Component): Option[Double]
 //  def waitTime(component:Component, duration: Int)
@@ -34,8 +34,10 @@ trait ComponentManager{
   def initThermostats(componentCollection: ComponentCollection): Unit
   def getThermostatHeat(thermostat: Thermostat):Double
   def getThermostatEnabled(thermostat: Thermostat):Boolean
+  def setThermostatEnabled(componentCollection:ComponentCollection, thermostat: Thermostat, enabled:Boolean)
 
-  var cancellable:Option[Cancellable] = None
+
+    var cancellable:Option[Cancellable] = None
   var actorRef:ActorRef = null
   def getComponentFromList(step:Step, componentList:List[Component]):Component
 
@@ -65,7 +67,6 @@ trait ComponentManagerK8055 extends ComponentManager{
   }
 
   override def off(component:Component) = {
-    //println(component.description+ " switched off")
     component match{
       case d:Device => k8055.setDigitalOut(d.port, false)
       case _ =>
@@ -105,10 +106,11 @@ trait ComponentManagerK8055 extends ComponentManager{
 //    componentCollection.devices.filter((device:Device) => device.id == id).head
 //  }
 
-  override def deviceFromId(componentCollection:ComponentCollection, id:Int):Component = {
+  override def componentFromId(componentCollection:ComponentCollection, id:Int):Component = {
     //println("componentCollection="+componentCollection)
     //println("step.device="+id)
-    componentCollection.devices.filter((device:Device) => device.id == id).head
+    val components:List[Component] = componentCollection.devices ::: componentCollection.thermostats
+    components.filter((component:Component) => component.id == id).head
   }
 
   override def reachedTemperatureHeating(component:Component, targetTemperature: Double):Boolean = {
@@ -181,20 +183,28 @@ trait ComponentManagerK8055 extends ComponentManager{
   ******************************************************************/
   override def initThermostats(componentCollection: ComponentCollection): Unit = {
     componentCollection.thermostats.foreach(thermostat => {
-      val thermometer = deviceFromId(componentCollection, thermostat.thermometer)
-      val heater = deviceFromId(componentCollection, thermostat.heater)
+      val thermometer = componentFromId(componentCollection, thermostat.thermometer)
+      val heater = componentFromId(componentCollection, thermostat.heater)
       setThermostat(thermometer, heater, 0.0, false)
     })
   }
 
   override def setThermostatHeat(componentCollection:ComponentCollection, thermostat: Thermostat, temperature:Double) = {
-    val thermometer = deviceFromId(componentCollection, thermostat.thermometer)
-    val heater = deviceFromId(componentCollection, thermostat.heater)
+    val thermometer = componentFromId(componentCollection, thermostat.thermometer)
+    val heater = componentFromId(componentCollection, thermostat.heater)
     cancellable match{
       case None => startThermostats(componentCollection)
       case _ =>
     }
     setThermostat(thermometer, heater, temperature, getThermostatEnabled(thermostat))
+  }
+
+  override def setThermostatEnabled(componentCollection:ComponentCollection, thermostat: Thermostat, enabled:Boolean) = {
+    val thermometer = componentFromId(componentCollection, thermostat.thermometer)
+    val heater = componentFromId(componentCollection, thermostat.heater)
+    val heat = getThermostatHeat(thermostat)
+    thermostats = thermostats.filter(t => (t._1 != thermometer) && t._2 != heater) //remove old one
+    thermostats += ((thermometer, heater, heat, enabled)) //add new one
   }
 
   private def addThermostat(thermometer: Component, heater: Component, targetTemperature:Double, enabled:Boolean): Unit ={
@@ -211,8 +221,8 @@ trait ComponentManagerK8055 extends ComponentManager{
 
   private def populateThermostatList(componentCollection:ComponentCollection): Unit = {
     componentCollection.thermostats.foreach(thermostat => {
-      val thermometer = deviceFromId(componentCollection, thermostat.thermometer)
-      val heater = deviceFromId(componentCollection, thermostat.heater)
+      val thermometer = componentFromId(componentCollection, thermostat.thermometer)
+      val heater = componentFromId(componentCollection, thermostat.heater)
       addThermostat(thermometer, heater, -273, true) //low default target temp.
     })
   }
@@ -238,10 +248,10 @@ trait ComponentManagerK8055 extends ComponentManager{
 
 
   //TODO Employ this method!!
-  private def disableThermostat(thermometer: Component, heater: Component): Unit ={
-    thermostats = thermostats.filter(t => (t._1 != thermometer) && t._2 != heater) //remove old one
-    thermostats += ((thermometer, heater, -273, false)) //add new one
-  }
+//  private def disableThermostat(thermometer: Component, heater: Component): Unit ={
+//    thermostats = thermostats.filter(t => (t._1 != thermometer) && t._2 != heater) //remove old one
+//    thermostats += ((thermometer, heater, -273, false)) //add new one
+//  }
 
   override def stopThermostats()={
     actorRef ! "stop"

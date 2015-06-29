@@ -3,7 +3,8 @@ p     { display: table-row;  }
 label { display: table-cell; }
 input { display: table-cell; }
 th    {text-align: left;     }
-td    {padding: 4px;        }
+td    {padding: 4px; }
+div   {font-family:Arial,"libra sans",sans-serif; }
 
 .running {color: red; font-weight:bold}
 .to-run {color: black; background-color: grey}

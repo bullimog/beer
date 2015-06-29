@@ -75,8 +75,8 @@ object Application extends Controller {
     componentCollection.thermostats.foreach(thermostat => {
       val enabled:Boolean = componentManager.getThermostatEnabled(thermostat)
       val temperature:Double = componentManager.getThermostatHeat(thermostat)
-      val thermometer:Component = componentManager.deviceFromId(componentCollection, thermostat.thermometer)
-      val heater:Component = componentManager.deviceFromId(componentCollection, thermostat.heater)
+      val thermometer:Component = componentManager.componentFromId(componentCollection, thermostat.thermometer)
+      val heater:Component = componentManager.componentFromId(componentCollection, thermostat.heater)
       val thermometerStatus = ComponentStatus(thermometer.id, Component.ANALOGUE_IN, componentManager.readTemperature(thermometer).getOrElse(0) toString)
       val heaterStatus = ComponentStatus(heater.id, heater.deviceType, componentManager.getPower(heater).getOrElse(0).toString)
       val thermostatStatus = ThermostatStatus(thermostat.id, enabled, temperature, thermometerStatus, heaterStatus)
@@ -96,17 +96,42 @@ object Application extends Controller {
     Ok("Stopped")
   }
 
-  def switchComponentOn(): Unit ={
 
+  def setComponentState(componentId: String, state:String) = Action { implicit request =>
+    val component = componentManager.componentFromId(componentCollection, componentId.toInt)
+    component match {
+      case t:Thermostat => setThermostatState(t, state)
+      case d:Device => setDeviceState(d, state)
+    }
+    Ok("Ok")
+  }
+
+  private def setThermostatState(thermostat: Thermostat, state:String): Unit ={
+    try{
+      componentManager.setThermostatEnabled(componentCollection, thermostat, state.toBoolean)
+    }catch{
+      case e:Exception => componentManager.setThermostatHeat(componentCollection, thermostat, state.toDouble)
+    }
+  }
+
+  private def setDeviceState(device:Device, state:String) = {
+    device.deviceType match {
+      case Component.DIGITAL_OUT => {
+        state.toBoolean match {
+          case true => componentManager.on(device)
+          case _ => componentManager.off(device)
+        }
+      }
+      case Component.ANALOGUE_OUT => { componentManager.setPower(device,state.toInt)}
+    }
   }
 
   def javascriptRoutes = Action { implicit request =>
     Ok(Routes.javascriptRouter("jsRoutes")(routes.javascript.Application.sequencerStatus,
+      routes.javascript.Application.setComponentState,
       routes.javascript.Application.startSequencer,
       routes.javascript.Application.stopSequencer)).as("text/javascript")
   }
-
-
 
   private def formatPeriod(seconds: Option[Int]): Option[String] = {
     seconds match {
