@@ -1,40 +1,32 @@
 {
   "description" : "My First Sequence",
   "steps" : [ {
-    "id" : 1,
     "device" : 104,
     "eventType" : 3,
     "temperature" : 41.0
   }, {
-    "id" : 2,
     "device" : 2,
     "eventType" : 1
   }, {
-    "id" : 3,
     "device" : 1,
     "eventType" : 4,
     "temperature" : 41.0
   }, {
-    "id" : 4,
-    "device" : 4,
+    "device" : 104,
     "eventType" : 5,
     "duration" : 1200
   }, {
-    "id" : 5,
     "device" : 104,
     "eventType" : 3,
     "temperature" : 68.0
   }, {
-    "id" : 6,
-    "device" : 4,
+    "device" : 104,
     "eventType" : 5,
     "duration" : 1200
   }, {
-    "id" : 7,
     "device" : 104,
     "eventType" : 2
   }, {
-    "id" : 8,
     "device" : 2,
     "eventType" : 2
   } ]

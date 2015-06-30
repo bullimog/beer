@@ -15,7 +15,8 @@ import play.api.libs.json._
 object Sequencer{
 
   //Some mutable state about the Sequencer
-  var currentStep:Int = 1
+  val START_STEP = 0
+  var currentStep:Int = START_STEP
   var running:Boolean = false
   var actorRef:ActorRef = null
 
@@ -29,12 +30,11 @@ object Sequencer{
 
 
   def abortSequence(componentManager: ComponentManager):Unit = {
-    Future {
       running = false
-      componentManager.stopThermostats()
+      //componentManager.stopThermostats()
       Timer.reset()
       actorRef ! "stop"
-    }
+      Sequencer.currentStep = Sequencer.START_STEP
   }
 
   def runSetHeat(step:Step, component:Component, componentManager: ComponentManager, componentCollection: ComponentCollection): Unit ={
@@ -98,7 +98,7 @@ class SequencerActor(sequence: Sequence, componentManager: ComponentManager, com
     }
     case "stop" => {
       context.stop(self)
-      Sequencer.currentStep =1
+      Sequencer.currentStep = Sequencer.START_STEP
     }
     case _ => println("unknown message")
   }

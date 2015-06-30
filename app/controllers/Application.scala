@@ -19,7 +19,7 @@ object Application extends Controller {
     override val k8055: K8055 = new K8055 with K8055Stub //stub for now...
   }
 
-  val sequence = controllers.ConfigIO.readSteps("sequence1.json")
+  val sequence:Sequence = controllers.ConfigIO.readSteps("sequence1.json")
   val componentCollection = controllers.ConfigIO.readComponentCollection("deviceSetup.json")
 
   //initialise the thermostat data...

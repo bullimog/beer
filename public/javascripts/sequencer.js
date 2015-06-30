@@ -1,6 +1,9 @@
 
   function highlightSteps(current){
-    if(current > 0) {
+
+  console.debug("current="+current)
+
+//    if(current >= 0) {
       var steps = $(".program").children().children();
       for(var i=1; i<current; i++){
         $("#"+steps[i].id).removeClass("to-run");
@@ -17,7 +20,7 @@
          $("#"+steps[i].id).removeClass("running");
          $("#"+steps[i].id).removeClass("ran");
       }
-    }
+ //   }
   }
 
   function highlightStartStopButtons(running){
@@ -98,7 +101,7 @@ function initEvents(){
 }
 
 function makeCall(componentId, state){
-    console.debug("componentId="+componentId+ "   state="+state)
+    //console.debug("componentId="+componentId+ "   state="+state)
     jsRoutes.controllers.Application.setComponentState(componentId, state).ajax();
 }
 
