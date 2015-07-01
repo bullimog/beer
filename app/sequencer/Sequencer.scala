@@ -42,7 +42,10 @@ object Sequencer{
     step.temperature match {
       case Some(temperature) =>
         component match {
-          case thermostat: Thermostat => componentManager.setThermostatHeat(componentCollection, thermostat, temperature)
+          case thermostat: Thermostat => {
+              componentManager.setThermostatHeat(componentCollection, thermostat, temperature)
+            componentManager.setThermostatEnabled(componentCollection, thermostat, true)
+          }
           case _ => println("Can't set thermostat on a : " + component + "in step " + step)
         }
       case _ => println("No temperature specified,  can't set temperature for: "+step)
@@ -85,8 +88,8 @@ class SequencerActor(sequence: Sequence, componentManager: ComponentManager, com
       //println("step " + step + " to be serviced by " + component)
 
       step.eventType match {
-        case (Step.ON) =>  componentManager.on(component); Sequencer.currentStep +=1      //Digital Out
-        case (Step.OFF) => componentManager.off(component); Sequencer.currentStep +=1     //Digital/Analogue Out
+        case (Step.ON) =>  componentManager.on(componentCollection,component); Sequencer.currentStep +=1      //Digital Out
+        case (Step.OFF) => componentManager.off(componentCollection, component); Sequencer.currentStep +=1     //Digital/Analogue Out/Monitor
         case (Step.SET_HEAT) => {                                                         //Thermostat
             Sequencer.runSetHeat(step, component, componentManager, componentCollection)
             Sequencer.currentStep +=1

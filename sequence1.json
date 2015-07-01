@@ -18,7 +18,7 @@
     "id" : 4,
     "device" : 4,
     "eventType" : 5,
-    "duration" : 1200
+    "duration" : 60
   }, {
     "id" : 5,
     "device" : 104,
@@ -28,7 +28,7 @@
     "id" : 6,
     "device" : 4,
     "eventType" : 5,
-    "duration" : 1200
+    "duration" : 60
   }, {
     "id" : 7,
     "device" : 104,

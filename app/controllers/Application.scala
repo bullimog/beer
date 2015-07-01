@@ -126,8 +126,8 @@ object Application extends Controller {
     device.deviceType match {
       case Component.DIGITAL_OUT => {
         state.toBoolean match {
-          case true => componentManager.on(device)
-          case _ => componentManager.off(device)
+          case true => componentManager.on(componentCollection, device)
+          case _ => componentManager.off(componentCollection, device)
         }
       }
       case Component.ANALOGUE_OUT => {

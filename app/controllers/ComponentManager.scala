@@ -17,8 +17,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
  ComponentManager: abstract base trait
 ***********************************************************************/
 trait ComponentManager{
-  def on(component:Component)
-  def off(component:Component)
+  def on(componentCollection: ComponentCollection, component:Component)
+  def off(componentCollection: ComponentCollection, component:Component)
   def isOn(component:Component):Boolean
   def pause(component:Component)
   def resume(component:Component)
@@ -56,8 +56,8 @@ trait ComponentManagerK8055 extends ComponentManager{
 
   val k8055:K8055
 
-  override def on(component:Component) = {
-    //println(component.description+ " switched on")
+  override def on(componentCollection: ComponentCollection, component:Component) = {
+    println(component.description+ " switched on")
     component.deviceType match{
       case Component.DIGITAL_OUT =>
         component match{
@@ -66,10 +66,11 @@ trait ComponentManagerK8055 extends ComponentManager{
     }
   }
 
-  override def off(component:Component) = {
+  override def off(componentCollection: ComponentCollection, component:Component) = {
+    println(component.description+ " switched off")
     component match{
       case d:Device => k8055.setDigitalOut(d.port, false)
-      case _ =>
+      case t:Thermostat => setThermostatEnabled(componentCollection, t, false)
     }
   }
   override def isOn(component:Component):Boolean = {
@@ -272,12 +273,11 @@ class ThermostatHeatActor(componentManager: ComponentManager, componentCollectio
         if(enabled){
           val thermometer = thermostat._1
           val targetTemperature = thermostat._3
-
           componentManager.readTemperature(thermometer) match {
            case Some(currentTemp) => componentManager.setPower(heater, calculateHeatSetting(targetTemperature - currentTemp))
-           case _ => componentManager.off(heater) //to be safe!
+           case _ => componentManager.off(componentCollection, heater);println("no temperature:") //to be safe!
           }
-        }else componentManager.off(heater)
+        }
       })
     }
     case "stop" => {context.stop(self)}
