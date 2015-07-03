@@ -81,29 +81,9 @@ object Sequencer{
 class SequencerActor(sequence: Sequence, componentManager: ComponentManager, componentCollection: ComponentCollection) extends Actor {
   def receive = {
     case "sequence" => {
-      //println("sequence step...")
-
       val maybeStep:Option[Step] = getStepFromList(Sequencer.currentStep, sequence.steps)
       maybeStep match{
-        case Some(step) => {
-          val component: Component = componentManager.getComponentFromCollection(step, componentCollection)
-          //println("step " + step + " to be serviced by " + component)
-
-          step.eventType match {
-            case (Step.ON) => componentManager.on(componentCollection, component); Sequencer.currentStep += 1 //Digital Out
-            case (Step.OFF) => componentManager.off(componentCollection, component); Sequencer.currentStep += 1 //Digital/Analogue Out/Monitor
-            case (Step.SET_HEAT) => {
-              //Thermostat
-              Sequencer.runSetHeat(step, component, componentManager, componentCollection)
-              Sequencer.currentStep += 1
-            }
-            case (Step.WAIT_HEAT) => Sequencer.runWaitHeat(step, component, componentManager) //Thermometer
-            case (Step.WAIT_TIME) => Sequencer.runWaitTime(step, component) //Any
-            case _ => {
-              println("Bad Step Type")
-            } //TODO report/log
-          }
-        }
+        case Some(step) => performStep(step)
         case None => {
           context.stop(self)
           Sequencer.currentStep = Sequencer.START_STEP
@@ -115,15 +95,32 @@ class SequencerActor(sequence: Sequence, componentManager: ComponentManager, com
       context.stop(self)
       Sequencer.currentStep = Sequencer.START_STEP
     }
-    case _ => println("unknown message")
+    case _ => println("unknown message")  //TODO report/log
   }
 
   def getStepFromList(id:Int, stepList:List[Step]):Option[Step] = {
-    //TODO: Need to work out what happens if id is not in list
-    val steps:List[Step] = stepList.filter(step => step.id == id)  //.head
+    val steps:List[Step] = stepList.filter(step => step.id == id)
     steps match {
       case List() => None
       case _ => Some(steps.head)
+    }
+  }
+
+  def performStep(step: Step): Unit ={
+    val component: Component = componentManager.getComponentFromCollection(step, componentCollection)
+    //println("step " + step + " to be serviced by " + component)
+
+    step.eventType match {
+      case (Step.ON) => componentManager.on(componentCollection, component); Sequencer.currentStep += 1 //Digital Out
+      case (Step.OFF) => componentManager.off(componentCollection, component); Sequencer.currentStep += 1 //Digital/Analogue Out/Monitor
+      case (Step.SET_HEAT) => {
+        //Thermostat
+        Sequencer.runSetHeat(step, component, componentManager, componentCollection)
+        Sequencer.currentStep += 1
+      }
+      case (Step.WAIT_HEAT) => Sequencer.runWaitHeat(step, component, componentManager) //Thermometer
+      case (Step.WAIT_TIME) => Sequencer.runWaitTime(step, component) //Any
+      case _ => println("Bad Step Type")//TODO report/log
     }
   }
 }

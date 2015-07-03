@@ -44,16 +44,16 @@ class ComponentManagerSpec extends Specification {
 
   "ComponentManager" should {
     "turn on and off, when instructed to do so" in {
-      componentManager.on(pump)
+      componentManager.on(componentCollection, pump)
       componentManager.isOn(pump) must equalTo(true)
-      componentManager.off(pump)
+      componentManager.off(componentCollection, pump)
       componentManager.isOn(pump) must equalTo(false)
     }
   }
 
   "ComponentManager" should {
     "identify a device within a ComponentCollection, for a given id" in {
-      val foundDevice = componentManager.deviceFromId(componentCollection, 4)
+      val foundDevice = componentManager.componentFromId(componentCollection, 4)
       foundDevice.description must equalTo("Heater")
     }
   }
