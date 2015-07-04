@@ -1,6 +1,23 @@
+/*
+Copyright 2015 Graeme Bullimore
+
+This file is part of BBrew.
+BBrew is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+BBrew is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+  along with BBrew.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 package controllers
 
-import akka.actor.ActorSystem
 import connector.{K8055Stub, K8055}
 import model._
 import org.joda.time.Period
@@ -26,12 +43,11 @@ object Application extends Controller {
   componentManager.initThermostats(componentCollection)
 
   def index = Action {
-    //val fs:ReadableSequence = sequenceToReadableSequence(sequence, componentManager, componentCollection)
-    //println("friendlySequenceToJSON = " + friendlySequenceToJSON(fs))
     Ok(views.html.index(sequenceToReadableSequence(sequence, componentManager, componentCollection),
       componentCollection))
   }
 
+  /** copies a Sequence to a ReadableSequence, formatting internal data to human-readable. */
   def sequenceToReadableSequence(sequence: Sequence, componentManager: ComponentManager,
                                  componentCollection: ComponentCollection): ReadableSequence = {
     val lbFSteps = new ListBuffer[ReadableStep]()
@@ -65,10 +81,6 @@ object Application extends Controller {
     })
     componentStatuses.toList
   }
-
-  //case class Thermostat(override val id: Int, override val description: String,
-  //                      override val deviceType: Int, thermometer:Int, heater:Int) extends Component
-  //case class ComponentStatus(componentId:Int, componentType:Int, componentValue:String)
 
   def compileThermostatStatuses(): List[ThermostatStatus] = {
     var thermostatStatuses: ListBuffer[ThermostatStatus] = ListBuffer[ThermostatStatus]()
