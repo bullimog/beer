@@ -1,5 +1,5 @@
-import connector.{K8055Stub, K8055}
-import controllers.{ComponentManagerK8055, ComponentManager}
+import connector.{DeviceConnector, DeviceConnectorStub}
+import controllers.{BrewComponentManager, ComponentManager}
 import model._
 import org.specs2.mutable._
 import org.specs2.runner._
@@ -12,8 +12,8 @@ import scala.concurrent.Future
 @RunWith(classOf[JUnitRunner])
 class SequencerSpec extends Specification {
 
-  val componentManager = new ComponentManager with ComponentManagerK8055 {
-    override val k8055:K8055 = new K8055 with K8055Stub
+  val componentManager = new ComponentManager with BrewComponentManager {
+    override val deviceConnector:DeviceConnector = new DeviceConnector with DeviceConnectorStub
 
     //Need to stub setting temperature on thermometer
     def setTemperature(component:Component, value:Double): Unit = {
@@ -21,7 +21,7 @@ class SequencerSpec extends Specification {
       component.deviceType match{
         case Component.ANALOGUE_IN =>
           component match{
-            case d:Device => k8055.setAnalogueIn(d.port, value)
+            case d:Device => deviceConnector.setAnalogueIn(d.port, value)
             case _ => println(component.description+ " Can't fake set temperature on non-device")
           }
         case _ => println(component.description+ " Can only fake set temperature on a Analogue In")

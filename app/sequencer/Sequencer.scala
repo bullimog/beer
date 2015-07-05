@@ -77,7 +77,10 @@ object Sequencer{
   def runWaitOn(step:Step, component:Component, componentManager: ComponentManager): Unit ={
     step.duration match {
       case Some(targetCount) => {
-        if (componentManager.reachedCount(component, targetCount)) currentStep +=1
+        if (componentManager.reachedCount(component, targetCount)) {
+          currentStep +=1
+          componentManager.resetCount(component)
+        }
       }
       case _ => println("No count specified,  can't wait for temperature for: "+step)
     }

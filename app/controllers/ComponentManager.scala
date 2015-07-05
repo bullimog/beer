@@ -4,24 +4,22 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.{ActorRef, Cancellable, Props, Actor}
 import async.BeerAppActorSystem._
-import connector.K8055
+import connector.DeviceConnector
 import model._
-import sequencer.Sequencer
 
-import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /***********************************************************************
- ComponentManager: abstract base trait
+ ComponentManager: abstract base class
 ***********************************************************************/
-trait ComponentManager{
+abstract class ComponentManager{
   def on(componentCollection: ComponentCollection, component:Component)
   def off(componentCollection: ComponentCollection, component:Component)
   def isOn(component:Component):Boolean
-  def pause(component:Component)
-  def resume(component:Component)
+  //def pause(component:Component)
+  //def resume(component:Component)
   def componentFromId(componentCollection:ComponentCollection, id:Int):Component
   def reachedTemperatureHeating(component:Component, targetTemperature: Double):Boolean
   def readTemperature(component:Component): Option[Double]
@@ -29,6 +27,8 @@ trait ComponentManager{
 //  def getTime(component:Component): Int
   def reachedCount(component:Component, targetCount: Int):Boolean
   def readCount(component:Component): Option[Int]
+  def resetCount(component: Component):Unit
+
   def setPower(component:Component, power: Int)
   def getPower(component:Component):Option[Int]
   def setThermostatHeat(componentCollection:ComponentCollection, thermostat: Thermostat, temperature:Double)
@@ -54,16 +54,15 @@ trait ComponentManager{
 /***********************************************************************
  ComponentManagerK8055: sub-trait
 ***********************************************************************/
-trait ComponentManagerK8055 extends ComponentManager{
-
-  val k8055:K8055
+trait BrewComponentManager extends ComponentManager{
+  val deviceConnector:DeviceConnector
 
   override def on(componentCollection: ComponentCollection, component:Component) = {
     println(component.description+ " switched on")
     component.deviceType match{
       case Component.DIGITAL_OUT =>
         component match{
-          case d:Device => k8055.setDigitalOut(d.port, true)
+          case d:Device => deviceConnector.setDigitalOut(d.port, true)
         }
     }
   }
@@ -71,7 +70,7 @@ trait ComponentManagerK8055 extends ComponentManager{
   override def off(componentCollection: ComponentCollection, component:Component) = {
     println(component.description+ " switched off")
     component match{
-      case d:Device => k8055.setDigitalOut(d.port, false)
+      case d:Device => deviceConnector.setDigitalOut(d.port, false)
       case t:Thermostat => setThermostatEnabled(componentCollection, t, false)
     }
   }
@@ -80,7 +79,7 @@ trait ComponentManagerK8055 extends ComponentManager{
     component.deviceType match{
       case Component.DIGITAL_OUT =>
         component match{
-          case d:Device => k8055.getDigitalOut(d.port)
+          case d:Device => deviceConnector.getDigitalOut(d.port)
           case _ => false
         }
       case _ => false
@@ -89,10 +88,10 @@ trait ComponentManagerK8055 extends ComponentManager{
 
   //Switch all components (pump heater) off. Remember state...
 
-  override def pause(component:Component) = {}  //TODO
+//  override def pause(component:Component) = {}  //TODO
 
 
-  override def resume(component:Component) = {} //TODO
+//  override def resume(component:Component) = {} //TODO
 
   //function to find the (first) item of Equipment, for the given step
   override def getComponentFromList(step:Step, componentList:List[Component]):Component = {
@@ -127,7 +126,7 @@ trait ComponentManagerK8055 extends ComponentManager{
     component.deviceType match{
       case Component.ANALOGUE_IN =>
         component match{
-          case d:Device => Some(k8055.getAnalogueIn(d.port))
+          case d:Device => Some(deviceConnector.getAnalogueIn(d.port))
           case _ => println(" Can't read temperature, not a component"); None
         }
       case _ => println(" Can't read temperature, not an Analogue In"); None
@@ -135,9 +134,7 @@ trait ComponentManagerK8055 extends ComponentManager{
   }
 
   override def reachedCount(component:Component, targetCount: Int):Boolean = {
-    val currentCount:Int = readCount(component).getOrElse(0)
-    //println(component.description + s" comparing temperature: target $targetTemperature with readTemperature: $risingTemp ... ")
-    currentCount >= targetCount
+    readCount(component).getOrElse(0) >= targetCount
   }
 
   override def readCount(component:Component): Option[Int] = {
@@ -145,10 +142,21 @@ trait ComponentManagerK8055 extends ComponentManager{
     component.deviceType match{
       case Component.DIGITAL_IN =>
         component match{
-          case d:Device => Some(k8055.getCount(d.port))
+          case d:Device => Some(deviceConnector.getCount(d.port))
           case _ => println(" Can't read counter, not a component"); None
         }
       case _ => println(" Can't read counter, not a Digital In"); None
+    }
+  }
+
+  override def resetCount(component: Component):Unit = {
+    component.deviceType match{
+      case Component.DIGITAL_IN =>
+        component match{
+          case d:Device => Some(deviceConnector.resetCount(d.port))
+          case _ => println(" Can't reset counter, not a component")
+        }
+      case _ => println(" Can't reset counter, not a Digital In")
     }
   }
 
@@ -176,9 +184,9 @@ trait ComponentManagerK8055 extends ComponentManager{
       case Component.ANALOGUE_OUT =>
         component match{
           case d:Device => {
-            if(k8055.getAnalogueOut(d.port) != power){
-              println(component.description+ " updating power to " + power + " from "+k8055.getAnalogueOut(d.port))
-              Some(k8055.setAnalogueOut(d.port, power))
+            if(deviceConnector.getAnalogueOut(d.port) != power){
+              println(component.description+ " updating power to " + power + " from "+deviceConnector.getAnalogueOut(d.port))
+              Some(deviceConnector.setAnalogueOut(d.port, power))
             }
           }
           case _ => println(" Can't set power, not a component")
@@ -192,7 +200,7 @@ trait ComponentManagerK8055 extends ComponentManager{
     component.deviceType match{
       case Component.ANALOGUE_OUT =>
         component match{
-          case d:Device => Some(k8055.getAnalogueOut(d.port))
+          case d:Device => Some(deviceConnector.getAnalogueOut(d.port))
           case _ => println(" Can't get power, not a component"); None
         }
       case _ => println(" Can't get power, not an Analogue Out"); None
@@ -267,12 +275,6 @@ trait ComponentManagerK8055 extends ComponentManager{
     thermostats.filter(t => (t._1.id == thermostat.thermometer) && t._2.id == thermostat.heater).head
   }
 
-
-  //TODO Employ this method!!
-//  private def disableThermostat(thermometer: Component, heater: Component): Unit ={
-//    thermostats = thermostats.filter(t => (t._1 != thermometer) && t._2 != heater) //remove old one
-//    thermostats += ((thermometer, heater, -273, false)) //add new one
-//  }
 
   override def stopThermostats()={
     actorRef ! "stop"

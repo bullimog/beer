@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 
 package controllers
 
-import connector.{K8055Stub, K8055}
+import connector.{DeviceConnector, DeviceConnectorStub}
 import model._
 import org.joda.time.Period
 import org.joda.time.format.PeriodFormat
@@ -32,8 +32,8 @@ import scala.collection.mutable.ListBuffer
 
 object Application extends Controller {
 
-  val componentManager = new ComponentManager with ComponentManagerK8055 {
-    override val k8055: K8055 = new K8055 with K8055Stub //stub for now...
+  val componentManager = new ComponentManager with BrewComponentManager {
+    override val deviceConnector: DeviceConnector = new DeviceConnector with DeviceConnectorStub //stub for now...
   }
 
   val sequence:Sequence = controllers.ConfigIO.readSteps("sequence1.json")
@@ -191,8 +191,8 @@ object Application extends Controller {
  *********************************************************/
 object Beer extends App{
   //instantiate Sequencer singleton Object
-  val componentManager = new ComponentManager with ComponentManagerK8055{
-    override val k8055:K8055 = new K8055 with K8055Stub //stub for now...
+  val componentManager = new ComponentManager with BrewComponentManager{
+    override val deviceConnector:DeviceConnector = new DeviceConnector with DeviceConnectorStub //stub for now...
   }
   var componentCollection = controllers.ConfigIO.readComponentCollection("deviceSetup.json")
   val sequence = controllers.ConfigIO.readSteps("sequence1.json")
