@@ -30,9 +30,9 @@ object Step{
   val SET_HEAT = 3    //  3 = set thermostat (META-DATA = temp[Double])
   val WAIT_HEAT = 4   //  4 = Wait-Temp (META-DATA = temp[Double])
   val WAIT_TIME = 5   //  5 = Wait-Time  (META-DATA = duration[milliseconds])
-  val SET_COOL = 6   //  6 = Not yet implemented
+  val SET_COOL = 6    //  6 = Not yet implemented
   val WAIT_COOL = 7   //  7 = Not yet implemented //TODO
-  val WAIT_ON = 8   //  7 = Not yet implemented //TODO
+  val WAIT_ON = 8     //  8 = Not yet implemented //TODO
 
 
     //  implicit val stepFmt = Json.format[Step]

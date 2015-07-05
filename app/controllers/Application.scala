@@ -1,19 +1,19 @@
-/*
-Copyright 2015 Graeme Bullimore
+/**
+Copyright © 2015 Graeme Bullimore
 
-This file is part of BBrew.
-BBrew is free software: you can redistribute it and/or modify
+This file is part of BulliBrew.
+BulliBrew is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-BBrew is distributed in the hope that it will be useful,
+BulliBrew is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-  along with BBrew.  If not, see <http://www.gnu.org/licenses/>.
+  along with BulliBrew.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 package controllers
@@ -72,7 +72,7 @@ object Application extends Controller {
       var cs = ComponentStatus(device.id, device.deviceType, componentManager.isOn(device).toString)
       device.deviceType match {
         case Component.TIMER => cs = ComponentStatus(device.id, device.deviceType, Timer.remainingTime().toString)
-        case Component.ANALOGUE_IN => cs = ComponentStatus(device.id, device.deviceType, componentManager.readTemperature(device).getOrElse(0) toString)
+        case Component.ANALOGUE_IN => cs = ComponentStatus(device.id, device.deviceType, componentManager.readTemperature(device).getOrElse(0).toString)
         case Component.ANALOGUE_OUT => cs = ComponentStatus(device.id, device.deviceType, componentManager.getPower(device).getOrElse(0).toString)
         case Component.DIGITAL_IN => cs = ComponentStatus(device.id, device.deviceType, componentManager.isOn(device).toString)
         case Component.DIGITAL_OUT => cs = ComponentStatus(device.id, device.deviceType, componentManager.isOn(device).toString)
@@ -89,7 +89,7 @@ object Application extends Controller {
       val temperature:Double = componentManager.getThermostatHeat(thermostat)
       val thermometer:Component = componentManager.componentFromId(componentCollection, thermostat.thermometer)
       val heater:Component = componentManager.componentFromId(componentCollection, thermostat.heater)
-      val thermometerStatus = ComponentStatus(thermometer.id, Component.ANALOGUE_IN, componentManager.readTemperature(thermometer).getOrElse(0) toString)
+      val thermometerStatus = ComponentStatus(thermometer.id, Component.ANALOGUE_IN, componentManager.readTemperature(thermometer).getOrElse(0).toString)
       val heaterStatus = ComponentStatus(heater.id, heater.deviceType, componentManager.getPower(heater).getOrElse(0).toString)
       val thermostatStatus = ThermostatStatus(thermostat.id, enabled, temperature, thermometerStatus, heaterStatus)
       thermostatStatuses += thermostatStatus
@@ -136,12 +136,11 @@ object Application extends Controller {
 
   private def setDeviceState(device:Device, state:String) = {
     device.deviceType match {
-      case Component.DIGITAL_OUT => {
+      case Component.DIGITAL_OUT =>
         state.toBoolean match {
           case true => componentManager.on(componentCollection, device)
           case _ => componentManager.off(componentCollection, device)
         }
-      }
       case Component.ANALOGUE_OUT => {
         val current:Int = componentManager.getPower(device).getOrElse(0)
         state match{
@@ -172,7 +171,7 @@ object Application extends Controller {
     seconds match {
       case Some(secs) => {
         val period: Period = Period.seconds(secs)
-        Some(PeriodFormat.getDefault().print(period.normalizedStandard()))
+        Some(PeriodFormat.getDefault.print(period.normalizedStandard()))
       }
       case None => None
     }

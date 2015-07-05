@@ -23,6 +23,8 @@ trait K8055 {
   def getDigitalIn(d: Int): Boolean
   def getAnalogueOut(d: Int): Int
   def setAnalogueOut(d: Int, value: Int): Unit
+
+  def getCount(d: Int): Int
 //  def getTime(): Int ={timer}
 //  def setTime(value:Int):Unit ={
 //    timer = value
@@ -73,6 +75,8 @@ trait K8055Stub extends K8055{
   override def setDigitalIn(i:Int, value:Boolean): Unit ={ setPort(digitalIn, i, value)}
   override def setAnalogueIn(i:Int, value:Double): Unit ={ setPort(analogueIn, i, value)}
   override def setAnalogueOut(i:Int, value:Int): Unit ={ setPort(analogueOut, i, value)}
+
+  def getCount(d: Int): Int = {0}
 
 }
 

@@ -73,6 +73,15 @@ object Sequencer{
       }
     }
   }
+
+  def runWaitOn(step:Step, component:Component, componentManager: ComponentManager): Unit ={
+    step.duration match {
+      case Some(targetCount) => {
+        if (componentManager.reachedCount(component, targetCount)) currentStep +=1
+      }
+      case _ => println("No count specified,  can't wait for temperature for: "+step)
+    }
+  }
 }
 
 /***********************************************************************
@@ -120,6 +129,7 @@ class SequencerActor(sequence: Sequence, componentManager: ComponentManager, com
       }
       case (Step.WAIT_HEAT) => Sequencer.runWaitHeat(step, component, componentManager) //Thermometer
       case (Step.WAIT_TIME) => Sequencer.runWaitTime(step, component) //Any
+      case (Step.WAIT_ON) => Sequencer.runWaitOn(step, component, componentManager) //Any
       case _ => println("Bad Step Type")//TODO report/log
     }
   }

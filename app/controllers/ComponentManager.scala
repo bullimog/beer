@@ -27,6 +27,8 @@ trait ComponentManager{
   def readTemperature(component:Component): Option[Double]
 //  def waitTime(component:Component, duration: Int)
 //  def getTime(component:Component): Int
+  def reachedCount(component:Component, targetCount: Int):Boolean
+  def readCount(component:Component): Option[Int]
   def setPower(component:Component, power: Int)
   def getPower(component:Component):Option[Int]
   def setThermostatHeat(componentCollection:ComponentCollection, thermostat: Thermostat, temperature:Double)
@@ -129,6 +131,24 @@ trait ComponentManagerK8055 extends ComponentManager{
           case _ => println(" Can't read temperature, not a component"); None
         }
       case _ => println(" Can't read temperature, not an Analogue In"); None
+    }
+  }
+
+  override def reachedCount(component:Component, targetCount: Int):Boolean = {
+    val currentCount:Int = readCount(component).getOrElse(0)
+    //println(component.description + s" comparing temperature: target $targetTemperature with readTemperature: $risingTemp ... ")
+    currentCount >= targetCount
+  }
+
+  override def readCount(component:Component): Option[Int] = {
+    //println(component.description+ " read count")
+    component.deviceType match{
+      case Component.DIGITAL_IN =>
+        component match{
+          case d:Device => Some(k8055.getCount(d.port))
+          case _ => println(" Can't read counter, not a component"); None
+        }
+      case _ => println(" Can't read counter, not a Digital In"); None
     }
   }
 
