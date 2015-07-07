@@ -62,7 +62,8 @@ public class JK8055 {
 	public static final int K8055_ERROR = -1;
 	
 	static {
-		System.loadLibrary("jk8055");
+		//System.loadLibrary("jk8055");
+		System.load("/usr/local/lib/libk8055.so");
 	}
 	
 	/* (non-Javadoc)

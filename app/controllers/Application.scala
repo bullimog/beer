@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 
 package controllers
 
-import connector.{DeviceConnector, DeviceConnectorStub}
+import connector.{K8055Board, DeviceConnector, DeviceConnectorStub}
 import model._
 import org.joda.time.Period
 import org.joda.time.format.PeriodFormat
@@ -33,7 +33,7 @@ import scala.collection.mutable.ListBuffer
 object Application extends Controller {
 
   val componentManager = new ComponentManager with BrewComponentManager {
-    override val deviceConnector: DeviceConnector = new DeviceConnector with DeviceConnectorStub //stub for now...
+    override val deviceConnector: DeviceConnector = new DeviceConnector with K8055Board //stub for now...
   }
 
   val sequence:Sequence = controllers.ConfigIO.readSteps("sequence1.json")
