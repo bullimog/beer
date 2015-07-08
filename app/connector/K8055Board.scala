@@ -1,7 +1,5 @@
 package connector
 
-import net.sf.libk8055.jk8055.JK8055
-
 import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -90,53 +88,61 @@ import scala.concurrent.ExecutionContext.Implicits.global
 trait K8055Board extends DeviceConnector{
 
   // can't read output settings from card, so need to cache state here...
-  var digitalOut:mutable.MutableList[Boolean] = mutable.MutableList(false,false,false,false,false,false,false,false)
-  var analogueOut:mutable.MutableList[Int] = mutable.MutableList(0,0)
-
-  val DEVICE = 0
-  val jk8055 = JK8055.getInstance()
-  jk8055.OpenDevice( DEVICE )
-  jk8055.CloseDevice()
+//  var digitalOut:mutable.MutableList[Boolean] = mutable.MutableList(false,false,false,false,false,false,false,false)
+  var digitalOut:Byte = 0
+  //var analogueOut:mutable.MutableList[Int] = mutable.MutableList(0,0)
+  var analogueOut1:Byte = 0
+  var analogueOut2:Byte = 0
 
 
-  def getPort[T](portList:mutable.MutableList[T], port:Int):Option[T] ={
-    //println(s"K8055: about to get port: $port from $portList")
-    if((portList.length > port) && (port>=0)) {
-      val ret = Some(portList(port-1))
-      //println(s"K8055:got port: $port : $ret $portList")
-      ret
-    } else {println(s"K8055:couldn't get port: $port from List: $portList"); None}
+//  def getPort[T](port:Int):Option[T] ={
+//    //println(s"K8055: about to get port: $port from $portList")
+//    if((portList.length > port) && (port>=0)) {
+//      val ret = Some(portList(port-1))
+//      //println(s"K8055:got port: $port : $ret $portList")
+//      ret
+//    } else {println(s"K8055:couldn't get port: $port from List: $portList"); None}
+//  }
+  override def getDigitalOut(i:Int): Boolean ={
+    val channel:Byte = math.pow(2,i-1).toByte
+    //println("getDigitalOut: i="+i + "  channel:"+channel + "digitalOut & channel:"+(digitalOut & channel))
+    (digitalOut & channel) > 0
   }
-  override def getDigitalOut(i:Int): Boolean ={getPort(digitalOut,i).getOrElse(false)}
-  override def getAnalogueOut(i:Int): Int ={getPort(analogueOut,i).getOrElse(0)}
-
-  override def getDigitalIn(i:Int): Boolean ={jk8055.ReadDigitalChannel(i)}
-  override def getAnalogueIn(i:Int): Double ={jk8055.ReadAnalogChannel(i)}
-
-
-
- def setChannel[T](portList:mutable.MutableList[T], port:Int, value:T, output:(Int, T) => Unit):Unit ={
-  //println(s"K8055:setting port: $port : $value $portList")
-  if((portList.length > port) && (port>=0)) {
-   portList(port-1) = value
-   output(port, value)
-   //println(s"K8055.setPort: p:$port : v:$value on: $portList")
-  }else println(s"K8055:couldn't set port: $port in List: $portList")
- }
-
-  val fSetDigitalOut = (channel:Int, value:Boolean) => {jk8055.SetDigitalChannel(channel)}
-  val fClearDigitalOut = (channel:Int, value:Boolean) => {jk8055.ClearDigitalChannel(channel)}
-
-
-  override def setDigitalOut(port:Int, value:Boolean): Unit ={
-    value match{
-      case true => setChannel(digitalOut, port, value, fSetDigitalOut)
-      case _ =>    setChannel(digitalOut, port, value, fClearDigitalOut)
+  override def getAnalogueOut(i:Int): Int ={
+    i match {
+      case 1 => analogueOut1
+      case 2 => analogueOut2
+      case _ => 0
     }
   }
 
-  val fSetAnalogueOut = (channel:Int, value:Int) => {jk8055.OutputAnalogChannel(channel, value)}
-  override def setAnalogueOut(i:Int, value:Int): Unit ={ setChannel(analogueOut, i, value, fSetAnalogueOut)}
+  override def getDigitalIn(i:Int): Boolean ={readDigitalChannel(i)}
+  override def getAnalogueIn(i:Int): Double ={readAnalogueChannel(i)}
+
+
+
+// def setChannel[T](portList:mutable.MutableList[T], port:Int, value:T, output:(Int, T) => Unit):Unit ={
+//  //println(s"K8055:setting port: $port : $value $portList")
+//  if((portList.length > port) && (port>=0)) {
+//   portList(port-1) = value
+//   output(port, value)
+//   //println(s"K8055.setPort: p:$port : v:$value on: $portList")
+//  }else println(s"K8055:couldn't set port: $port in List: $portList")
+// }
+
+  val fSetDigitalOut = (channel:Int, value:Boolean) => {setDigitalChannel(channel)}
+  val fClearDigitalOut = (channel:Int, value:Boolean) => {clearDigitalChannel(channel)}
+
+
+  override def setDigitalOut(channel:Int, value:Boolean): Unit ={
+    value match{
+      case true => setDigitalChannel(channel)
+      case _ =>    clearDigitalChannel(channel)
+    }
+  }
+
+//  val fSetAnalogueOut = (channel:Int, value:Int) => {outputAnalogChannel(channel, value)}
+  override def setAnalogueOut(i:Int, value:Int): Unit ={ outputAnalogueChannel(i, value)}
 
   def setAnalogueIn(d: Int, value: Double): Unit = ???
   def setDigitalIn(d: Int, state: Boolean): Unit = ???
@@ -152,5 +158,38 @@ trait K8055Board extends DeviceConnector{
 //  def getCount(d: Int): Int
 //  def setCount(i: Int, value:Int): Unit
 //  def resetCount(d: Int): Unit
+
+  def setDigitalChannel(i:Int):Unit = {
+    val channel:Byte = math.pow(2,i-1).toByte
+    println("setDigitalChannel: i="+i + "  channel:"+channel + "  digitalOut:"+digitalOut)
+    digitalOut = (digitalOut | channel).toByte
+    println("  digitalOut & channel:"+(digitalOut & channel))
+    println("digitalOut:"+digitalOut)
+    executeCommand(s"k8055 -d:$digitalOut")
+  }
+  def clearDigitalChannel(i:Int):Unit = {
+    val channel:Byte = math.pow(2,i-1).toByte
+    println("clearDigitalChannel: i="+i + "  channel:"+channel + "  digitalOut:"+digitalOut)
+    digitalOut = (digitalOut - channel).toByte
+    println("  digitalOut & channel:"+(digitalOut & channel))
+    println("digitalOut:"+digitalOut)
+    executeCommand(s"k8055 -d:$digitalOut")
+  }
+  def outputAnalogueChannel(channel:Int, value:Int):Unit = {
+    executeCommand(s"k8055 -a$channel:$value")
+  }
+  def readDigitalChannel(channel:Int):Boolean = {
+    true
+  }
+  def readAnalogueChannel(channel:Int):Int = {
+    34
+  }
+
+  def executeCommand(command:String): String = {
+    println("executeCommand: "+command)
+    import sys.process.Process
+    val result = Process(""+command+"")
+    ""+result.!
+  }
 }
 

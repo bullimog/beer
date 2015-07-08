@@ -33,7 +33,7 @@ import scala.collection.mutable.ListBuffer
 object Application extends Controller {
 
   val componentManager = new ComponentManager with BrewComponentManager {
-    override val deviceConnector: DeviceConnector = new DeviceConnector with K8055Board //stub for now...
+    override val deviceConnector: DeviceConnector = new DeviceConnector with K8055Board //DeviceConnectorStub //stub for now...
   }
 
   val sequence:Sequence = controllers.ConfigIO.readSteps("sequence1.json")
@@ -197,6 +197,12 @@ object Beer extends App{
   var componentCollection = controllers.ConfigIO.readComponentCollection("deviceSetup.json")
   val sequence = controllers.ConfigIO.readSteps("sequence1.json")
   //val sequencer = new Sequencer
+
+  import sys.process.Process
+  val command = "ls -al"
+  val result = Process(""+command+"")
+  println("result="+result.!)
+
 
   println("About to run sequence")
   Sequencer.runSequence(componentManager, componentCollection, sequence)
