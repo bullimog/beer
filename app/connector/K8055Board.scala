@@ -91,8 +91,17 @@ trait K8055Board extends DeviceConnector{
 //  var digitalOut:mutable.MutableList[Boolean] = mutable.MutableList(false,false,false,false,false,false,false,false)
   var digitalOut:Byte = 0
   //var analogueOut:mutable.MutableList[Int] = mutable.MutableList(0,0)
-  var analogueOut1:Byte = 0
-  var analogueOut2:Byte = 0
+  var analogueOut1:Int = 0
+  var analogueOut2:Int = 0
+
+  val K8055_TIME = 0
+  val K8055_DIGITAL = 1
+  val K8055_ANALOG_1 = 2
+  val K8055_ANALOG_2 = 3
+  val K8055_COUNTER_1 = 4
+  val K8055_COUNTER_2 = 5
+
+
 
 
 //  def getPort[T](port:Int):Option[T] ={
@@ -103,13 +112,16 @@ trait K8055Board extends DeviceConnector{
 //      ret
 //    } else {println(s"K8055:couldn't get port: $port from List: $portList"); None}
 //  }
-  override def getDigitalOut(i:Int): Boolean ={
-    val channel:Byte = math.pow(2,i-1).toByte
+
+  def byteMask(i:Int): Byte = {math.pow(2,i-1).toByte}
+
+  override def getDigitalOut(channel:Int): Boolean ={
+    //val channel:Byte = math.pow(2,i-1).toByte
     //println("getDigitalOut: i="+i + "  channel:"+channel + "digitalOut & channel:"+(digitalOut & channel))
-    (digitalOut & channel) > 0
+    (digitalOut & byteMask(channel)) > 0
   }
-  override def getAnalogueOut(i:Int): Int ={
-    i match {
+  override def getAnalogueOut(channel:Int): Int ={
+    channel match {
       case 1 => analogueOut1
       case 2 => analogueOut2
       case _ => 0
@@ -130,8 +142,8 @@ trait K8055Board extends DeviceConnector{
 //  }else println(s"K8055:couldn't set port: $port in List: $portList")
 // }
 
-  val fSetDigitalOut = (channel:Int, value:Boolean) => {setDigitalChannel(channel)}
-  val fClearDigitalOut = (channel:Int, value:Boolean) => {clearDigitalChannel(channel)}
+//  val fSetDigitalOut = (channel:Int, value:Boolean) => {setDigitalChannel(channel)}
+//  val fClearDigitalOut = (channel:Int, value:Boolean) => {clearDigitalChannel(channel)}
 
 
   override def setDigitalOut(channel:Int, value:Boolean): Unit ={
@@ -141,8 +153,23 @@ trait K8055Board extends DeviceConnector{
     }
   }
 
+//  def percentToByte(percent:Int):Byte = {
+//    ((percent*255)/100).toByte
+//  }
+//  def byteToPercent(b:Byte):Int = {
+//    (b*100)/255
+//  }
+
 //  val fSetAnalogueOut = (channel:Int, value:Int) => {outputAnalogChannel(channel, value)}
-  override def setAnalogueOut(i:Int, value:Int): Unit ={ outputAnalogueChannel(i, value)}
+  override def setAnalogueOut(channel:Int, value:Int): Unit ={
+    (channel) match{
+      case 1 => analogueOut1 = value
+      case 2 => analogueOut2 = value
+      case _ =>
+    }
+    val byteVal:Byte = (value * 2.55).toByte
+    executeCommand(s"k8055 -a$channel:$byteVal")
+  }
 
   def setAnalogueIn(d: Int, value: Double): Unit = ???
   def setDigitalIn(d: Int, state: Boolean): Unit = ???
@@ -159,37 +186,58 @@ trait K8055Board extends DeviceConnector{
 //  def setCount(i: Int, value:Int): Unit
 //  def resetCount(d: Int): Unit
 
-  def setDigitalChannel(i:Int):Unit = {
-    val channel:Byte = math.pow(2,i-1).toByte
-    println("setDigitalChannel: i="+i + "  channel:"+channel + "  digitalOut:"+digitalOut)
-    digitalOut = (digitalOut | channel).toByte
-    println("  digitalOut & channel:"+(digitalOut & channel))
-    println("digitalOut:"+digitalOut)
+  def setDigitalChannel(channel:Int):Unit = {
+    //val channel:Byte = math.pow(2,i-1).toByte
+//    println("setDigitalChannel: i="+i + "  channel:"+channel + "  digitalOut:"+digitalOut)
+    digitalOut = (digitalOut | byteMask(channel)).toByte
+//    println("  digitalOut & channel:"+(digitalOut & channel))
+//    println("digitalOut:"+digitalOut)
     executeCommand(s"k8055 -d:$digitalOut")
   }
-  def clearDigitalChannel(i:Int):Unit = {
-    val channel:Byte = math.pow(2,i-1).toByte
-    println("clearDigitalChannel: i="+i + "  channel:"+channel + "  digitalOut:"+digitalOut)
-    digitalOut = (digitalOut - channel).toByte
-    println("  digitalOut & channel:"+(digitalOut & channel))
-    println("digitalOut:"+digitalOut)
+  def clearDigitalChannel(channel:Int):Unit = {
+    //val channel:Byte = math.pow(2,i-1).toByte
+//    println("clearDigitalChannel: i="+i + "  channel:"+channel + "  digitalOut:"+digitalOut)
+    digitalOut = (digitalOut & (255 - byteMask(channel))).toByte
+//    println("  digitalOut & channel:"+(digitalOut & channel))
+//    println("digitalOut:"+digitalOut)
     executeCommand(s"k8055 -d:$digitalOut")
   }
-  def outputAnalogueChannel(channel:Int, value:Int):Unit = {
-    executeCommand(s"k8055 -a$channel:$value")
-  }
+
+
   def readDigitalChannel(channel:Int):Boolean = {
-    true
+    readStatus() match {
+      case Some(status) => testBits(status(K8055_DIGITAL).toByte, byteMask(channel))
+      case None => false
+    }
   }
+
+  def testBits(source:Byte, mask:Byte): Boolean = {
+    if((source & mask) > 0) true
+    else false
+  }
+
   def readAnalogueChannel(channel:Int):Int = {
-    34
+//    val result = executeCommand(s"k8055")
+//    val retVal = result.split(';')
+    (channel, readStatus()) match{
+      case (1, Some(status)) => status(K8055_ANALOG_1).toInt
+      case (2, Some(status)) => status(K8055_ANALOG_2).toInt
+      case _ => 0
+    }
+  }
+
+  def readStatus():Option[Array[String]] = {
+    val result = executeCommand(s"k8055")
+    val retVal = result.split(';')
+    if(retVal.length > 5){Some(retVal)}
+    else None
   }
 
   def executeCommand(command:String): String = {
-    println("executeCommand: "+command)
+    //println("executeCommand: "+command)
     import sys.process.Process
     val result = Process(""+command+"")
-    ""+result.!
+    result.!!
   }
 }
 
