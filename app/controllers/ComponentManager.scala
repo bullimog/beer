@@ -184,9 +184,9 @@ trait BrewComponentManager extends ComponentManager{
       case Component.ANALOGUE_OUT =>
         component match{
           case d:Device => {
-            if(deviceConnector.getAnalogueOut(d.port) != power){
-              println(component.description+ " updating power to " + power + " from "+deviceConnector.getAnalogueOut(d.port))
-              Some(deviceConnector.setAnalogueOut(d.port, power))
+            if(deviceConnector.getAnaloguePercentageOut(d.port) != power){
+              println(component.description+ " updating power to " + power + " from "+deviceConnector.getAnaloguePercentageOut(d.port))
+              Some(deviceConnector.setAnaloguePercentageOut(d.port, power))
             }
           }
           case _ => println(" Can't set power, not a component")
@@ -200,7 +200,7 @@ trait BrewComponentManager extends ComponentManager{
     component.deviceType match{
       case Component.ANALOGUE_OUT =>
         component match{
-          case d:Device => Some(deviceConnector.getAnalogueOut(d.port))
+          case d:Device => Some(deviceConnector.getAnaloguePercentageOut(d.port))
           case _ => println(" Can't get power, not a component"); None
         }
       case _ => println(" Can't get power, not an Analogue Out"); None

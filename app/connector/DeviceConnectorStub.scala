@@ -23,6 +23,7 @@ trait DeviceConnectorStub extends DeviceConnector{
   override def getDigitalOut(i:Int): Boolean ={getPort(digitalOut,i).getOrElse(false)}
   override def getDigitalIn(i:Int): Boolean ={getPort(digitalIn,i).getOrElse(false)}
   override def getAnalogueIn(i:Int): Double ={getPort(analogueIn,i).getOrElse(0)}
+  override def getAnaloguePercentageOut(i:Int): Int ={getPort(analogueOut,i).getOrElse(0)}
   override def getAnalogueOut(i:Int): Int ={getPort(analogueOut,i).getOrElse(0)}
 
   def setPort[T](portList:mutable.MutableList[T], port:Int, value:T):Unit ={
@@ -36,6 +37,7 @@ trait DeviceConnectorStub extends DeviceConnector{
   override def setDigitalIn(i:Int, value:Boolean): Unit ={ setPort(digitalIn, i, value)}
   override def setAnalogueIn(i:Int, value:Double): Unit ={ setPort(analogueIn, i, value)}
   override def setAnalogueOut(i:Int, value:Int): Unit ={ setPort(analogueOut, i, value)}
+  override def setAnaloguePercentageOut(i:Int, value:Int): Unit ={ setPort(analogueOut, i, value)}
 
   override def getCount(i: Int): Int = {getPort(digitalInCount, i).getOrElse(0)}
   override def setCount(i: Int, value:Int): Unit = {setPort(digitalInCount,i, value)}

@@ -11,7 +11,9 @@ trait DeviceConnector {
     def setDigitalIn(d: Int, state: Boolean): Unit
     def getDigitalIn(d: Int): Boolean
     def getAnalogueOut(d: Int): Int
+    def getAnaloguePercentageOut(d: Int): Int
     def setAnalogueOut(d: Int, value: Int): Unit
+    def setAnaloguePercentageOut(d: Int, value: Int): Unit
 
     def getCount(d: Int): Int
     def setCount(i: Int, value:Int): Unit
