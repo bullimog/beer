@@ -23,7 +23,8 @@ object Component {
 }
 
 case class Device(override val id: Int, override val description: String,
-                  override val deviceType: Int, port:Int) extends Component
+                  override val deviceType: Int, port:Int, units:Option[String], conversionFactor:Option[Double],
+                   conversionOffset:Option[Double], decimalPlaces:Option[Int]) extends Component
 
 object Device{
 //  implicit val deviceFmt = Json.format[Device]
@@ -31,7 +32,11 @@ implicit val deviceReads: Reads[Device] = (
   (JsPath \ "id").read[Int] and
     (JsPath \ "description").read[String] and
     (JsPath \ "deviceType").read[Int] and
-    (JsPath \ "port").read[Int]
+    (JsPath \ "port").read[Int] and
+    (JsPath \ "units").readNullable[String] and
+    (JsPath \ "conversionFactor").readNullable[Double] and
+    (JsPath \ "conversionOffset").readNullable[Double] and
+    (JsPath \ "decimalPlaces").readNullable[Int]
   )(Device.apply _)
 
   implicit val deviceWrites = Json.writes[Device]
@@ -69,7 +74,7 @@ object ComponentCollection{
     implicit val componentCollectionWrites = Json.writes[ComponentCollection]
 }
 
-case class ComponentStatus(componentId:Int, componentType:Int, componentValue:String)
+case class ComponentStatus(componentId:Int, componentType:Int, componentValue:String, componentUnit:Option[String])
 object  ComponentStatus {
   implicit val formats=Json.writes[ComponentStatus]
 }

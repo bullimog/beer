@@ -5,7 +5,11 @@
     "id" : 1,
     "description" : "Thermometer",
     "deviceType" : 1,
-    "port" : 1
+    "port" : 1, 
+	"units" : "°c",
+    "conversionFactor" : 0.384313725,
+    "conversionOffset" : 2,
+    "decimalPlaces" : 1
   }, {
     "id" : 2,
     "description" : "Pump",

@@ -31,10 +31,10 @@ class SequencerSpec extends Specification {
 
 
   //val sequencer = new Sequencer
-  val thermometer = Device(1,"Thermometer", Component.ANALOGUE_IN, 1)
-  val pump = Device(2, "Pump", Component.DIGITAL_OUT, 1)
-  val heater = Device(3, "Heater", Component.ANALOGUE_OUT, 1)
-  val timer = Device(4, "Clock", Component.TIMER, 0)
+  val thermometer = Device(1,"Thermometer", Component.ANALOGUE_IN, 1, None, None, None, None)
+  val pump = Device(2, "Pump", Component.DIGITAL_OUT, 1, None, None, None, None)
+  val heater = Device(3, "Heater", Component.ANALOGUE_OUT, 1, None, None, None, None)
+  val timer = Device(4, "Clock", Component.TIMER, 0, None, None, None, None)
   val lb = new ListBuffer[Device]()
   lb += thermometer += pump += heater += timer
   val devices = lb.toList

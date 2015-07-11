@@ -126,7 +126,12 @@ trait BrewComponentManager extends ComponentManager{
     component.deviceType match{
       case Component.ANALOGUE_IN =>
         component match{
-          case d:Device => Some(deviceConnector.getAnalogueIn(d.port))
+          case d:Device => {
+            val raw:Double = deviceConnector.getAnalogueIn(d.port)
+            val unrounded:Double = raw * d.conversionFactor.getOrElse(1.0) + d.conversionOffset.getOrElse(0.0)
+            val roundFactor:Double = math.pow(10, d.decimalPlaces.getOrElse(0).toInt)
+            Some(math.round(unrounded*roundFactor)/roundFactor)
+          }
           case _ => println(" Can't read temperature, not a component"); None
         }
       case _ => println(" Can't read temperature, not an Analogue In"); None

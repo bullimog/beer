@@ -43,11 +43,12 @@
         var compId = ss.componentStatuses[i].componentId
         var compType = ss.componentStatuses[i].componentType
         var compValue = ss.componentStatuses[i].componentValue
+        var compUnit = ss.componentStatuses[i].componentUnit
         //console.debug("comp: "+ compId + " - "  + compType +" - " + compValue);
 
         switch(compType){
           case 0: {$("#device-val"+compId).text(formatTimer(compValue)); break;} //TIMER
-          case 1: {$("#device-val"+compId).text(compValue+" \xB0c"); break;}     //ANALOGUE_IN / Thermometer
+          case 1: {$("#device-val"+compId).text(compValue+" "+compUnit); break;}     //ANALOGUE_IN / Thermometer
           case 2: {$("#device-val"+compId).text(compValue+" %"); break;}         //ANALOGUE OUT / Heater
           case 4: {                                                              //DIGITAL_OUT
             if(compValue == "true") $("#device-true"+compId).prop("checked", true)
@@ -78,12 +79,13 @@
        var thermostatTemp = ss.thermostatStatuses[i].temperature
        var thermometerTemp = ss.thermostatStatuses[i].thermometerStatus.componentValue
        var heaterPower = ss.thermostatStatuses[i].heaterStatus.componentValue
+       var thermometerUnit = ss.thermostatStatuses[i].thermometerStatus.componentUnit
 
        if(thermostatEnabled) $("#thermostat-true"+thermostatId).prop("checked", true)
             else $("#thermostat-false"+thermostatId).prop("checked", true);
 
        $("#thermostat-temperature"+thermostatId).text(thermostatTemp+" \xB0c");
-       $("#thermostat-thermometer"+thermostatId).text(thermometerTemp+" \xB0c");
+       $("#thermostat-thermometer"+thermostatId).text(thermometerTemp+" "+ thermometerUnit);
        $("#thermostat-heater"+thermostatId).text(heaterPower+" %");
     }
   }

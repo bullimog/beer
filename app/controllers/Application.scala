@@ -69,13 +69,13 @@ object Application extends Controller {
   def compileComponentsStatuses(): List[ComponentStatus] = {
     var componentStatuses: ListBuffer[ComponentStatus] = ListBuffer[ComponentStatus]()
     componentCollection.devices.foreach(device => {
-      var cs = ComponentStatus(device.id, device.deviceType, componentManager.isOn(device).toString)
+      var cs = ComponentStatus(device.id, device.deviceType, componentManager.isOn(device).toString, device.units)
       device.deviceType match {
-        case Component.TIMER => cs = ComponentStatus(device.id, device.deviceType, Timer.remainingTime().toString)
-        case Component.ANALOGUE_IN => cs = ComponentStatus(device.id, device.deviceType, componentManager.readTemperature(device).getOrElse(0).toString)
-        case Component.ANALOGUE_OUT => cs = ComponentStatus(device.id, device.deviceType, componentManager.getPower(device).getOrElse(0).toString)
-        case Component.DIGITAL_IN => cs = ComponentStatus(device.id, device.deviceType, componentManager.isOn(device).toString)
-        case Component.DIGITAL_OUT => cs = ComponentStatus(device.id, device.deviceType, componentManager.isOn(device).toString)
+        case Component.TIMER => cs = ComponentStatus(device.id, device.deviceType, Timer.remainingTime().toString, device.units)
+        case Component.ANALOGUE_IN => cs = ComponentStatus(device.id, device.deviceType, componentManager.readTemperature(device).getOrElse(0).toString, device.units)
+        case Component.ANALOGUE_OUT => cs = ComponentStatus(device.id, device.deviceType, componentManager.getPower(device).getOrElse(0).toString, device.units)
+        case Component.DIGITAL_IN => cs = ComponentStatus(device.id, device.deviceType, componentManager.isOn(device).toString, device.units)
+        case Component.DIGITAL_OUT => cs = ComponentStatus(device.id, device.deviceType, componentManager.isOn(device).toString, device.units)
       }
       componentStatuses += cs
     })
@@ -87,12 +87,16 @@ object Application extends Controller {
     componentCollection.thermostats.foreach(thermostat => {
       val enabled:Boolean = componentManager.getThermostatEnabled(thermostat)
       val temperature:Double = componentManager.getThermostatHeat(thermostat)
-      val thermometer:Component = componentManager.componentFromId(componentCollection, thermostat.thermometer)
-      val heater:Component = componentManager.componentFromId(componentCollection, thermostat.heater)
-      val thermometerStatus = ComponentStatus(thermometer.id, Component.ANALOGUE_IN, componentManager.readTemperature(thermometer).getOrElse(0).toString)
-      val heaterStatus = ComponentStatus(heater.id, heater.deviceType, componentManager.getPower(heater).getOrElse(0).toString)
-      val thermostatStatus = ThermostatStatus(thermostat.id, enabled, temperature, thermometerStatus, heaterStatus)
-      thermostatStatuses += thermostatStatus
+      val cThermometer:Component = componentManager.componentFromId(componentCollection, thermostat.thermometer)
+      val cHeater:Component = componentManager.componentFromId(componentCollection, thermostat.heater)
+      (cThermometer, cHeater) match {  //Need to cast to Devices, to get units
+        case(thermometer:Device, heater:Device) => {
+          val thermometerStatus = ComponentStatus(thermometer.id, Component.ANALOGUE_IN, componentManager.readTemperature(thermometer).getOrElse(0).toString, thermometer.units)
+          val heaterStatus = ComponentStatus(heater.id, heater.deviceType, componentManager.getPower(heater).getOrElse(0).toString, heater.units)
+          val thermostatStatus = ThermostatStatus(thermostat.id, enabled, temperature, thermometerStatus, heaterStatus)
+          thermostatStatuses += thermostatStatus
+        }
+      }
     })
     thermostatStatuses.toList
   }
