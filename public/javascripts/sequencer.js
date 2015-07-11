@@ -1,7 +1,7 @@
 
   function highlightSteps(current){
 
-  console.debug("current="+current)
+  //console.debug("current="+current)
 
 //    if(current >= 0) {
       var steps = $(".program").children().children();

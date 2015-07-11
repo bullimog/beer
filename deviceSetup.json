@@ -19,7 +19,8 @@
     "id" : 3,
     "description" : "Heater",
     "deviceType" : 2,
-    "port" : 1
+    "port" : 1,
+	"units" : "°c"
   }, {
     "id" : 4,
     "description" : "Clock",
@@ -28,7 +29,7 @@
   } ],
   "thermostats" : [ {
     "id" : 104,
-    "description" : "Boiler",
+    "description" : "Boiler Thermostat",
     "deviceType" : 5,
     "thermometer" : 1,
     "heater" : 3
