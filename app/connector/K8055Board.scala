@@ -14,12 +14,11 @@ trait K8055Board extends DeviceConnector{
 
   // can't read output settings from card, so need to cache state here...
   var digitalOut:Byte = 0
-  var analogueOut1:Double = 0.0
-  var analogueOut2:Double = 0.0
+  var analogueOut1:Int = 0  // 0 to 25,500  (which is 100*255, so we can convert Integers without loss)
+  var analogueOut2:Int = 0
 
-  val percentToByteFactor:Double = 2.551
-  val byteToPercentFactor:Double = 1/2.55
-
+  val percentToStoreFactor:Int = 255   // 1% = 255 in the store
+  val byteToStoreFactor:Int = 100      // 1 bit = 100 in the store
 
   val K8055_PORT = 0
   val K8055_TIME = 0
@@ -31,23 +30,23 @@ trait K8055Board extends DeviceConnector{
 
   def setAnalogueIn(d: Int, value: Double): Unit = ???
   def setDigitalIn(d: Int, state: Boolean): Unit = ???
-  def getCount(d: Int): Int = ???
   def setCount(i: Int, value:Int): Unit = ???
-  def resetCount(d: Int): Unit = ???
 
-
-  override def getAnaloguePercentageOut(channel:Int): Int ={getAnAnalogueOut(channel, byteToPercentFactor)}
-  override def getAnalogueOut(channel:Int): Int ={getAnAnalogueOut(channel, 1)}
+  /** *******************************************************
+   * Analogue Out
+   **********************************************************/
+  override def getAnaloguePercentageOut(channel:Int): Int ={getAnAnalogueOut(channel, percentToStoreFactor)}
+  override def getAnalogueOut(channel:Int): Int ={getAnAnalogueOut(channel, byteToStoreFactor)}
   def getAnAnalogueOut(channel:Int, factor: Double): Int ={
     channel match {
-      case 1 => (analogueOut1 * factor).toInt
-      case 2 => (analogueOut2 * factor).toInt
+      case 1 => (analogueOut1 / factor).toInt
+      case 2 => (analogueOut2 / factor).toInt
       case _ => 0
     }
   }
 
-  override def setAnaloguePercentageOut(channel:Int, value:Int): Unit ={setAnAnalogueOut(channel, value, percentToByteFactor)}
-  override def setAnalogueOut(channel:Int, value:Int): Unit ={setAnAnalogueOut(channel, value, 1)}
+  override def setAnaloguePercentageOut(channel:Int, value:Int): Unit ={setAnAnalogueOut(channel, value, percentToStoreFactor)}
+  override def setAnalogueOut(channel:Int, value:Int): Unit ={setAnAnalogueOut(channel, value, byteToStoreFactor)}
   def setAnAnalogueOut(channel:Int, value:Int, factor:Double): Unit ={
     channel match{
       case 1 => analogueOut1 = (value * factor).toInt
@@ -57,6 +56,9 @@ trait K8055Board extends DeviceConnector{
     setStatus()
   }
 
+  /** *******************************************************
+    * Analogue In
+    **********************************************************/
   override def getAnalogueIn(i:Int): Double ={readAnalogueChannel(i)}
 
   def readAnalogueChannel(channel:Int):Int = {
@@ -68,17 +70,12 @@ trait K8055Board extends DeviceConnector{
   }
 
 
-  def byteMask(i:Int): Byte = {math.pow(2,i-1).toByte}
 
+  /** ********************************************************
+    * Digital Out
+    **********************************************************/
   override def getDigitalOut(channel:Int): Boolean ={
     (digitalOut & byteMask(channel)) > 0
-  }
-
-  override def getDigitalIn(channel:Int): Boolean ={
-    readStatus() match {
-      case Some(status) => andBits(status(K8055_DIGITAL).toByte, byteMask(channel))
-      case None => false
-    }
   }
 
   override def setDigitalOut(channel:Int, value:Boolean): Unit ={
@@ -87,6 +84,8 @@ trait K8055Board extends DeviceConnector{
       case _ =>    clearDigitalChannel(channel)
     }
   }
+
+  private def byteMask(i:Int): Byte = {math.pow(2,i-1).toByte}
 
 
   def setDigitalChannel(channel:Int):Unit = {
@@ -99,19 +98,46 @@ trait K8055Board extends DeviceConnector{
   }
 
 
+  /** ********************************************************
+    * Digital In
+    **********************************************************/
 
-
-  def andBits(source:Byte, mask:Byte): Boolean = {
+  private def andBitsTogether(source:Byte, mask:Byte): Boolean = {
     if((source & mask) > 0) true
     else false
+  }
+  override def getDigitalIn(channel:Int): Boolean ={
+    readStatus() match {
+      case Some(status) => andBitsTogether(status(K8055_DIGITAL).toByte, byteMask(channel))
+      case None => false
+    }
+  }
+
+  def getCount(channel: Int): Int = {
+    (channel, readStatus()) match{
+      case (1, Some(status)) => status(K8055_COUNTER_1).toInt
+      case (2, Some(status)) => status(K8055_COUNTER_2).toInt
+      case _ => 0
+    }
+  }
+
+  def resetCount(channel: Int): Unit = {executeCommand(s"k8055 -reset$channel")}
+
+  def getDigitalInLatch(channel: Int):Boolean = {
+    val pressed:Boolean = getCount(channel) > 0
+    resetCount(channel)
+    pressed
   }
 
 
 
+  /** ********************************************************
+    * k8055 Communication
+    **********************************************************/
   def readStatus():Option[Array[String]] = {
     val result = executeCommand(s"k8055")
-    val retVal = result.split(';')
-    if(retVal.length > 5){Some(retVal)}
+    val retVals = result.split(';')
+    if(retVals.length > 5){Some(retVals)}
     else None
   }
 
@@ -120,8 +146,8 @@ trait K8055Board extends DeviceConnector{
   }
 
   def setStatus():String = {
-    val byteVal1:Int = analogueOut1.toInt
-    val byteVal2:Int = analogueOut2.toInt
+    val byteVal1:Int = analogueOut1/byteToStoreFactor
+    val byteVal2:Int = analogueOut2/byteToStoreFactor
     executeCommand(s"k8055 -d:$digitalOut -a1:$byteVal1 -a2:$byteVal2")
   }
 
