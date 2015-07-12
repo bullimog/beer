@@ -47,7 +47,7 @@ object Sequencer{
     step.temperature match {
       case Some(temperature) =>
         component match {
-          case thermostat: Thermostat => {
+          case thermostat: Monitor => {
               componentManager.setThermostatHeat(componentCollection, thermostat, temperature)
             componentManager.setThermostatEnabled(componentCollection, thermostat, true)
           }

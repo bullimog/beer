@@ -132,13 +132,13 @@ object Application extends Controller {
   def setComponentState(componentId: String, state:String) = Action { implicit request =>
     val component = componentManager.componentFromId(componentCollection, componentId.toInt)
     component match {
-      case t:Thermostat => setThermostatState(t, state)
+      case t:Monitor => setThermostatState(t, state)
       case d:Device => setDeviceState(d, state)
     }
     Ok("Ok")
   }
 
-  private def setThermostatState(thermostat: Thermostat, state:String): Unit ={
+  private def setThermostatState(thermostat: Monitor, state:String): Unit ={
     try{ // to convert state to Boolean
       componentManager.setThermostatEnabled(componentCollection, thermostat, state.toBoolean)
     }catch{ // ok, not a Boolean, so execute a heat adjustment...

@@ -38,7 +38,7 @@ class SequencerSpec extends Specification {
   val lb = new ListBuffer[Device]()
   lb += thermometer += pump += heater += timer
   val devices = lb.toList
-  val thermo = Thermostat(104, "Boiler", Component.MONITOR, 1, 3)
+  val thermo = Monitor(104, "Boiler", Component.MONITOR, 1, 3)
   val thermos = List(thermo)
   val componentCollection = ComponentCollection ("Masher 1", "My first set-up, for mashing", devices, thermos)
 

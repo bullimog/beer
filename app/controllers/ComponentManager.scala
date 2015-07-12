@@ -31,12 +31,12 @@ abstract class ComponentManager{
 
   def setPower(component:Component, power: Int)
   def getPower(component:Component):Option[Int]
-  def setThermostatHeat(componentCollection:ComponentCollection, thermostat: Thermostat, temperature:Double)
+  def setThermostatHeat(componentCollection:ComponentCollection, thermostat: Monitor, temperature:Double)
   def stopThermostats()
   def initThermostats(componentCollection: ComponentCollection): Unit
-  def getThermostatHeat(thermostat: Thermostat):Double
-  def getThermostatEnabled(thermostat: Thermostat):Boolean
-  def setThermostatEnabled(componentCollection:ComponentCollection, thermostat: Thermostat, enabled:Boolean)
+  def getThermostatHeat(thermostat: Monitor):Double
+  def getThermostatEnabled(thermostat: Monitor):Boolean
+  def setThermostatEnabled(componentCollection:ComponentCollection, thermostat: Monitor, enabled:Boolean)
 
 
     var cancellable:Option[Cancellable] = None
@@ -71,7 +71,7 @@ trait BrewComponentManager extends ComponentManager{
     println(component.description+ " switched off")
     component match{
       case d:Device => deviceConnector.setDigitalOut(d.port, false)
-      case t:Thermostat => setThermostatEnabled(componentCollection, t, false)
+      case t:Monitor => setThermostatEnabled(componentCollection, t, false)
     }
   }
   override def isOn(component:Component):Boolean = {
@@ -217,7 +217,7 @@ trait BrewComponentManager extends ComponentManager{
     })
   }
 
-  override def setThermostatHeat(componentCollection:ComponentCollection, thermostat: Thermostat, temperature:Double) = {
+  override def setThermostatHeat(componentCollection:ComponentCollection, thermostat: Monitor, temperature:Double) = {
     val thermometer = componentFromId(componentCollection, thermostat.thermometer)
     val heater = componentFromId(componentCollection, thermostat.heater)
     cancellable match{
@@ -227,7 +227,7 @@ trait BrewComponentManager extends ComponentManager{
     setThermostat(thermometer, heater, temperature, getThermostatEnabled(thermostat))
   }
 
-  override def setThermostatEnabled(componentCollection:ComponentCollection, thermostat: Thermostat, enabled:Boolean) = {
+  override def setThermostatEnabled(componentCollection:ComponentCollection, thermostat: Monitor, enabled:Boolean) = {
     val thermometer = componentFromId(componentCollection, thermostat.thermometer)
     val heater = componentFromId(componentCollection, thermostat.heater)
     val heat = getThermostatHeat(thermostat)
@@ -260,17 +260,17 @@ trait BrewComponentManager extends ComponentManager{
     //    println("set thermostats..." + thermostats)
   }
 
-  override def getThermostatHeat(thermostat: Thermostat):Double = {
+  override def getThermostatHeat(thermostat: Monitor):Double = {
     //thermostats.filter(t => (t._1.id == thermostat.thermometer) && t._2.id == thermostat.heater).head._3
     getThermostatData(thermostat)._3
   }
 
-  override def getThermostatEnabled(thermostat: Thermostat):Boolean = {
+  override def getThermostatEnabled(thermostat: Monitor):Boolean = {
     //thermostats.filter(t => (t._1.id == thermostat.thermometer) && t._2.id == thermostat.heater).head._4
     getThermostatData(thermostat)._4
   }
 
-  private def getThermostatData(thermostat: Thermostat):(Component, Component, Double, Boolean) = {
+  private def getThermostatData(thermostat: Monitor):(Component, Component, Double, Boolean) = {
     thermostats.filter(t => (t._1.id == thermostat.thermometer) && t._2.id == thermostat.heater).head
   }
 

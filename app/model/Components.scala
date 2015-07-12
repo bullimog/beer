@@ -1,6 +1,5 @@
 package model
 
-import akka.actor.Cancellable
 import play.api.libs.json.{JsPath, Reads, Json}
 import play.api.libs.functional.syntax._
 
@@ -9,7 +8,6 @@ trait Component{
   def id: Int
   def description: String
   def deviceType: Int
-//  var cancellable: Option[Cancellable]
 
 }
 
@@ -42,24 +40,24 @@ implicit val deviceReads: Reads[Device] = (
   implicit val deviceWrites = Json.writes[Device]
 }
 
-case class Thermostat(override val id: Int, override val description: String,
+case class Monitor(override val id: Int, override val description: String,
                       override val deviceType: Int, thermometer:Int, heater:Int) extends Component
-object Thermostat{
+object Monitor{
 //  implicit val thermostatFmt = Json.format[Thermostat]
-implicit val thermostatReads: Reads[Thermostat] = (
+implicit val thermostatReads: Reads[Monitor] = (
   (JsPath \ "id").read[Int] and
     (JsPath \ "description").read[String] and
     (JsPath \ "deviceType").read[Int] and
     (JsPath \ "thermometer").read[Int] and
     (JsPath \ "heater").read[Int]
-  )(Thermostat.apply _)
+  )(Monitor.apply _)
 
-  implicit val thermostatWrites = Json.writes[Thermostat]
+  implicit val thermostatWrites = Json.writes[Monitor]
 }
 
 
 case class ComponentCollection(name: String, description: String, devices: List[Device],
-                               thermostats: List[Thermostat])
+                               thermostats: List[Monitor])
 object ComponentCollection{
   //  implicit val componentCollectionFmt = Json.format[ComponentCollection]
 
@@ -67,7 +65,7 @@ object ComponentCollection{
     (JsPath \ "name").read[String] and
       (JsPath \ "description").read[String] and
       (JsPath \ "devices").read[List[Device]] and
-      (JsPath \ "thermostats").read[List[Thermostat]]
+      (JsPath \ "thermostats").read[List[Monitor]]
     )(ComponentCollection.apply _)
 
     /* Since this case class references Device and Thermostat, the Json.writes has to be defined last! */

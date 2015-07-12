@@ -1,6 +1,6 @@
 import connector.{DeviceConnector, DeviceConnectorStub}
 import controllers.{BrewComponentManager, ComponentManager}
-import model.{ComponentCollection, Thermostat, Device, Component}
+import model.{ComponentCollection, Monitor, Device, Component}
 import org.specs2.mutable._
 import org.specs2.runner._
 import org.junit.runner._
@@ -37,7 +37,7 @@ class ComponentManagerSpec extends Specification {
   val lb = new ListBuffer[Device]()
   lb += timer += thermometer += pump += heater
   val devices = lb.toList
-  val thermo = Thermostat(5, "Boiler", Component.MONITOR, 2, 4)
+  val thermo = Monitor(5, "Boiler", Component.MONITOR, 2, 4)
   val thermos = List(thermo)
   val componentCollection = ComponentCollection ("Masher 1", "My first set-up, for mashing", devices, thermos)
 
