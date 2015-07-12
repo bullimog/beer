@@ -33,6 +33,7 @@ object Step{
   val SET_COOL = 6    //  6 = Not yet implemented
   val WAIT_COOL = 7   //  7 = Not yet implemented //TODO
   val WAIT_ON = 8     //  8 = Not yet implemented //TODO
+  val WAIT_COUNT = 9  //  9 = Not yet implemented //TODO
 
 
     //  implicit val stepFmt = Json.format[Step]

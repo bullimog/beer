@@ -28,6 +28,9 @@ object Sequencer{
     val cancellable = Some(system.scheduler.schedule(tickInterval, tickInterval, actorRef, "sequence")) //initialDelay, delay, Actor, Message
   }
 
+  def skipStep() = {currentStep += 1}
+  def backStep() = {currentStep -= 1}
+
 
   def abortSequence(componentManager: ComponentManager):Unit = {
       running = false
@@ -36,6 +39,8 @@ object Sequencer{
       actorRef ! "stop"
       Sequencer.currentStep = Sequencer.START_STEP
   }
+
+
 
   def runSetHeat(step:Step, component:Component, componentManager: ComponentManager, componentCollection: ComponentCollection): Unit ={
 //    println(s"runSetHeat on $component")

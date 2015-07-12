@@ -31,7 +31,7 @@ class ComponentManagerSpec extends Specification {
 
 
   val timer = Device(1,"Clock", Component.TIMER, 0, None, None, None, None)
-  val thermometer = Device(2,"Thermometer", Component.ANALOGUE_IN, 1, None, None, None, None)
+  val thermometer = Device(2,"Thermometer", Component.ANALOGUE_IN, 1, Some("c"), None, None, Some(2))
   val pump = Device(3, "Pump", Component.DIGITAL_OUT, 1, None, None, None, None)
   val heater = Device(4, "Heater", Component.ANALOGUE_OUT, 1, None, None, None, None)
   val lb = new ListBuffer[Device]()

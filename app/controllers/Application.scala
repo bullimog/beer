@@ -59,6 +59,23 @@ object Application extends Controller {
     ReadableSequence(sequence.description, lbFSteps.toList, 0)
   }
 
+  private def formatTemperature(temperature: Option[Double]): Option[String] = {
+    temperature match {
+      case Some(temp) => Some("" + temp + " \u00b0c")  //degree symbol
+      case None => None
+    }
+  }
+
+  private def formatPeriod(seconds: Option[Int]): Option[String] = {
+    seconds match {
+      case Some(secs) => {
+        val period: Period = Period.seconds(secs)
+        Some(PeriodFormat.getDefault.print(period.normalizedStandard()))
+      }
+      case None => None
+    }
+  }
+
   /** ***************** Ajax Services ********************
     * *******************************************************/
   def sequencerStatus() = Action { implicit request =>
@@ -66,7 +83,7 @@ object Application extends Controller {
     Ok(Json.toJson(ss).toString())
   }
 
-  def compileComponentsStatuses(): List[ComponentStatus] = {
+  private def compileComponentsStatuses(): List[ComponentStatus] = {
     var componentStatuses: ListBuffer[ComponentStatus] = ListBuffer[ComponentStatus]()
     componentCollection.devices.foreach(device => {
       var cs = ComponentStatus(device.id, device.deviceType, componentManager.isOn(device).toString, device.units)
@@ -82,15 +99,15 @@ object Application extends Controller {
     componentStatuses.toList
   }
 
-  def compileThermostatStatuses(): List[ThermostatStatus] = {
+  private def compileThermostatStatuses(): List[ThermostatStatus] = {
     var thermostatStatuses: ListBuffer[ThermostatStatus] = ListBuffer[ThermostatStatus]()
     componentCollection.thermostats.foreach(thermostat => {
       val enabled:Boolean = componentManager.getThermostatEnabled(thermostat)
       val temperature:Double = componentManager.getThermostatHeat(thermostat)
       val cThermometer:Component = componentManager.componentFromId(componentCollection, thermostat.thermometer)
       val cHeater:Component = componentManager.componentFromId(componentCollection, thermostat.heater)
-      (cThermometer, cHeater) match {  //Need to cast to Devices, to get units
-        case(thermometer:Device, heater:Device) => {
+      (cThermometer, cHeater) match {
+        case(thermometer:Device, heater:Device) => {  //Need to cast to Devices, to get units
           val thermometerStatus = ComponentStatus(thermometer.id, Component.ANALOGUE_IN, componentManager.readTemperature(thermometer).getOrElse(0).toString, thermometer.units)
           val heaterStatus = ComponentStatus(heater.id, heater.deviceType, componentManager.getPower(heater).getOrElse(0).toString, heater.units)
           val thermostatStatus = ThermostatStatus(thermostat.id, enabled, temperature, thermometerStatus, heaterStatus)
@@ -108,7 +125,6 @@ object Application extends Controller {
 
   def stopSequencer() = Action { implicit request =>
     Sequencer.abortSequence(componentManager)
-
     Ok("Stopped")
   }
 
@@ -123,9 +139,9 @@ object Application extends Controller {
   }
 
   private def setThermostatState(thermostat: Thermostat, state:String): Unit ={
-    try{
+    try{ // to convert state to Boolean
       componentManager.setThermostatEnabled(componentCollection, thermostat, state.toBoolean)
-    }catch{
+    }catch{ // ok, not a Boolean, so execute a heat adjustment...
       case e:Exception => {
         val current:Double = componentManager.getThermostatHeat(thermostat)
         state match{
@@ -138,7 +154,9 @@ object Application extends Controller {
     }
   }
 
+
   private def setDeviceState(device:Device, state:String) = {
+    val limitPercent:Int=>Int =(in:Int) => math.min(math.max(0,in) ,100)
     device.deviceType match {
       case Component.DIGITAL_OUT =>
         state.toBoolean match {
@@ -158,11 +176,6 @@ object Application extends Controller {
   }
 
 
-  private def limitPercent(in:Int):Int = {
-    if(in > 100) 100
-    else if (in < 0) 0
-    else in
-  }
 
   def javascriptRoutes = Action { implicit request =>
     Ok(Routes.javascriptRouter("jsRoutes")(routes.javascript.Application.sequencerStatus,
@@ -171,22 +184,8 @@ object Application extends Controller {
       routes.javascript.Application.stopSequencer)).as("text/javascript")
   }
 
-  private def formatPeriod(seconds: Option[Int]): Option[String] = {
-    seconds match {
-      case Some(secs) => {
-        val period: Period = Period.seconds(secs)
-        Some(PeriodFormat.getDefault.print(period.normalizedStandard()))
-      }
-      case None => None
-    }
-  }
 
-  private def formatTemperature(temperature: Option[Double]): Option[String] = {
-    temperature match {
-      case Some(temp) => Some("" + temp + " \u00b0c")  //degree symbol
-      case None => None
-    }
-  }
+
 }
 
 

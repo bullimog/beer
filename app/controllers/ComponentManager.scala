@@ -86,12 +86,6 @@ trait BrewComponentManager extends ComponentManager{
     }
   }
 
-  //Switch all components (pump heater) off. Remember state...
-
-//  override def pause(component:Component) = {}  //TODO
-
-
-//  override def resume(component:Component) = {} //TODO
 
   //function to find the (first) item of Equipment, for the given step
   override def getComponentFromList(step:Step, componentList:List[Component]):Component = {
