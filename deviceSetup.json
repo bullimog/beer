@@ -20,7 +20,7 @@
     "description" : "Heater",
     "deviceType" : 2,
     "port" : 1,
-	"units" : "°c"
+	"units" : "%"
   }, {
     "id" : 4,
     "description" : "Clock",

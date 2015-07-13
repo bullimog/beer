@@ -43,16 +43,16 @@ object Sequencer{
 
   def runSetHeat(step:Step, component:Component, componentManager: ComponentManager, componentCollection: ComponentCollection): Unit ={
 //    println(s"runSetHeat on $component")
-    step.temperature match {
-      case Some(temperature) =>
+    step.target match {
+      case Some(target) =>
         component match {
           case monitor: Monitor => {
-              componentManager.setMonitorTarget(componentCollection, monitor, temperature)
+              componentManager.setMonitorTarget(componentCollection, monitor, target)
             componentManager.setMonitorEnabled(componentCollection, monitor, true)
           }
           case device:Device => {
             if(device.deviceType == Component.ANALOGUE_OUT){
-              componentManager.setPower(component, temperature.toInt) //should be power!
+              componentManager.setPower(component, target.toInt)
             }
           }
           case _ => println("Can't set monitor on a : " + component + "in step " + step)
@@ -63,11 +63,11 @@ object Sequencer{
 
 
   def runWaitHeat(step:Step, component:Component, componentManager: ComponentManager): Unit ={
-    step.temperature match {
-      case Some(temperature) => {
-        if (componentManager.reachedTemperatureHeating(component, temperature)) currentStep +=1
+    step.target match {
+      case Some(target) => {
+        if (componentManager.reachedTemperatureHeating(component, target)) currentStep +=1
       }
-      case _ => println("No temperature specified,  can't wait for temperature for: "+step)
+      case _ => println("No target specified,  can't wait for target value for: "+step)
     }
   }
 
@@ -91,7 +91,7 @@ object Sequencer{
           componentManager.resetCount(component)
         }
       }
-      case _ => println("No count specified,  can't wait for temperature for: "+step)
+      case _ => println("No count specified,  can't wait for: "+step)
     }
   }
 }

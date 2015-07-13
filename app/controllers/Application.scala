@@ -55,15 +55,20 @@ object Application extends Controller {
     sequence.steps.foreach(step => {
       lbFSteps += ReadableStep(step.id, step.device,
         componentManager.getComponentFromCollection(step, componentCollection).description,
-        step.eventType, step.decode, formatTemperature(step.temperature), formatPeriod(step.duration))
+        step.eventType, step.decode, formatTarget(step.target, step.device), formatPeriod(step.duration))
     })
     ReadableSequence(sequence.description, lbFSteps.toList, 0)
   }
 
-  private def formatTemperature(temperature: Option[Double]): Option[String] = {
-    temperature match {
-      case Some(temp) => Some("" + temp + " \u00b0c")  //degree symbol
-      case None => None
+  private def formatTarget(target: Option[Double], device:Int): Option[String] = {
+    val comp:Component = componentManager.componentFromId(componentCollection, device)
+    (comp,target) match {
+      case (device:Device, Some(temp)) => Some("" + temp + device.units.getOrElse(""))
+      case (monitor:Monitor, Some(temp)) => {
+        val therm:Component = componentManager.componentFromId(componentCollection, monitor.thermometer)
+        therm match {case device:Device => Some("" + temp + device.units.getOrElse(""))}
+      }
+      case (_,_) => None
     }
   }
 
@@ -84,6 +89,7 @@ object Application extends Controller {
     Ok(Json.toJson(ss).toString())
   }
 
+  //TODO: can we use a yield here??
   private def compileComponentsStatuses(): List[ComponentStatus] = {
     var componentStatuses: ListBuffer[ComponentStatus] = ListBuffer[ComponentStatus]()
     componentCollection.devices.foreach(device => {

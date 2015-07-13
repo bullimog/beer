@@ -5,9 +5,9 @@ import play.api.libs.functional.syntax._
 
 
 
-case class Step(id: Int, device: Int, eventType:Int, temperature: Option[Double], duration: Option[Int]) {
+case class Step(id: Int, device: Int, eventType:Int, target: Option[Double], duration: Option[Int]) {
   override def toString: String ={
-    "##Step device:"+device+", eventType:"+decode+", temperature:"+temperature+", duration:"+duration
+    "##Step device:"+device+", eventType:"+decode+", target:"+target+", duration:"+duration
   }
 
   def decode:String ={
@@ -15,7 +15,7 @@ case class Step(id: Int, device: Int, eventType:Int, temperature: Option[Double]
       case Step.ON => "On"
       case Step.OFF => "Off"
       case Step.SET_HEAT => "Set to "
-      case Step.WAIT_HEAT => "Wait until temperature rises to "
+      case Step.WAIT_HEAT => "Wait until reading rises to "
       case Step.WAIT_TIME => "Wait for "
       case Step.SET_COOL => "Set Required Cool to "
       case Step.WAIT_ON => "Wait For"
@@ -42,7 +42,7 @@ object Step{
     (JsPath \ "id").read[Int] and
     (JsPath \ "device").read[Int] and
     (JsPath \ "eventType").read[Int] and
-    (JsPath \ "temperature").readNullable[Double] and
+    (JsPath \ "target").readNullable[Double] and
     (JsPath \ "duration").readNullable[Int]
    )(Step.apply _)
 
