@@ -72,21 +72,21 @@
     else return num
   }
 
-  function updateThermostats(ss){
-    for(i=0; i<ss.thermostatStatuses.length; i++){
-       var thermostatId = ss.thermostatStatuses[i].componentId
-       var thermostatEnabled = ss.thermostatStatuses[i].enabled
-       var thermostatTemp = ss.thermostatStatuses[i].temperature
-       var thermometerTemp = ss.thermostatStatuses[i].thermometerStatus.componentValue
-       var heaterPower = ss.thermostatStatuses[i].heaterStatus.componentValue
-       var thermometerUnit = ss.thermostatStatuses[i].thermometerStatus.componentUnit
+  function updateMonitors(ss){
+    for(i=0; i<ss.monitorStatuses.length; i++){
+       var monitorId = ss.monitorStatuses[i].componentId
+       var monitorEnabled = ss.monitorStatuses[i].enabled
+       var monitorTemp = ss.monitorStatuses[i].temperature
+       var thermometerTemp = ss.monitorStatuses[i].thermometerStatus.componentValue
+       var heaterPower = ss.monitorStatuses[i].heaterStatus.componentValue
+       var thermometerUnit = ss.monitorStatuses[i].thermometerStatus.componentUnit
 
-       if(thermostatEnabled) $("#thermostat-true"+thermostatId).prop("checked", true)
-            else $("#thermostat-false"+thermostatId).prop("checked", true);
+       if(monitorEnabled) $("#monitor-true"+monitorId).prop("checked", true)
+            else $("#monitor-false"+monitorId).prop("checked", true);
 
-       $("#thermostat-temperature"+thermostatId).text(thermostatTemp+" \xB0c");
-       $("#thermostat-thermometer"+thermostatId).text(thermometerTemp+" "+ thermometerUnit);
-       $("#thermostat-heater"+thermostatId).text(heaterPower+" %");
+       $("#monitor-temperature"+monitorId).text(monitorTemp+" \xB0c");
+       $("#monitor-thermometer"+monitorId).text(thermometerTemp+" "+ thermometerUnit);
+       $("#monitor-heater"+monitorId).text(heaterPower+" %");
     }
   }
 
@@ -124,7 +124,7 @@ var  onSuccess = function(strSequenceStatus) {
     highlightStartStopButtons(ss.running)
     highlightSteps(ss.currentStep)
     updateDevices(ss)
-    updateThermostats(ss)
+    updateMonitors(ss)
 }
 
 var onError = function(error) {

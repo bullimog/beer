@@ -39,8 +39,8 @@ object Application extends Controller {
   val sequence:Sequence = controllers.ConfigIO.readSteps("sequence1.json")
   val componentCollection = controllers.ConfigIO.readComponentCollection("deviceSetup.json")
 
-  //initialise the thermostat data...
-  componentManager.initThermostats(componentCollection)
+  //initialise the monitor data...
+  componentManager.initMonitors(componentCollection)
 
   def index = Action {
     Ok(views.html.index(sequenceToReadableSequence(sequence, componentManager, componentCollection),
@@ -48,6 +48,7 @@ object Application extends Controller {
   }
 
   /** copies a Sequence to a ReadableSequence, formatting internal data to human-readable. */
+  //TODO: Use For/Yield
   def sequenceToReadableSequence(sequence: Sequence, componentManager: ComponentManager,
                                  componentCollection: ComponentCollection): ReadableSequence = {
     val lbFSteps = new ListBuffer[ReadableStep]()
@@ -79,7 +80,7 @@ object Application extends Controller {
   /** ***************** Ajax Services ********************
     * *******************************************************/
   def sequencerStatus() = Action { implicit request =>
-    val ss = SequenceStatus(Sequencer.running, Sequencer.currentStep, compileComponentsStatuses(), compileThermostatStatuses())
+    val ss = SequenceStatus(Sequencer.running, Sequencer.currentStep, compileComponentsStatuses(), compileMonitorStatuses())
     Ok(Json.toJson(ss).toString())
   }
 
@@ -99,23 +100,24 @@ object Application extends Controller {
     componentStatuses.toList
   }
 
-  private def compileThermostatStatuses(): List[ThermostatStatus] = {
-    var thermostatStatuses: ListBuffer[ThermostatStatus] = ListBuffer[ThermostatStatus]()
-    componentCollection.thermostats.foreach(thermostat => {
-      val enabled:Boolean = componentManager.getThermostatEnabled(thermostat)
-      val temperature:Double = componentManager.getThermostatHeat(thermostat)
-      val cThermometer:Component = componentManager.componentFromId(componentCollection, thermostat.thermometer)
-      val cHeater:Component = componentManager.componentFromId(componentCollection, thermostat.heater)
+  //TODO: can we use a yield here??
+  private def compileMonitorStatuses(): List[MonitorStatus] = {
+    var monitorStatuses: ListBuffer[MonitorStatus] = ListBuffer[MonitorStatus]()
+    componentCollection.monitors.foreach(monitor => {
+      val enabled:Boolean = componentManager.getMonitorEnabled(monitor)
+      val temperature:Double = componentManager.getMonitorTarget(monitor)
+      val cThermometer:Component = componentManager.componentFromId(componentCollection, monitor.thermometer)
+      val cHeater:Component = componentManager.componentFromId(componentCollection, monitor.heater)
       (cThermometer, cHeater) match {
         case(thermometer:Device, heater:Device) => {  //Need to cast to Devices, to get units
           val thermometerStatus = ComponentStatus(thermometer.id, Component.ANALOGUE_IN, componentManager.readTemperature(thermometer).getOrElse(0).toString, thermometer.units)
           val heaterStatus = ComponentStatus(heater.id, heater.deviceType, componentManager.getPower(heater).getOrElse(0).toString, heater.units)
-          val thermostatStatus = ThermostatStatus(thermostat.id, enabled, temperature, thermometerStatus, heaterStatus)
-          thermostatStatuses += thermostatStatus
+          val monitorStatus = MonitorStatus(monitor.id, enabled, temperature, thermometerStatus, heaterStatus)
+          monitorStatuses += monitorStatus
         }
       }
     })
-    thermostatStatuses.toList
+    monitorStatuses.toList
   }
 
   def startSequencer() = Action { implicit request =>
@@ -132,23 +134,23 @@ object Application extends Controller {
   def setComponentState(componentId: String, state:String) = Action { implicit request =>
     val component = componentManager.componentFromId(componentCollection, componentId.toInt)
     component match {
-      case t:Monitor => setThermostatState(t, state)
+      case t:Monitor => setMonitorState(t, state)
       case d:Device => setDeviceState(d, state)
     }
     Ok("Ok")
   }
 
-  private def setThermostatState(thermostat: Monitor, state:String): Unit ={
+  private def setMonitorState(monitor: Monitor, state:String): Unit ={
     try{ // to convert state to Boolean
-      componentManager.setThermostatEnabled(componentCollection, thermostat, state.toBoolean)
+      componentManager.setMonitorEnabled(componentCollection, monitor, state.toBoolean)
     }catch{ // ok, not a Boolean, so execute a heat adjustment...
       case e:Exception => {
-        val current:Double = componentManager.getThermostatHeat(thermostat)
+        val current:Double = componentManager.getMonitorTarget(monitor)
         state match{
-          case "ddown" => componentManager.setThermostatHeat(componentCollection, thermostat, current - 10)
-          case "down" => componentManager.setThermostatHeat(componentCollection, thermostat, current - 1)
-          case "up" => componentManager.setThermostatHeat(componentCollection, thermostat, current + 1)
-          case "dup" => componentManager.setThermostatHeat(componentCollection, thermostat, current + 10)
+          case "ddown" => componentManager.setMonitorTarget(componentCollection, monitor, current - 10)
+          case "down" => componentManager.setMonitorTarget(componentCollection, monitor, current - 1)
+          case "up" => componentManager.setMonitorTarget(componentCollection, monitor, current + 1)
+          case "dup" => componentManager.setMonitorTarget(componentCollection, monitor, current + 10)
         }
       }
     }
@@ -212,6 +214,6 @@ object Beer extends App{
   println("Kicked off sequence")
   Thread.sleep(1000)
   println("App End")
-  componentManager.stopThermostats()
+  componentManager.stopMonitors()
 
 }

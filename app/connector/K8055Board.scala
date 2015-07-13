@@ -134,11 +134,16 @@ trait K8055Board extends DeviceConnector{
   /** ********************************************************
     * k8055 Communication
     **********************************************************/
-  def readStatus():Option[Array[String]] = {
-    val result = executeCommand(s"k8055")
-    val retVals = result.split(';')
-    if(retVals.length > 5){Some(retVals)}
-    else None
+  val expectedValCount = 6
+  def readStatus():Option[Array[Int]] = {
+    val retValues = executeCommand(s"k8055").replaceAll("\n","").split(';')
+    try {
+      if (retValues.length == expectedValCount) {Some(for (strValue <- retValues) yield {strValue.toInt})}
+      else None
+    }
+    catch {
+      case e:NumberFormatException =>  None
+    }
   }
 
   def resetStatus():String = {
@@ -154,8 +159,16 @@ trait K8055Board extends DeviceConnector{
   def executeCommand(command:String): String = {
     println("executeCommand: "+command)
     import sys.process.Process
-    val result = Process(""+command+"")
-    result.!!
+    try{
+      val result = Process(""+command+"")
+      result.!!
+    }
+    catch{
+      case e:RuntimeException => {
+        println("Communication with k8055 failed")
+        ""
+      }
+    }
   }
 }
 

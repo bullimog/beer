@@ -27,7 +27,7 @@
     "deviceType" : 0,
     "port" : 0
   } ],
-  "thermostats" : [ {
+  "monitors" : [ {
     "id" : 104,
     "description" : "Boiler Thermostat",
     "deviceType" : 5,

@@ -43,8 +43,8 @@ implicit val deviceReads: Reads[Device] = (
 case class Monitor(override val id: Int, override val description: String,
                       override val deviceType: Int, thermometer:Int, heater:Int) extends Component
 object Monitor{
-//  implicit val thermostatFmt = Json.format[Thermostat]
-implicit val thermostatReads: Reads[Monitor] = (
+//  implicit val monitorFmt = Json.format[Monitor]
+implicit val monitorReads: Reads[Monitor] = (
   (JsPath \ "id").read[Int] and
     (JsPath \ "description").read[String] and
     (JsPath \ "deviceType").read[Int] and
@@ -52,12 +52,12 @@ implicit val thermostatReads: Reads[Monitor] = (
     (JsPath \ "heater").read[Int]
   )(Monitor.apply _)
 
-  implicit val thermostatWrites = Json.writes[Monitor]
+  implicit val monitorWrites = Json.writes[Monitor]
 }
 
 
 case class ComponentCollection(name: String, description: String, devices: List[Device],
-                               thermostats: List[Monitor])
+                               monitors: List[Monitor])
 object ComponentCollection{
   //  implicit val componentCollectionFmt = Json.format[ComponentCollection]
 
@@ -65,10 +65,10 @@ object ComponentCollection{
     (JsPath \ "name").read[String] and
       (JsPath \ "description").read[String] and
       (JsPath \ "devices").read[List[Device]] and
-      (JsPath \ "thermostats").read[List[Monitor]]
+      (JsPath \ "monitors").read[List[Monitor]]
     )(ComponentCollection.apply _)
 
-    /* Since this case class references Device and Thermostat, the Json.writes has to be defined last! */
+    /* Since this case class references Device and Monitor, the Json.writes has to be defined last! */
     implicit val componentCollectionWrites = Json.writes[ComponentCollection]
 }
 
@@ -77,8 +77,8 @@ object  ComponentStatus {
   implicit val formats=Json.writes[ComponentStatus]
 }
 
-case class ThermostatStatus(componentId:Int, enabled:Boolean, temperature:Double,
+case class MonitorStatus(componentId:Int, enabled:Boolean, temperature:Double,
                             thermometerStatus:ComponentStatus, heaterStatus:ComponentStatus)
-object  ThermostatStatus {
-  implicit val formats=Json.writes[ThermostatStatus]
+object  MonitorStatus {
+  implicit val formats=Json.writes[MonitorStatus]
 }

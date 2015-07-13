@@ -34,7 +34,6 @@ object Sequencer{
 
   def abortSequence(componentManager: ComponentManager):Unit = {
       running = false
-      //componentManager.stopThermostats()
       Timer.reset()
       actorRef ! "stop"
       Sequencer.currentStep = Sequencer.START_STEP
@@ -47,11 +46,16 @@ object Sequencer{
     step.temperature match {
       case Some(temperature) =>
         component match {
-          case thermostat: Monitor => {
-              componentManager.setThermostatHeat(componentCollection, thermostat, temperature)
-            componentManager.setThermostatEnabled(componentCollection, thermostat, true)
+          case monitor: Monitor => {
+              componentManager.setMonitorTarget(componentCollection, monitor, temperature)
+            componentManager.setMonitorEnabled(componentCollection, monitor, true)
           }
-          case _ => println("Can't set thermostat on a : " + component + "in step " + step)
+          case device:Device => {
+            if(device.deviceType == Component.ANALOGUE_OUT){
+              componentManager.setPower(component, temperature.toInt) //should be power!
+            }
+          }
+          case _ => println("Can't set monitor on a : " + component + "in step " + step)
         }
       case _ => println("No temperature specified,  can't set temperature for: "+step)
     }
@@ -101,7 +105,7 @@ class SequencerActor(sequence: Sequence, componentManager: ComponentManager, com
       val maybeStep:Option[Step] = getStepFromList(Sequencer.currentStep, sequence.steps)
       maybeStep match{
         case Some(step) => performStep(step)
-        case None => {
+        case None => {  //End of Sequence
           context.stop(self)
           Sequencer.currentStep = Sequencer.START_STEP
           Sequencer.running = false
@@ -130,8 +134,7 @@ class SequencerActor(sequence: Sequence, componentManager: ComponentManager, com
     step.eventType match {
       case (Step.ON) => componentManager.on(componentCollection, component); Sequencer.currentStep += 1 //Digital Out
       case (Step.OFF) => componentManager.off(componentCollection, component); Sequencer.currentStep += 1 //Digital/Analogue Out/Monitor
-      case (Step.SET_HEAT) => {
-        //Thermostat
+      case (Step.SET_HEAT) => { //Monitor or Analogue Out
         Sequencer.runSetHeat(step, component, componentManager, componentCollection)
         Sequencer.currentStep += 1
       }

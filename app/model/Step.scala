@@ -14,7 +14,7 @@ case class Step(id: Int, device: Int, eventType:Int, temperature: Option[Double]
     eventType match {
       case Step.ON => "On"
       case Step.OFF => "Off"
-      case Step.SET_HEAT => "Set Thermostat to "
+      case Step.SET_HEAT => "Set to "
       case Step.WAIT_HEAT => "Wait until temperature rises to "
       case Step.WAIT_TIME => "Wait for "
       case Step.SET_COOL => "Set Required Cool to "
@@ -27,9 +27,9 @@ object Step{
   //  Step(event) Types
   val ON = 1          //  1 = turn on
   val OFF = 2         //  2 = turn off
-  val SET_HEAT = 3    //  3 = set thermostat (META-DATA = temp[Double])
-  val WAIT_HEAT = 4   //  4 = Wait-Temp (META-DATA = temp[Double])
-  val WAIT_TIME = 5   //  5 = Wait-Time  (META-DATA = duration[milliseconds])
+  val SET_HEAT = 3    //  3 = set monitor (META-DATA = temp[Double])
+  val WAIT_HEAT = 4   //  4 = Wait-Temp   (META-DATA = temp[Double])
+  val WAIT_TIME = 5   //  5 = Wait-Time   (META-DATA = duration[milliseconds])
   val SET_COOL = 6    //  6 = Not yet implemented
   val WAIT_COOL = 7   //  7 = Not yet implemented //TODO
   val WAIT_ON = 8     //  8 = Not yet implemented //TODO
@@ -67,7 +67,7 @@ case class ReadableSequence(description:String, friendlySteps:List[ReadableStep]
 
 
 case class SequenceStatus(running:Boolean, currentStep:Int, componentStatuses:List[ComponentStatus],
-                          thermostatStatuses:List[ThermostatStatus])
+                          monitorStatuses:List[MonitorStatus])
 object  SequenceStatus {
   implicit val formats=Json.writes[SequenceStatus]
 }

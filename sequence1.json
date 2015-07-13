@@ -37,5 +37,10 @@
     "id" : 8,
     "device" : 2,
     "eventType" : 2
+  }, {
+    "id" : 9,
+    "device" : 3,
+    "eventType" : 3,
+    "temperature" : 0.0
   } ]
 }

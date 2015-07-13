@@ -114,8 +114,8 @@ class ComponentManagerSpec extends Specification {
   }
 
   "ComponentManager" should {
-    "maintain thermostat, when instructed to do so" in {
-      componentManager.setThermostatHeat(componentCollection, thermo, 42)
+    "maintain monitor, when instructed to do so" in {
+      componentManager.setMonitorTarget(componentCollection, thermo, 42)
       Thread.sleep(2000)
       componentManager.getPower(heater) must equalTo(Some(100))
       componentManager.setTemperature(thermometer, 22)
@@ -135,7 +135,7 @@ class ComponentManagerSpec extends Specification {
       componentManager.getPower(heater) must equalTo(Some(0))
       componentManager.setTemperature(thermometer, 43)
       Thread.sleep(2000)
-      componentManager.stopThermostats()
+      componentManager.stopMonitors()
       componentManager.getPower(heater) must equalTo(Some(0))
 
 

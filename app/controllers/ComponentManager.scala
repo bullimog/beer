@@ -31,12 +31,12 @@ abstract class ComponentManager{
 
   def setPower(component:Component, power: Int)
   def getPower(component:Component):Option[Int]
-  def setThermostatHeat(componentCollection:ComponentCollection, thermostat: Monitor, temperature:Double)
-  def stopThermostats()
-  def initThermostats(componentCollection: ComponentCollection): Unit
-  def getThermostatHeat(thermostat: Monitor):Double
-  def getThermostatEnabled(thermostat: Monitor):Boolean
-  def setThermostatEnabled(componentCollection:ComponentCollection, thermostat: Monitor, enabled:Boolean)
+  def setMonitorTarget(componentCollection:ComponentCollection, monitor: Monitor, temperature:Double)
+  def stopMonitors()
+  def initMonitors(componentCollection: ComponentCollection): Unit
+  def getMonitorTarget(monitor: Monitor):Double
+  def getMonitorEnabled(monitor: Monitor):Boolean
+  def setMonitorEnabled(componentCollection:ComponentCollection, monitor: Monitor, enabled:Boolean)
 
 
     var cancellable:Option[Cancellable] = None
@@ -46,8 +46,8 @@ abstract class ComponentManager{
   //function to find the item of Equipment, for the given step
   def getComponentFromCollection(step:Step, componentCollection:ComponentCollection):Component
 
-  // (Thermometer, Heater, thermostatRequiredTemperature, ThermostatEnabled)
-  var thermostats:mutable.MutableList[(Component, Component, Double, Boolean)] = mutable.MutableList()
+  // (Thermometer, Heater, monitorTarget, MonitorEnabled)
+  var monitors:mutable.MutableList[(Component, Component, Double, Boolean)] = mutable.MutableList()
 
 }
 
@@ -71,7 +71,7 @@ trait BrewComponentManager extends ComponentManager{
     println(component.description+ " switched off")
     component match{
       case d:Device => deviceConnector.setDigitalOut(d.port, false)
-      case t:Monitor => setThermostatEnabled(componentCollection, t, false)
+      case t:Monitor => setMonitorEnabled(componentCollection, t, false)
     }
   }
   override def isOn(component:Component):Boolean = {
@@ -94,7 +94,7 @@ trait BrewComponentManager extends ComponentManager{
 
   //function to find the item of Equipment, for the given step
   override def getComponentFromCollection(step:Step, componentCollection:ComponentCollection):Component = {
-    val components:List[Component] = componentCollection.devices ::: componentCollection.thermostats
+    val components:List[Component] = componentCollection.devices ::: componentCollection.monitors
     getComponentFromList(step, components)
   }
 
@@ -105,7 +105,7 @@ trait BrewComponentManager extends ComponentManager{
   override def componentFromId(componentCollection:ComponentCollection, id:Int):Component = {
     //println("componentCollection="+componentCollection)
     //println("step.device="+id)
-    val components:List[Component] = componentCollection.devices ::: componentCollection.thermostats
+    val components:List[Component] = componentCollection.devices ::: componentCollection.monitors
     components.filter((component:Component) => component.id == id).head
   }
 
@@ -207,93 +207,85 @@ trait BrewComponentManager extends ComponentManager{
   }
 
   /*****************************************************************
-    Thermostat Methods
+    Monitor Methods
   ******************************************************************/
-  override def initThermostats(componentCollection: ComponentCollection): Unit = {
-    componentCollection.thermostats.foreach(thermostat => {
-      val thermometer = componentFromId(componentCollection, thermostat.thermometer)
-      val heater = componentFromId(componentCollection, thermostat.heater)
-      setThermostat(thermometer, heater, 0.0, false)
+  override def initMonitors(componentCollection: ComponentCollection): Unit = {
+    componentCollection.monitors.foreach(monitor => {
+      val thermometer = componentFromId(componentCollection, monitor.thermometer)
+      val heater = componentFromId(componentCollection, monitor.heater)
+      setMonitor(thermometer, heater, 0.0, false)
     })
   }
 
-  override def setThermostatHeat(componentCollection:ComponentCollection, thermostat: Monitor, temperature:Double) = {
-    val thermometer = componentFromId(componentCollection, thermostat.thermometer)
-    val heater = componentFromId(componentCollection, thermostat.heater)
+  override def setMonitorTarget(componentCollection:ComponentCollection, monitor: Monitor, temperature:Double) = {
+    val thermometer = componentFromId(componentCollection, monitor.thermometer)
+    val heater = componentFromId(componentCollection, monitor.heater)
     cancellable match{
-      case None => startThermostats(componentCollection)
+      case None => startMonitors(componentCollection)
       case _ =>
     }
-    setThermostat(thermometer, heater, temperature, getThermostatEnabled(thermostat))
+    setMonitor(thermometer, heater, temperature, getMonitorEnabled(monitor))
   }
 
-  override def setThermostatEnabled(componentCollection:ComponentCollection, thermostat: Monitor, enabled:Boolean) = {
-    val thermometer = componentFromId(componentCollection, thermostat.thermometer)
-    val heater = componentFromId(componentCollection, thermostat.heater)
-    val heat = getThermostatHeat(thermostat)
-    thermostats = thermostats.filter(t => (t._1 != thermometer) && t._2 != heater) //remove old one
-    thermostats += ((thermometer, heater, heat, enabled)) //add new one
+  override def setMonitorEnabled(componentCollection:ComponentCollection, monitor: Monitor, enabled:Boolean) = {
+    val thermometer = componentFromId(componentCollection, monitor.thermometer)
+    val heater = componentFromId(componentCollection, monitor.heater)
+    val heat = getMonitorTarget(monitor)
+    monitors = monitors.filter(t => (t._1 != thermometer) && t._2 != heater) //remove old one
+    monitors += ((thermometer, heater, heat, enabled)) //add new one
   }
 
-  private def addThermostat(thermometer: Component, heater: Component, targetTemperature:Double, enabled:Boolean): Unit ={
-    thermostats += ((thermometer, heater, targetTemperature, enabled))
-    //    println("Added thermostat..." + thermostats)
+  private def addMonitor(thermometer: Component, heater: Component, targetTemperature:Double, enabled:Boolean): Unit ={
+    monitors += ((thermometer, heater, targetTemperature, enabled))
   }
 
-  private def startThermostats(componentCollection:ComponentCollection) {
-    populateThermostatList(componentCollection)
-    actorRef = system.actorOf(Props(new ThermostatHeatActor(this, componentCollection)), name = "thermostat")
+  private def startMonitors(componentCollection:ComponentCollection) {
+    populateMonitorList(componentCollection)
+    actorRef = system.actorOf(Props(new MonitorActor(this, componentCollection)), name = "thermostat")
     val tickInterval  = new FiniteDuration(1, TimeUnit.SECONDS)
     cancellable = Some(system.scheduler.schedule(tickInterval, tickInterval, actorRef, "tick")) //initialDelay, delay, Actor, Message
   }
 
-  private def populateThermostatList(componentCollection:ComponentCollection): Unit = {
-    componentCollection.thermostats.foreach(thermostat => {
-      val thermometer = componentFromId(componentCollection, thermostat.thermometer)
-      val heater = componentFromId(componentCollection, thermostat.heater)
-      addThermostat(thermometer, heater, -273, true) //low default target temp.
+  private def populateMonitorList(componentCollection:ComponentCollection): Unit = {
+    componentCollection.monitors.foreach(monitor => {
+      val thermometer = componentFromId(componentCollection, monitor.thermometer)
+      val heater = componentFromId(componentCollection, monitor.heater)
+      addMonitor(thermometer, heater, -273, true) //low default target temp.
     })
   }
-  private def setThermostat(thermometer: Component, heater: Component, targetTemperature:Double, enabled:Boolean): Unit = {
-    thermostats = thermostats.filter(t => (t._1 != thermometer) && t._2 != heater) //remove old one (if exists)
-    thermostats += ((thermometer, heater, targetTemperature, enabled)) //add new one
-    //    println("set thermostats..." + thermostats)
+  private def setMonitor(thermometer: Component, heater: Component, targetTemperature:Double, enabled:Boolean): Unit = {
+    monitors = monitors.filter(t => (t._1 != thermometer) && t._2 != heater) //remove old one (if exists)
+    monitors += ((thermometer, heater, targetTemperature, enabled)) //add new one
   }
 
-  override def getThermostatHeat(thermostat: Monitor):Double = {
-    //thermostats.filter(t => (t._1.id == thermostat.thermometer) && t._2.id == thermostat.heater).head._3
-    getThermostatData(thermostat)._3
-  }
+  override def getMonitorTarget(monitor: Monitor):Double = {getMonitorData(monitor)._3}
 
-  override def getThermostatEnabled(thermostat: Monitor):Boolean = {
-    //thermostats.filter(t => (t._1.id == thermostat.thermometer) && t._2.id == thermostat.heater).head._4
-    getThermostatData(thermostat)._4
-  }
+  override def getMonitorEnabled(monitor: Monitor):Boolean = {getMonitorData(monitor)._4}
 
-  private def getThermostatData(thermostat: Monitor):(Component, Component, Double, Boolean) = {
-    thermostats.filter(t => (t._1.id == thermostat.thermometer) && t._2.id == thermostat.heater).head
+  private def getMonitorData(monitor: Monitor):(Component, Component, Double, Boolean) = {
+    monitors.filter(t => (t._1.id == monitor.thermometer) && t._2.id == monitor.heater).head
   }
 
 
-  override def stopThermostats()={
+  override def stopMonitors()={
     actorRef ! "stop"
     //cancellable = None
   }
 }
 
 /***********************************************************************
- ThermostatHeatActor: Akka Actor
+ MonitorActor: Akka Actor
 ***********************************************************************/
-class ThermostatHeatActor(componentManager: ComponentManager, componentCollection: ComponentCollection) extends Actor {
+class MonitorActor(componentManager: ComponentManager, componentCollection: ComponentCollection) extends Actor {
   def receive = {
     case "tick" => {
       //println("tick!")
-      componentManager.thermostats.foreach( thermostat => {
-        val heater = thermostat._2
-        val enabled = thermostat._4
+      componentManager.monitors.foreach( monitor => {
+        val heater = monitor._2
+        val enabled = monitor._4
         if(enabled){
-          val thermometer = thermostat._1
-          val targetTemperature = thermostat._3
+          val thermometer = monitor._1
+          val targetTemperature = monitor._3
           componentManager.readTemperature(thermometer) match {
            case Some(currentTemp) => componentManager.setPower(heater, calculateHeatSetting(targetTemperature - currentTemp))
            case _ => componentManager.off(componentCollection, heater);println("no temperature:") //to be safe!

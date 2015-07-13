@@ -5,25 +5,25 @@
 <div style="width:400px;" xmlns="http://www.w3.org/1999/html">
     <fieldset>
         <legend>Monitors</legend>
-        @componentCollection.thermostats.map {thermostat =>
+        @componentCollection.monitors.map {monitor =>
         <fieldset>
-            <legend>@thermostat.description</legend>
+            <legend>@monitor.description</legend>
         <p> <label>Enabled:</label>
-            @Html("<input type=\"radio\" name=\"thermostat-enabled"+thermostat.id+"\" id=\"thermostat-true"+thermostat.id + "\" value=\"true\" onclick=\"makeCall('"+thermostat.id+"', 'true')\">On "+
-                  "<input type=\"radio\" name=\"thermostat-enabled"+thermostat.id+"\" id=\"thermostat-false"+thermostat.id + "\" value=\"false\" onclick=\"makeCall('"+thermostat.id+"', 'false')\" checked>Off ")
+            @Html("<input type=\"radio\" name=\"monitor-enabled"+monitor.id+"\" id=\"monitor-true"+monitor.id + "\" value=\"true\" onclick=\"makeCall('"+monitor.id+"', 'true')\">On "+
+                  "<input type=\"radio\" name=\"monitor-enabled"+monitor.id+"\" id=\"monitor-false"+monitor.id + "\" value=\"false\" onclick=\"makeCall('"+monitor.id+"', 'false')\" checked>Off ")
         </p>
         <p><label>Temperature:</label>
-            @Html("<button id=\"device-down\"+thermostat.id class=\"button\" onclick=\"makeCall('"+thermostat.id+"', 'ddown')\"><<</button>" +
-            "<button id=\"-\"  class=\"button\" value=\"Next\" onclick=\"makeCall('"+thermostat.id+"', 'down')\"><</button> " +
-            "<span id=\"thermostat-temperature" + thermostat.id + "\"> 0 &deg;c </span>" +
-            " <button id=\"+\"  class=\"button\" value=\"Next\" onclick=\"makeCall('"+thermostat.id+"', 'up')\">></button>" +
-            "<button id=\"+\"  class=\"button\" value=\"Next\" onclick=\"makeCall('"+thermostat.id+"', 'dup')\">>></button>")
+            @Html("<button id=\"device-down\"+monitor.id class=\"button\" onclick=\"makeCall('"+monitor.id+"', 'ddown')\"><<</button>" +
+            "<button id=\"-\"  class=\"button\" value=\"Next\" onclick=\"makeCall('"+monitor.id+"', 'down')\"><</button> " +
+            "<span id=\"monitor-temperature" + monitor.id + "\"> 0 &deg;c </span>" +
+            " <button id=\"+\"  class=\"button\" value=\"Next\" onclick=\"makeCall('"+monitor.id+"', 'up')\">></button>" +
+            "<button id=\"+\"  class=\"button\" value=\"Next\" onclick=\"makeCall('"+monitor.id+"', 'dup')\">>></button>")
         </p>
         <p><label>Thermometer:&nbsp;</label>
-            @Html("<span id=\"thermostat-thermometer" + thermostat.id + "\"> 0 &deg;c </span>")
+            @Html("<span id=\"monitor-thermometer" + monitor.id + "\"> 0 &deg;c </span>")
         </p>
         <p><label>Heater:</label>
-            @Html("<span id=\"thermostat-heater" + thermostat.id + "\"> 0 % </span>")
+            @Html("<span id=\"monitor-heater" + monitor.id + "\"> 0 % </span>")
         </p>
         </fieldset>
         }
