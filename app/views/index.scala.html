@@ -12,7 +12,7 @@
             @Html("<input type=\"radio\" name=\"monitor-enabled"+monitor.id+"\" id=\"monitor-true"+monitor.id + "\" value=\"true\" onclick=\"makeCall('"+monitor.id+"', 'true')\">On "+
                   "<input type=\"radio\" name=\"monitor-enabled"+monitor.id+"\" id=\"monitor-false"+monitor.id + "\" value=\"false\" onclick=\"makeCall('"+monitor.id+"', 'false')\" checked>Off ")
         </p>
-        <p><label>Temperature:</label>
+        <p><label>Reading:</label>
             @Html("<button id=\"device-down\"+monitor.id class=\"button\" onclick=\"makeCall('"+monitor.id+"', 'ddown')\"><<</button>" +
             "<button id=\"-\"  class=\"button\" value=\"Next\" onclick=\"makeCall('"+monitor.id+"', 'down')\"><</button> " +
             "<span id=\"monitor-temperature" + monitor.id + "\"> 0 &deg;c </span>" +
@@ -20,10 +20,10 @@
             "<button id=\"+\"  class=\"button\" value=\"Next\" onclick=\"makeCall('"+monitor.id+"', 'dup')\">>></button>")
         </p>
         <p><label>Thermometer:&nbsp;</label>
-            @Html("<span id=\"monitor-thermometer" + monitor.id + "\"> 0 &deg;c </span>")
+            @Html("<span id=\"monitor-sensor" + monitor.id + "\"> 0 &deg;c </span>")
         </p>
         <p><label>Heater:</label>
-            @Html("<span id=\"monitor-heater" + monitor.id + "\"> 0 % </span>")
+            @Html("<span id=\"monitor-increaser" + monitor.id + "\"> 0 % </span>")
         </p>
         </fieldset>
         }

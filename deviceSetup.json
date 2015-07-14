@@ -31,7 +31,7 @@
     "id" : 104,
     "description" : "Boiler Thermostat",
     "deviceType" : 5,
-    "thermometer" : 1,
-    "heater" : 3
+    "sensor" : 1,
+    "increaser" : 3
   } ]
 }

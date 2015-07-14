@@ -65,7 +65,7 @@ object Sequencer{
   def runWaitHeat(step:Step, component:Component, componentManager: ComponentManager): Unit ={
     step.target match {
       case Some(target) => {
-        if (componentManager.reachedTemperatureHeating(component, target)) currentStep +=1
+        if (componentManager.reachedTargetIncreasing(component, target)) currentStep +=1
       }
       case _ => println("No target specified,  can't wait for target value for: "+step)
     }

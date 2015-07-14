@@ -21,8 +21,8 @@ abstract class ComponentManager{
   //def pause(component:Component)
   //def resume(component:Component)
   def componentFromId(componentCollection:ComponentCollection, id:Int):Component
-  def reachedTemperatureHeating(component:Component, targetTemperature: Double):Boolean
-  def readTemperature(component:Component): Option[Double]
+  def reachedTargetIncreasing(component:Component, targetTemperature: Double):Boolean
+  def readSensor(component:Component): Option[Double]
 //  def waitTime(component:Component, duration: Int)
 //  def getTime(component:Component): Int
   def reachedCount(component:Component, targetCount: Int):Boolean
@@ -39,14 +39,14 @@ abstract class ComponentManager{
   def setMonitorEnabled(componentCollection:ComponentCollection, monitor: Monitor, enabled:Boolean)
 
 
-    var cancellable:Option[Cancellable] = None
+  var cancellable:Option[Cancellable] = None
   var actorRef:ActorRef = null
   def getComponentFromList(step:Step, componentList:List[Component]):Component
 
   //function to find the item of Equipment, for the given step
   def getComponentFromCollection(step:Step, componentCollection:ComponentCollection):Component
 
-  // (Thermometer, Heater, monitorTarget, MonitorEnabled)
+  // (sensor, Increaser, monitorTarget, MonitorEnabled)
   var monitors:mutable.MutableList[(Component, Component, Double, Boolean)] = mutable.MutableList()
 
 }
@@ -109,13 +109,13 @@ trait BrewComponentManager extends ComponentManager{
     components.filter((component:Component) => component.id == id).head
   }
 
-  override def reachedTemperatureHeating(component:Component, targetTemperature: Double):Boolean = {
-    val risingTemp:Double = readTemperature(component).getOrElse(-273)
+  override def reachedTargetIncreasing(component:Component, targetReading: Double):Boolean = {
+    val risingReading:Double = readSensor(component).getOrElse(-273)
     //println(component.description + s" comparing temperature: target $targetTemperature with readTemperature: $risingTemp ... ")
-    risingTemp >= targetTemperature
+    risingReading >= targetReading
   }
 
-  override def readTemperature(component:Component): Option[Double] = {
+  override def readSensor(component:Component): Option[Double] = {
     //println(component.description+ " read temperature")
     component.deviceType match{
       case Component.ANALOGUE_IN =>
@@ -159,24 +159,6 @@ trait BrewComponentManager extends ComponentManager{
     }
   }
 
-//  override def waitTime(component:Component, duration: Int) = {
-//    k8055.setTime(duration)
-//    waitTime2(component)
-//  }
-//
-//  @tailrec
-//  private def waitTime2(component:Component):Unit = {
-//    println(component.description+ " waiting for "+ k8055.getTime() + " seconds..."+ "sequencer running:"+Sequencer.running)
-//    if((k8055.getTime() > 0) &&  Sequencer.running) {  //TODO tight coupling with Sequencer. :(
-//      Thread.sleep(1000)
-//      waitTime2(component)
-//    }
-//  }
-//
-//  override def getTime(component: Component):Int = {
-//    k8055.getTime()
-//  }
-
 
   override def setPower(component:Component, power: Int) = {
     component.deviceType match{
@@ -211,51 +193,51 @@ trait BrewComponentManager extends ComponentManager{
   ******************************************************************/
   override def initMonitors(componentCollection: ComponentCollection): Unit = {
     componentCollection.monitors.foreach(monitor => {
-      val thermometer = componentFromId(componentCollection, monitor.thermometer)
-      val heater = componentFromId(componentCollection, monitor.heater)
-      setMonitor(thermometer, heater, 0.0, false)
+      val sensor = componentFromId(componentCollection, monitor.sensor)
+      val increaser = componentFromId(componentCollection, monitor.increaser)
+      setMonitor(sensor, increaser, 0.0, false)
     })
   }
 
-  override def setMonitorTarget(componentCollection:ComponentCollection, monitor: Monitor, temperature:Double) = {
-    val thermometer = componentFromId(componentCollection, monitor.thermometer)
-    val heater = componentFromId(componentCollection, monitor.heater)
+  override def setMonitorTarget(componentCollection:ComponentCollection, monitor: Monitor, target:Double) = {
+    val sensor = componentFromId(componentCollection, monitor.sensor)
+    val increaser = componentFromId(componentCollection, monitor.increaser)
     cancellable match{
       case None => startMonitors(componentCollection)
       case _ =>
     }
-    setMonitor(thermometer, heater, temperature, getMonitorEnabled(monitor))
+    setMonitor(sensor, increaser, target, getMonitorEnabled(monitor))
   }
 
   override def setMonitorEnabled(componentCollection:ComponentCollection, monitor: Monitor, enabled:Boolean) = {
-    val thermometer = componentFromId(componentCollection, monitor.thermometer)
-    val heater = componentFromId(componentCollection, monitor.heater)
-    val heat = getMonitorTarget(monitor)
-    monitors = monitors.filter(t => (t._1 != thermometer) && t._2 != heater) //remove old one
-    monitors += ((thermometer, heater, heat, enabled)) //add new one
+    val sensor = componentFromId(componentCollection, monitor.sensor)
+    val increaser = componentFromId(componentCollection, monitor.increaser)
+    val target = getMonitorTarget(monitor)
+    monitors = monitors.filter(t => (t._1 != sensor) && t._2 != increaser) //remove old one
+    monitors += ((sensor, increaser, target, enabled)) //add new one
   }
 
-  private def addMonitor(thermometer: Component, heater: Component, targetTemperature:Double, enabled:Boolean): Unit ={
-    monitors += ((thermometer, heater, targetTemperature, enabled))
+  private def addMonitor(sensor: Component, increaser: Component, target:Double, enabled:Boolean): Unit ={
+    monitors += ((sensor, increaser, target, enabled))
   }
 
   private def startMonitors(componentCollection:ComponentCollection) {
     populateMonitorList(componentCollection)
-    actorRef = system.actorOf(Props(new MonitorActor(this, componentCollection)), name = "thermostat")
+    actorRef = system.actorOf(Props(new MonitorActor(this, componentCollection)), name = "monitor")
     val tickInterval  = new FiniteDuration(1, TimeUnit.SECONDS)
     cancellable = Some(system.scheduler.schedule(tickInterval, tickInterval, actorRef, "tick")) //initialDelay, delay, Actor, Message
   }
 
   private def populateMonitorList(componentCollection:ComponentCollection): Unit = {
     componentCollection.monitors.foreach(monitor => {
-      val thermometer = componentFromId(componentCollection, monitor.thermometer)
-      val heater = componentFromId(componentCollection, monitor.heater)
-      addMonitor(thermometer, heater, -273, true) //low default target temp.
+      val sensor = componentFromId(componentCollection, monitor.sensor)
+      val increaser = componentFromId(componentCollection, monitor.increaser)
+      addMonitor(sensor, increaser, -1000, true) //low default target temp.
     })
   }
-  private def setMonitor(thermometer: Component, heater: Component, targetTemperature:Double, enabled:Boolean): Unit = {
-    monitors = monitors.filter(t => (t._1 != thermometer) && t._2 != heater) //remove old one (if exists)
-    monitors += ((thermometer, heater, targetTemperature, enabled)) //add new one
+  private def setMonitor(sensor: Component, increaser: Component, targetTemperature:Double, enabled:Boolean): Unit = {
+    monitors = monitors.filter(t => (t._1 != sensor) && t._2 != increaser) //remove old one (if exists)
+    monitors += ((sensor, increaser, targetTemperature, enabled)) //add new one
   }
 
   override def getMonitorTarget(monitor: Monitor):Double = {getMonitorData(monitor)._3}
@@ -263,7 +245,7 @@ trait BrewComponentManager extends ComponentManager{
   override def getMonitorEnabled(monitor: Monitor):Boolean = {getMonitorData(monitor)._4}
 
   private def getMonitorData(monitor: Monitor):(Component, Component, Double, Boolean) = {
-    monitors.filter(t => (t._1.id == monitor.thermometer) && t._2.id == monitor.heater).head
+    monitors.filter(t => (t._1.id == monitor.sensor) && t._2.id == monitor.increaser).head
   }
 
 
@@ -281,14 +263,14 @@ class MonitorActor(componentManager: ComponentManager, componentCollection: Comp
     case "tick" => {
       //println("tick!")
       componentManager.monitors.foreach( monitor => {
-        val heater = monitor._2
+        val increaser = monitor._2
         val enabled = monitor._4
         if(enabled){
-          val thermometer = monitor._1
+          val sensor = monitor._1
           val targetTemperature = monitor._3
-          componentManager.readTemperature(thermometer) match {
-           case Some(currentTemp) => componentManager.setPower(heater, calculateHeatSetting(targetTemperature - currentTemp))
-           case _ => componentManager.off(componentCollection, heater);println("no temperature:") //to be safe!
+          componentManager.readSensor(sensor) match {
+           case Some(currentTemp) => componentManager.setPower(increaser, calculateOutputSetting(targetTemperature - currentTemp))
+           case _ => componentManager.off(componentCollection, increaser);println("no sensor reading:") //to be safe!
           }
         }
       })
@@ -297,7 +279,7 @@ class MonitorActor(componentManager: ComponentManager, componentCollection: Comp
     case _ => println("unknown message")
   }
 
-  def calculateHeatSetting(tempDiff: Double): Int ={
+  def calculateOutputSetting(tempDiff: Double): Int ={
     if(tempDiff > 2.0) 100
     else if(tempDiff < 0) 0
       else (tempDiff * 50).toInt

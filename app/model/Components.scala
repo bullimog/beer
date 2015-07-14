@@ -14,8 +14,8 @@ trait Component{
 object Component {
   val TIMER = 0         // Clock
   val ANALOGUE_IN = 1   // Thermometer
-  val ANALOGUE_OUT = 2  // Heater
-  val DIGITAL_IN = 3    // Button
+  val ANALOGUE_OUT = 2  // Heater or Cooler
+  val DIGITAL_IN = 3    // Button or Switch
   val DIGITAL_OUT = 4   // Pump
   val MONITOR = 5       // Thermostat
 }
@@ -41,15 +41,15 @@ implicit val deviceReads: Reads[Device] = (
 }
 
 case class Monitor(override val id: Int, override val description: String,
-                      override val deviceType: Int, thermometer:Int, heater:Int) extends Component
+                      override val deviceType: Int, sensor:Int, increaser:Int) extends Component
 object Monitor{
 //  implicit val monitorFmt = Json.format[Monitor]
 implicit val monitorReads: Reads[Monitor] = (
   (JsPath \ "id").read[Int] and
     (JsPath \ "description").read[String] and
     (JsPath \ "deviceType").read[Int] and
-    (JsPath \ "thermometer").read[Int] and
-    (JsPath \ "heater").read[Int]
+    (JsPath \ "sensor").read[Int] and
+    (JsPath \ "increaser").read[Int]
   )(Monitor.apply _)
 
   implicit val monitorWrites = Json.writes[Monitor]
@@ -78,7 +78,7 @@ object  ComponentStatus {
 }
 
 case class MonitorStatus(componentId:Int, enabled:Boolean, temperature:Double,
-                            thermometerStatus:ComponentStatus, heaterStatus:ComponentStatus)
+                            sensorStatus:ComponentStatus, increaserStatus:ComponentStatus)
 object  MonitorStatus {
   implicit val formats=Json.writes[MonitorStatus]
 }

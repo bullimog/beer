@@ -65,7 +65,7 @@ object Application extends Controller {
     (comp,target) match {
       case (device:Device, Some(temp)) => Some("" + temp + device.units.getOrElse(""))
       case (monitor:Monitor, Some(temp)) => {
-        val therm:Component = componentManager.componentFromId(componentCollection, monitor.thermometer)
+        val therm:Component = componentManager.componentFromId(componentCollection, monitor.sensor)
         therm match {case device:Device => Some("" + temp + device.units.getOrElse(""))}
       }
       case (_,_) => None
@@ -96,7 +96,7 @@ object Application extends Controller {
       var cs = ComponentStatus(device.id, device.deviceType, componentManager.isOn(device).toString, device.units)
       device.deviceType match {
         case Component.TIMER => cs = ComponentStatus(device.id, device.deviceType, Timer.remainingTime().toString, device.units)
-        case Component.ANALOGUE_IN => cs = ComponentStatus(device.id, device.deviceType, componentManager.readTemperature(device).getOrElse(0).toString, device.units)
+        case Component.ANALOGUE_IN => cs = ComponentStatus(device.id, device.deviceType, componentManager.readSensor(device).getOrElse(0).toString, device.units)
         case Component.ANALOGUE_OUT => cs = ComponentStatus(device.id, device.deviceType, componentManager.getPower(device).getOrElse(0).toString, device.units)
         case Component.DIGITAL_IN => cs = ComponentStatus(device.id, device.deviceType, componentManager.isOn(device).toString, device.units)
         case Component.DIGITAL_OUT => cs = ComponentStatus(device.id, device.deviceType, componentManager.isOn(device).toString, device.units)
@@ -112,13 +112,13 @@ object Application extends Controller {
     componentCollection.monitors.foreach(monitor => {
       val enabled:Boolean = componentManager.getMonitorEnabled(monitor)
       val temperature:Double = componentManager.getMonitorTarget(monitor)
-      val cThermometer:Component = componentManager.componentFromId(componentCollection, monitor.thermometer)
-      val cHeater:Component = componentManager.componentFromId(componentCollection, monitor.heater)
-      (cThermometer, cHeater) match {
-        case(thermometer:Device, heater:Device) => {  //Need to cast to Devices, to get units
-          val thermometerStatus = ComponentStatus(thermometer.id, Component.ANALOGUE_IN, componentManager.readTemperature(thermometer).getOrElse(0).toString, thermometer.units)
-          val heaterStatus = ComponentStatus(heater.id, heater.deviceType, componentManager.getPower(heater).getOrElse(0).toString, heater.units)
-          val monitorStatus = MonitorStatus(monitor.id, enabled, temperature, thermometerStatus, heaterStatus)
+      val cSensor:Component = componentManager.componentFromId(componentCollection, monitor.sensor)
+      val cIncreaser:Component = componentManager.componentFromId(componentCollection, monitor.increaser)
+      (cSensor, cIncreaser) match {
+        case(sensor:Device, increaser:Device) => {  //Need to cast to Devices, to get units
+          val sensorStatus = ComponentStatus(sensor.id, Component.ANALOGUE_IN, componentManager.readSensor(sensor).getOrElse(0).toString, sensor.units)
+          val increaserStatus = ComponentStatus(increaser.id, increaser.deviceType, componentManager.getPower(increaser).getOrElse(0).toString, increaser.units)
+          val monitorStatus = MonitorStatus(monitor.id, enabled, temperature, sensorStatus, increaserStatus)
           monitorStatuses += monitorStatus
         }
       }

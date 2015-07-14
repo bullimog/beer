@@ -61,25 +61,25 @@ class ComponentManagerSpec extends Specification {
   "ComponentManager" should {
     "block the waitTemperatureHeating thread appropriately, until the desired heat has been reached" in {
       componentManager.setTemperature(thermometer, 22)  //set the temperature of the thermometer
-      componentManager.reachedTemperatureHeating(thermometer, 22)
-      componentManager.readTemperature(thermometer) must equalTo(Some(22))
+      componentManager.reachedTargetIncreasing(thermometer, 22)
+      componentManager.readSensor(thermometer) must equalTo(Some(22))
 
       componentManager.setTemperature(thermometer, 22)  //set the temperature of the thermometer
-      componentManager.reachedTemperatureHeating(thermometer, 21)
-      componentManager.readTemperature(thermometer) must equalTo(Some(22))
+      componentManager.reachedTargetIncreasing(thermometer, 21)
+      componentManager.readSensor(thermometer) must equalTo(Some(22))
 
 
       componentManager.setTemperature(thermometer, 20)  //set the temperature of the thermometer
       var finished:Boolean = false
       Future {
-        componentManager.reachedTemperatureHeating(thermometer, 22)
+        componentManager.reachedTargetIncreasing(thermometer, 22)
         finished  = true
       }
 
       Thread.sleep(3000)
       componentManager.setTemperature(thermometer, 22)  //set the temperature of the thermometer, to finish the Wait
       Thread.sleep(1000)
-      componentManager.readTemperature(thermometer) must equalTo(Some(22))
+      componentManager.readSensor(thermometer) must equalTo(Some(22))
       finished mustEqual true
     }
   }

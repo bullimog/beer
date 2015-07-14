@@ -77,16 +77,16 @@
        var monitorId = ss.monitorStatuses[i].componentId
        var monitorEnabled = ss.monitorStatuses[i].enabled
        var monitorTemp = ss.monitorStatuses[i].temperature
-       var thermometerTemp = ss.monitorStatuses[i].thermometerStatus.componentValue
-       var heaterPower = ss.monitorStatuses[i].heaterStatus.componentValue
-       var thermometerUnit = ss.monitorStatuses[i].thermometerStatus.componentUnit
+       var sensorTemp = ss.monitorStatuses[i].sensorStatus.componentValue
+       var increaserPower = ss.monitorStatuses[i].increaserStatus.componentValue
+       var sensorUnit = ss.monitorStatuses[i].sensorStatus.componentUnit
 
        if(monitorEnabled) $("#monitor-true"+monitorId).prop("checked", true)
             else $("#monitor-false"+monitorId).prop("checked", true);
 
-       $("#monitor-temperature"+monitorId).text(monitorTemp+" \xB0c");
-       $("#monitor-thermometer"+monitorId).text(thermometerTemp+" "+ thermometerUnit);
-       $("#monitor-heater"+monitorId).text(heaterPower+" %");
+       $("#monitor-temperature"+monitorId).text(monitorTemp+" "+sensorUnit);
+       $("#monitor-sensor"+monitorId).text(sensorTemp+" "+ sensorUnit);
+       $("#monitor-increaser"+monitorId).text(increaserPower+" %");
     }
   }
 
