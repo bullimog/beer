@@ -55,6 +55,11 @@ implicit val monitorReads: Reads[Monitor] = (
   implicit val monitorWrites = Json.writes[Monitor]
 }
 
+case class ReadableMonitor(override val id: Int, override val description: String,
+                          override val deviceType: Int, sensor:Device, increaser:Device) extends Component
+case class ReadableComponentCollection(name: String, description: String, devices: List[Device],
+                               monitors: List[ReadableMonitor])
+
 
 case class ComponentCollection(name: String, description: String, devices: List[Device],
                                monitors: List[Monitor])
@@ -72,6 +77,7 @@ object ComponentCollection{
     implicit val componentCollectionWrites = Json.writes[ComponentCollection]
 }
 
+/* case classes for ajax data */
 case class ComponentStatus(componentId:Int, componentType:Int, componentValue:String, componentUnit:Option[String])
 object  ComponentStatus {
   implicit val formats=Json.writes[ComponentStatus]

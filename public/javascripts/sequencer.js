@@ -48,8 +48,8 @@
 
         switch(compType){
           case 0: {$("#device-val"+compId).text(formatTimer(compValue)); break;} //TIMER
-          case 1: {$("#device-val"+compId).text(compValue+" "+compUnit); break;}     //ANALOGUE_IN / Thermometer
-          case 2: {$("#device-val"+compId).text(compValue+" %"); break;}         //ANALOGUE OUT / Heater
+          case 1: {$("#device-val"+compId).text(compValue+" "+compUnit); break;} //ANALOGUE_IN / Thermometer
+          case 2: {$("#device-val"+compId).text(compValue+" "+compUnit); break;} //ANALOGUE OUT / Heater
           case 4: {                                                              //DIGITAL_OUT
             if(compValue == "true") $("#device-true"+compId).prop("checked", true)
             else $("#device-false"+compId).prop("checked", true);
@@ -80,13 +80,14 @@
        var sensorTemp = ss.monitorStatuses[i].sensorStatus.componentValue
        var increaserPower = ss.monitorStatuses[i].increaserStatus.componentValue
        var sensorUnit = ss.monitorStatuses[i].sensorStatus.componentUnit
+       var increaserUnit = ss.monitorStatuses[i].increaserStatus.componentUnit
 
        if(monitorEnabled) $("#monitor-true"+monitorId).prop("checked", true)
             else $("#monitor-false"+monitorId).prop("checked", true);
 
        $("#monitor-temperature"+monitorId).text(monitorTemp+" "+sensorUnit);
        $("#monitor-sensor"+monitorId).text(sensorTemp+" "+ sensorUnit);
-       $("#monitor-increaser"+monitorId).text(increaserPower+" %");
+       $("#monitor-increaser"+monitorId).text(increaserPower+" "+increaserUnit);
     }
   }
 

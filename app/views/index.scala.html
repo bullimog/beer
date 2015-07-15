@@ -1,5 +1,5 @@
 
-@(sequence: model.ReadableSequence, componentCollection: model.ComponentCollection)
+@(sequence: model.ReadableSequence, componentCollection: model.ReadableComponentCollection)
 
 @main("Beer Title") {
 <div style="width:400px;" xmlns="http://www.w3.org/1999/html">
@@ -12,18 +12,18 @@
             @Html("<input type=\"radio\" name=\"monitor-enabled"+monitor.id+"\" id=\"monitor-true"+monitor.id + "\" value=\"true\" onclick=\"makeCall('"+monitor.id+"', 'true')\">On "+
                   "<input type=\"radio\" name=\"monitor-enabled"+monitor.id+"\" id=\"monitor-false"+monitor.id + "\" value=\"false\" onclick=\"makeCall('"+monitor.id+"', 'false')\" checked>Off ")
         </p>
-        <p><label>Reading:</label>
+        <p><label>Target:</label>
             @Html("<button id=\"device-down\"+monitor.id class=\"button\" onclick=\"makeCall('"+monitor.id+"', 'ddown')\"><<</button>" +
             "<button id=\"-\"  class=\"button\" value=\"Next\" onclick=\"makeCall('"+monitor.id+"', 'down')\"><</button> " +
             "<span id=\"monitor-temperature" + monitor.id + "\"> 0 &deg;c </span>" +
             " <button id=\"+\"  class=\"button\" value=\"Next\" onclick=\"makeCall('"+monitor.id+"', 'up')\">></button>" +
             "<button id=\"+\"  class=\"button\" value=\"Next\" onclick=\"makeCall('"+monitor.id+"', 'dup')\">>></button>")
         </p>
-        <p><label>Thermometer:&nbsp;</label>
-            @Html("<span id=\"monitor-sensor" + monitor.id + "\"> 0 &deg;c </span>")
+        <p><label>@monitor.sensor.description:&nbsp;</label>
+            @Html("<span id=\"monitor-sensor" + monitor.id + "\"> 0  </span>")
         </p>
-        <p><label>Heater:</label>
-            @Html("<span id=\"monitor-increaser" + monitor.id + "\"> 0 % </span>")
+        <p><label>@monitor.increaser.description:</label>
+            @Html("<span id=\"monitor-increaser" + monitor.id + "\"> 0 </span>")
         </p>
         </fieldset>
         }
@@ -36,11 +36,11 @@
             <label id="deviceDesc@device.id">@device.id: @device.description:&nbsp;</label>
             @{device.deviceType match {
                 case 0 => Html("<span id=\"device-val"+device.id + "\"> 0 seconds </span>")
-                case 1 => Html("<span id=\"device-val"+device.id + "\"> 0 &deg;c </span>")
+                case 1 => Html("<span id=\"device-val"+device.id + "\"> 0 @device.units </span>")
                 case 2 => {
                     Html("<button id=\"device-down\"+device.id class=\"button\" onclick=\"makeCall('"+device.id+"', 'ddown')\"><<</button>" +
                     "<button id=\"-\"  class=\"button\" value=\"Next\" onclick=\"makeCall('"+device.id+"', 'down')\"><</button> " +
-                    "<span id=\"device-val" + device.id + "\"> 0 % </span>" +
+                    "<span id=\"device-val" + device.id + "\"> 0 @device.units </span>" +
                     " <button id=\"+\"  class=\"button\" value=\"Next\" onclick=\"makeCall('"+device.id+"', 'up')\">></button>" +
                     "<button id=\"+\"  class=\"button\" value=\"Next\" onclick=\"makeCall('"+device.id+"', 'dup')\">>></button>")
                 }

@@ -17,8 +17,8 @@ case class Step(id: Int, device: Int, eventType:Int, target: Option[Double], dur
       case Step.SET_HEAT => "Set to "
       case Step.WAIT_HEAT => "Wait until reading rises to "
       case Step.WAIT_TIME => "Wait for "
-      case Step.SET_COOL => "Set Required Cool to "
-      case Step.WAIT_ON => "Wait For"
+      case Step.SET_COOL => "Set to "
+      case Step.WAIT_ON => "Wait for "
     }
   }
 }

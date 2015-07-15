@@ -21,6 +21,8 @@ abstract class ComponentManager{
   //def pause(component:Component)
   //def resume(component:Component)
   def componentFromId(componentCollection:ComponentCollection, id:Int):Component
+  def deviceFromId(componentCollection:ComponentCollection, id:Int):Device
+
   def reachedTargetIncreasing(component:Component, targetTemperature: Double):Boolean
   def readSensor(component:Component): Option[Double]
 //  def waitTime(component:Component, duration: Int)
@@ -107,6 +109,10 @@ trait BrewComponentManager extends ComponentManager{
     //println("step.device="+id)
     val components:List[Component] = componentCollection.devices ::: componentCollection.monitors
     components.filter((component:Component) => component.id == id).head
+  }
+
+  override def deviceFromId(componentCollection:ComponentCollection, id:Int):Device = {
+    componentCollection.devices.filter((device:Device) => device.id == id).head
   }
 
   override def reachedTargetIncreasing(component:Component, targetReading: Double):Boolean = {

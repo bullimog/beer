@@ -44,7 +44,17 @@ object Application extends Controller {
 
   def index = Action {
     Ok(views.html.index(sequenceToReadableSequence(sequence, componentManager, componentCollection),
-      componentCollection))
+      cCToReadableCc(componentCollection)))
+  }
+
+  def cCToReadableCc(componentCollection: ComponentCollection):ReadableComponentCollection = {
+    val rccMonitors:List[ReadableMonitor] = for (monitor <- componentCollection.monitors)
+      yield{new ReadableMonitor(monitor.id, monitor.description, monitor.deviceType,
+              componentManager.deviceFromId(componentCollection, monitor.sensor),
+              componentManager.deviceFromId(componentCollection, monitor.increaser))
+      }
+    ReadableComponentCollection(componentCollection.name, componentCollection.description,
+                                componentCollection.devices, rccMonitors)
   }
 
   /** copies a Sequence to a ReadableSequence, formatting internal data to human-readable. */
@@ -65,8 +75,8 @@ object Application extends Controller {
     (comp,target) match {
       case (device:Device, Some(temp)) => Some("" + temp + device.units.getOrElse(""))
       case (monitor:Monitor, Some(temp)) => {
-        val therm:Component = componentManager.componentFromId(componentCollection, monitor.sensor)
-        therm match {case device:Device => Some("" + temp + device.units.getOrElse(""))}
+        val sensor:Component = componentManager.componentFromId(componentCollection, monitor.sensor)
+        sensor match {case device:Device => Some("" + temp + device.units.getOrElse(""))}
       }
       case (_,_) => None
     }
@@ -208,12 +218,6 @@ object Beer extends App{
   var componentCollection = controllers.ConfigIO.readComponentCollection("deviceSetup.json")
   val sequence = controllers.ConfigIO.readSteps("sequence1.json")
   //val sequencer = new Sequencer
-
-  import sys.process.Process
-  val command = "ls -al"
-  val result = Process(""+command+"")
-  println("result="+result.!)
-
 
   println("About to run sequence")
   Sequencer.runSequence(componentManager, componentCollection, sequence)
