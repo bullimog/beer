@@ -58,16 +58,14 @@ object Application extends Controller {
   }
 
   /** copies a Sequence to a ReadableSequence, formatting internal data to human-readable. */
-  //TODO: Use For/Yield
   def sequenceToReadableSequence(sequence: Sequence, componentManager: ComponentManager,
                                  componentCollection: ComponentCollection): ReadableSequence = {
-    val lbFSteps = new ListBuffer[ReadableStep]()
-    sequence.steps.foreach(step => {
-      lbFSteps += ReadableStep(step.id, step.device,
+    val lbFSteps = for (step <- sequence.steps) yield {
+      ReadableStep(step.id, step.device,
         componentManager.getComponentFromCollection(step, componentCollection).description,
         step.eventType, step.decode, formatTarget(step.target, step.device), formatPeriod(step.duration))
-    })
-    ReadableSequence(sequence.description, lbFSteps.toList, 0)
+    }
+    ReadableSequence(sequence.description, lbFSteps, 0)
   }
 
   private def formatTarget(target: Option[Double], device:Int): Option[String] = {
@@ -99,27 +97,21 @@ object Application extends Controller {
     Ok(Json.toJson(ss).toString())
   }
 
-  //TODO: can we use a yield here??
   private def compileComponentsStatuses(): List[ComponentStatus] = {
-    var componentStatuses: ListBuffer[ComponentStatus] = ListBuffer[ComponentStatus]()
-    componentCollection.devices.foreach(device => {
-      var cs = ComponentStatus(device.id, device.deviceType, componentManager.isOn(device).toString, device.units)
+    for(device <- componentCollection.devices) yield {
       device.deviceType match {
-        case Component.TIMER => cs = ComponentStatus(device.id, device.deviceType, Timer.remainingTime().toString, device.units)
-        case Component.ANALOGUE_IN => cs = ComponentStatus(device.id, device.deviceType, componentManager.readSensor(device).getOrElse(0).toString, device.units)
-        case Component.ANALOGUE_OUT => cs = ComponentStatus(device.id, device.deviceType, componentManager.getPower(device).getOrElse(0).toString, device.units)
-        case Component.DIGITAL_IN => cs = ComponentStatus(device.id, device.deviceType, componentManager.isOn(device).toString, device.units)
-        case Component.DIGITAL_OUT => cs = ComponentStatus(device.id, device.deviceType, componentManager.isOn(device).toString, device.units)
+        case Component.TIMER => ComponentStatus(device.id, device.deviceType, Timer.remainingTime().toString, device.units)
+        case Component.ANALOGUE_IN => ComponentStatus(device.id, device.deviceType, componentManager.readSensor(device).getOrElse(0).toString, device.units)
+        case Component.ANALOGUE_OUT => ComponentStatus(device.id, device.deviceType, componentManager.getPower(device).getOrElse(0).toString, device.units)
+        case Component.DIGITAL_IN => ComponentStatus(device.id, device.deviceType, componentManager.isOn(device).toString, device.units)
+        case Component.DIGITAL_OUT => ComponentStatus(device.id, device.deviceType, componentManager.isOn(device).toString, device.units)
       }
-      componentStatuses += cs
-    })
-    componentStatuses.toList
+    }
   }
 
-  //TODO: can we use a yield here??
+
   private def compileMonitorStatuses(): List[MonitorStatus] = {
-    var monitorStatuses: ListBuffer[MonitorStatus] = ListBuffer[MonitorStatus]()
-    componentCollection.monitors.foreach(monitor => {
+    for(monitor <- componentCollection.monitors) yield {
       val enabled:Boolean = componentManager.getMonitorEnabled(monitor)
       val temperature:Double = componentManager.getMonitorTarget(monitor)
       val cSensor:Component = componentManager.componentFromId(componentCollection, monitor.sensor)
@@ -128,12 +120,10 @@ object Application extends Controller {
         case(sensor:Device, increaser:Device) => {  //Need to cast to Devices, to get units
           val sensorStatus = ComponentStatus(sensor.id, Component.ANALOGUE_IN, componentManager.readSensor(sensor).getOrElse(0).toString, sensor.units)
           val increaserStatus = ComponentStatus(increaser.id, increaser.deviceType, componentManager.getPower(increaser).getOrElse(0).toString, increaser.units)
-          val monitorStatus = MonitorStatus(monitor.id, enabled, temperature, sensorStatus, increaserStatus)
-          monitorStatuses += monitorStatus
+          MonitorStatus(monitor.id, enabled, temperature, sensorStatus, increaserStatus)
         }
       }
-    })
-    monitorStatuses.toList
+    }
   }
 
   def startSequencer() = Action { implicit request =>
