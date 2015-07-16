@@ -42,14 +42,15 @@ class SequencerSpec extends Specification {
   val thermos = List(thermo)
   val componentCollection = ComponentCollection ("Masher 1", "My first set-up, for mashing", devices, thermos)
 
-  val stepDefn1 = Step(1, 104, Step.SET_HEAT, Some(41), None)    // Set required monitor target to 41
+  val stepDefn1 = Step(1, 104, Step.SET_TARGET, Some(41), None)  // Set required monitor target to 41
   val stepDefn2 = Step(2, 2, Step.ON, None, None)                // Turn pump on
   val stepDefn3 = Step(3, 1, Step.WAIT_HEAT, Some(41), None)     // Wait for thermometer to reach 41
   val stepDefn4 = Step(4, 4, Step.WAIT_TIME, None, Some(5))      // wait for 5 seconds
-  val stepDefn5 = Step(5, 104, Step.SET_HEAT, Some(68), None)    // Set monitor target to 68
+  val stepDefn5 = Step(5, 104, Step.SET_TARGET, Some(68), None)  // Set monitor target to 68
   val stepDefn6 = Step(6, 4, Step.WAIT_TIME, None, Some(5))      // wait for 5 seconds
-  val stepDefn7 = Step(7, 104, Step.OFF, None, None)             // turn boiler off
-  val stepDefn8 = Step(8, 2, Step.OFF, None, None)               // turn pump off
+  val stepDefn7 = Step(7, 104, Step.OFF, None, None)             // turn thermostat off
+  val stepDefn8 = Step(8, 3, Step.OFF, None, None)               // turn heater off
+  val stepDefn9 = Step(9, 2, Step.OFF, None, None)               // turn pump off
 
   val lb2 = new ListBuffer[Step]()
   lb2 += stepDefn1 += stepDefn2 += stepDefn3 += stepDefn4 += stepDefn5 += stepDefn6 += stepDefn7 += stepDefn8

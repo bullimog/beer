@@ -134,7 +134,7 @@ class SequencerActor(sequence: Sequence, componentManager: ComponentManager, com
     step.eventType match {
       case (Step.ON) => componentManager.on(componentCollection, component); Sequencer.currentStep += 1 //Digital Out
       case (Step.OFF) => componentManager.off(componentCollection, component); Sequencer.currentStep += 1 //Digital/Analogue Out/Monitor
-      case (Step.SET_HEAT) => { //Monitor or Analogue Out
+      case (Step.SET_TARGET) => { //Monitor or Analogue Out
         Sequencer.runSetHeat(step, component, componentManager, componentCollection)
         Sequencer.currentStep += 1
       }

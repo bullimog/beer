@@ -14,7 +14,7 @@ case class Step(id: Int, device: Int, eventType:Int, target: Option[Double], dur
     eventType match {
       case Step.ON => "On"
       case Step.OFF => "Off"
-      case Step.SET_HEAT => "Set to "
+      case Step.SET_TARGET => "Set to "
       case Step.WAIT_HEAT => "Wait until reading rises to "
       case Step.WAIT_TIME => "Wait for "
       case Step.SET_COOL => "Set to "
@@ -27,7 +27,7 @@ object Step{
   //  Step(event) Types
   val ON = 1          //  1 = turn on
   val OFF = 2         //  2 = turn off
-  val SET_HEAT = 3    //  3 = set monitor (META-DATA = temp[Double])
+  val SET_TARGET = 3  //  3 = set monitor (META-DATA = temp[Double])
   val WAIT_HEAT = 4   //  4 = Wait-Temp   (META-DATA = temp[Double])
   val WAIT_TIME = 5   //  5 = Wait-Time   (META-DATA = duration[milliseconds])
   val SET_COOL = 6    //  6 = Not yet implemented
