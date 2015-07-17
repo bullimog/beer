@@ -41,7 +41,7 @@ object Sequencer{
 
 
 
-  def runSetHeat(step:Step, component:Component, componentManager: ComponentManager, componentCollection: ComponentCollection): Unit ={
+  def runSetTarget(step:Step, component:Component, componentManager: ComponentManager, componentCollection: ComponentCollection): Unit ={
 //    println(s"runSetHeat on $component")
     step.target match {
       case Some(target) =>
@@ -57,15 +57,24 @@ object Sequencer{
           }
           case _ => println("Can't set monitor on a : " + component + "in step " + step)
         }
-      case _ => println("No temperature specified,  can't set temperature for: "+step)
+      case _ => println("No target specified,  can't set target for: "+step)
     }
   }
 
 
-  def runWaitHeat(step:Step, component:Component, componentManager: ComponentManager): Unit ={
+  def runWaitRising(step:Step, component:Component, componentManager: ComponentManager): Unit ={
     step.target match {
       case Some(target) => {
         if (componentManager.reachedTargetIncreasing(component, target)) currentStep +=1
+      }
+      case _ => println("No target specified,  can't wait for target value for: "+step)
+    }
+  }
+
+  def runWaitFalling(step:Step, component:Component, componentManager: ComponentManager): Unit ={
+    step.target match {
+      case Some(target) => {
+        if (componentManager.reachedTargetDecreasing(component, target)) currentStep +=1
       }
       case _ => println("No target specified,  can't wait for target value for: "+step)
     }
@@ -84,9 +93,9 @@ object Sequencer{
   }
 
   def runWaitOn(step:Step, component:Component, componentManager: ComponentManager): Unit ={
-    step.duration match {
+    step.target match {
       case Some(targetCount) => {
-        if (componentManager.reachedCount(component, targetCount)) {
+        if (componentManager.reachedCount(component, targetCount.toInt)) {
           currentStep +=1
           componentManager.resetCount(component)
         }
@@ -135,12 +144,13 @@ class SequencerActor(sequence: Sequence, componentManager: ComponentManager, com
       case (Step.ON) => componentManager.on(componentCollection, component); Sequencer.currentStep += 1 //Digital Out
       case (Step.OFF) => componentManager.off(componentCollection, component); Sequencer.currentStep += 1 //Digital/Analogue Out/Monitor
       case (Step.SET_TARGET) => { //Monitor or Analogue Out
-        Sequencer.runSetHeat(step, component, componentManager, componentCollection)
+        Sequencer.runSetTarget(step, component, componentManager, componentCollection)
         Sequencer.currentStep += 1
       }
-      case (Step.WAIT_HEAT) => Sequencer.runWaitHeat(step, component, componentManager) //Thermometer
+      case (Step.WAIT_RISING) => Sequencer.runWaitRising(step, component, componentManager) //Sensor
       case (Step.WAIT_TIME) => Sequencer.runWaitTime(step, component) //Any
-      case (Step.WAIT_ON) => Sequencer.runWaitOn(step, component, componentManager) //Any
+      case (Step.WAIT_FALLING) => Sequencer.runWaitFalling(step, component, componentManager) //Sensor
+      case (Step.WAIT_ON) => Sequencer.runWaitOn(step, component, componentManager) // C
       case _ => println("Bad Step Type")//TODO report/log
     }
   }

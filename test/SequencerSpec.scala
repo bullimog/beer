@@ -44,7 +44,7 @@ class SequencerSpec extends Specification {
 
   val stepDefn1 = Step(1, 104, Step.SET_TARGET, Some(41), None)  // Set required monitor target to 41
   val stepDefn2 = Step(2, 2, Step.ON, None, None)                // Turn pump on
-  val stepDefn3 = Step(3, 1, Step.WAIT_HEAT, Some(41), None)     // Wait for thermometer to reach 41
+  val stepDefn3 = Step(3, 1, Step.WAIT_RISING, Some(41), None)     // Wait for thermometer to reach 41
   val stepDefn4 = Step(4, 4, Step.WAIT_TIME, None, Some(5))      // wait for 5 seconds
   val stepDefn5 = Step(5, 104, Step.SET_TARGET, Some(68), None)  // Set monitor target to 68
   val stepDefn6 = Step(6, 4, Step.WAIT_TIME, None, Some(5))      // wait for 5 seconds

@@ -15,25 +15,23 @@ case class Step(id: Int, device: Int, eventType:Int, target: Option[Double], dur
       case Step.ON => "On"
       case Step.OFF => "Off"
       case Step.SET_TARGET => "Set to "
-      case Step.WAIT_HEAT => "Wait until reading rises to "
+      case Step.WAIT_RISING => "Wait until reading rises to "
       case Step.WAIT_TIME => "Wait for "
-      case Step.SET_COOL => "Set to "
       case Step.WAIT_ON => "Wait for "
     }
   }
 }
 
 object Step{
-  //  Step(event) Types
-  val ON = 1          //  1 = turn on
-  val OFF = 2         //  2 = turn off
-  val SET_TARGET = 3  //  3 = set monitor (META-DATA = temp[Double])
-  val WAIT_HEAT = 4   //  4 = Wait-Temp   (META-DATA = temp[Double])
-  val WAIT_TIME = 5   //  5 = Wait-Time   (META-DATA = duration[milliseconds])
-  val SET_COOL = 6    //  6 = Not yet implemented
-  val WAIT_COOL = 7   //  7 = Not yet implemented //TODO
-  val WAIT_ON = 8     //  8 = Not yet implemented //TODO
-  val WAIT_COUNT = 9  //  9 = Not yet implemented //TODO
+  //  Step(event) Types.
+  val ON = 1            //  1 = turn on
+  val OFF = 2           //  2 = turn off
+  val SET_TARGET = 3    //  3 = set monitor (META-DATA = target[Double])
+  val WAIT_RISING = 4   //  4 = Wait-Target (META-DATA = target[Double])
+  val WAIT_TIME = 5     //  5 = Wait-Time   (META-DATA = duration[milliseconds])
+  val WAIT_FALLING = 6  //  6 = Wait-Target (META-DATA = target[Double])
+  val WAIT_ON = 7       //  7 = Not yet implemented //TODO
+  val WAIT_COUNT = 8    //  8 = Not yet implemented //TODO
 
 
     //  implicit val stepFmt = Json.format[Step]
@@ -61,7 +59,7 @@ object Sequence {
 }
 
 case class ReadableStep(stepId:Int, deviceId: Int, deviceDesc: String, eventType:Int, eventDesc: String,
-                        temperature: Option[String], duration: Option[String])
+                        target: Option[String], duration: Option[String])
 
 case class ReadableSequence(description:String, friendlySteps:List[ReadableStep], currentStep:Int)
 

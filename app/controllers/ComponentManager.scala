@@ -24,6 +24,7 @@ abstract class ComponentManager{
   def deviceFromId(componentCollection:ComponentCollection, id:Int):Device
 
   def reachedTargetIncreasing(component:Component, targetTemperature: Double):Boolean
+  def reachedTargetDecreasing(component:Component, targetTemperature: Double):Boolean
   def readSensor(component:Component): Option[Double]
 //  def waitTime(component:Component, duration: Int)
 //  def getTime(component:Component): Int
@@ -116,9 +117,14 @@ trait BrewComponentManager extends ComponentManager{
   }
 
   override def reachedTargetIncreasing(component:Component, targetReading: Double):Boolean = {
-    val risingReading:Double = readSensor(component).getOrElse(-273)
+    val risingReading:Double = readSensor(component).getOrElse(Double.MinValue)
     //println(component.description + s" comparing temperature: target $targetTemperature with readTemperature: $risingTemp ... ")
     risingReading >= targetReading
+  }
+
+  override def reachedTargetDecreasing(component:Component, targetReading: Double):Boolean = {
+    val fallingReading:Double = readSensor(component).getOrElse(Double.MaxValue)
+    fallingReading <= targetReading
   }
 
   override def readSensor(component:Component): Option[Double] = {
