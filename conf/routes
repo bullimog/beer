@@ -4,6 +4,7 @@
 
 # Home page
 GET     /                           controllers.Application.index
+GET     /components                 controllers.Components.present
 GET     /sequencerStatus/           controllers.Application.sequencerStatus
 GET     /startSequencer/            controllers.Application.startSequencer
 GET     /stopSequencer/             controllers.Application.stopSequencer

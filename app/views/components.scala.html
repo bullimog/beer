@@ -1,0 +1,35 @@
+@(componentCollection: model.ReadableComponentCollection)
+
+@main("Edit Components") {
+<div style="width:400px;" xmlns="http://www.w3.org/1999/html">
+    <b>Monitors</b><br>
+    <table border="1">
+        <tr>
+            <th>Id</th><th>Description</th><th>Sensor</th><th>Increaser</th>
+        </tr>
+        @componentCollection.monitors.map {monitor =>
+        <tr>
+            <td>@monitor.id</td> <td>@monitor.description</td>
+            <td>@monitor.sensor.description</td> <td>@monitor.increaser.description</td>
+        </tr>
+        }
+    </table>
+
+    <br><br>
+    <b>Devices</b><br>
+    <table border="1">
+        <tr>
+        <th>Id</th><th>Description</th><th>DeviceType</th><th>Channel</th><th>Units</th><th>Conversion Factor</th>
+            <th>Conversion Offset</th><th>Number of Decimal Places</th>
+        </tr>
+        @componentCollection.devices.map {device =>
+        <tr>
+            <td>@device.id</td> <td>@device.description</td> <td>@device.deviceType</td> <td>@device.port</td>
+            <td>@device.units</td> <td>@device.conversionFactor</td> <td>@device.conversionOffset</td>
+            <td>@device.decimalPlaces</td>
+        </tr>
+    }
+        </table>
+
+</div>
+}
