@@ -17,7 +17,7 @@ trait K8055Board extends DeviceConnector{
   var analogueOut1:Int = 0  // 0 to 25,500  (which is 100*255, so we can convert Integers without loss)
   var analogueOut2:Int = 0
 
-  val percentToStoreFactor:Int = 255   // 1% = 255 in the store
+  val percentToStoreFactor:Int = 255   // 1% = 255 in the (0 to 25,500) store
   val byteToStoreFactor:Int = 100      // 1 bit = 100 in the store
 
   val K8055_PORT = 0

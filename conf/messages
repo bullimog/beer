@@ -1,0 +1,10 @@
+#The Constraints trait defines all the default form messages, that can be overridden
+constraint.required=This is a constraint message for all required fields
+error.required=Error, this field must be populated
+format.boolean=A boolean format message
+
+error.protocol.not.populated=You must give a protocol, if you want to override it!
+
+index.button.message=Submit
+index.title=Form Building 101
+index.h2=Mucking about with forms

@@ -191,9 +191,6 @@ object Application extends Controller {
       routes.javascript.Application.startSequencer,
       routes.javascript.Application.stopSequencer)).as("text/javascript")
   }
-
-
-
 }
 
 

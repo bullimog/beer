@@ -89,7 +89,6 @@ trait BrewComponentManager extends ComponentManager{
     }
   }
 
-
   //function to find the (first) item of Equipment, for the given step
   override def getComponentFromList(step:Step, componentList:List[Component]):Component = {
     componentList.filter(component => component.id == step.device).head
@@ -244,7 +243,7 @@ trait BrewComponentManager extends ComponentManager{
     componentCollection.monitors.foreach(monitor => {
       val sensor = componentFromId(componentCollection, monitor.sensor)
       val increaser = componentFromId(componentCollection, monitor.increaser)
-      addMonitor(sensor, increaser, -1000, true) //low default target temp.
+      addMonitor(sensor, increaser, -1000, true) //low default target.
     })
   }
   private def setMonitor(sensor: Component, increaser: Component, targetTemperature:Double, enabled:Boolean): Unit = {

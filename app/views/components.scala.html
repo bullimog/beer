@@ -1,35 +1,44 @@
-@(componentCollection: model.ReadableComponentCollection)
+@(componentCollection: model.ReadableComponentCollection, type2Desc:(Int=>String))
 
-@main("Edit Components") {
+@main("View my Components") {
 <div style="width:400px;" xmlns="http://www.w3.org/1999/html">
-    <b>Monitors</b><br>
-    <table border="1">
+    <fieldset>
+    <legend>Monitors</legend>
+    <table>
         <tr>
-            <th>Id</th><th>Description</th><th>Sensor</th><th>Increaser</th>
+            <th>Id</th><th>Description</th><th>Sensor</th><th>Booster</th>
         </tr>
         @componentCollection.monitors.map {monitor =>
         <tr>
             <td>@monitor.id</td> <td>@monitor.description</td>
             <td>@monitor.sensor.description</td> <td>@monitor.increaser.description</td>
+            <td><a href="monitor-edit?monitorId=@monitor.id">Edit</a></td>
+            <td><a href="monitor-delete?monitorId=@monitor.id">Delete</a></td>
         </tr>
         }
     </table>
+    </fieldset>
+    <a href="monitor-create">Create Monitor</a>
 
-    <br><br>
-    <b>Devices</b><br>
-    <table border="1">
+
+    <fieldset>
+    <legend>Devices</legend>
+    <table>
         <tr>
         <th>Id</th><th>Description</th><th>DeviceType</th><th>Channel</th><th>Units</th><th>Conversion Factor</th>
             <th>Conversion Offset</th><th>Number of Decimal Places</th>
         </tr>
         @componentCollection.devices.map {device =>
         <tr>
-            <td>@device.id</td> <td>@device.description</td> <td>@device.deviceType</td> <td>@device.port</td>
+            <td>@device.id</td> <td>@device.description</td> <td>@type2Desc(device.deviceType)</td> <td>@device.port</td>
             <td>@device.units</td> <td>@device.conversionFactor</td> <td>@device.conversionOffset</td>
             <td>@device.decimalPlaces</td>
+            <td><a href="device-edit?deviceId=@device.id">Edit</a></td>
+            <td><a href="device-delete?deviceId=@device.id">Delete</a></td>
         </tr>
     }
         </table>
-
+    </fieldset>
+    <a href="device-create">Create Device</a>
 </div>
 }

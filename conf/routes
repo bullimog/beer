@@ -5,6 +5,10 @@
 # Home page
 GET     /                           controllers.Application.index
 GET     /components                 controllers.Components.present
+GET     /device-edit                controllers.DeviceEdit.present(deviceId:Int)
+POST    /device-edit                controllers.DeviceEdit.submit()
+#GET     /device-delete              controllers.DeviceDelete.present(deviceId:Int)
+
 GET     /sequencerStatus/           controllers.Application.sequencerStatus
 GET     /startSequencer/            controllers.Application.startSequencer
 GET     /stopSequencer/             controllers.Application.stopSequencer

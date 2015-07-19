@@ -20,46 +20,8 @@ object Component {
   val MONITOR = 5       // Thermostat
 }
 
-case class Device(override val id: Int, override val description: String,
-                  override val deviceType: Int, port:Int, units:Option[String], conversionFactor:Option[Double],
-                   conversionOffset:Option[Double], decimalPlaces:Option[Int]) extends Component
-
-object Device{
-//  implicit val deviceFmt = Json.format[Device]
-implicit val deviceReads: Reads[Device] = (
-  (JsPath \ "id").read[Int] and
-    (JsPath \ "description").read[String] and
-    (JsPath \ "deviceType").read[Int] and
-    (JsPath \ "port").read[Int] and
-    (JsPath \ "units").readNullable[String] and
-    (JsPath \ "conversionFactor").readNullable[Double] and
-    (JsPath \ "conversionOffset").readNullable[Double] and
-    (JsPath \ "decimalPlaces").readNullable[Int]
-  )(Device.apply _)
-
-  implicit val deviceWrites = Json.writes[Device]
-}
-
-case class Monitor(override val id: Int, override val description: String,
-                      override val deviceType: Int, sensor:Int, increaser:Int) extends Component
-object Monitor{
-//  implicit val monitorFmt = Json.format[Monitor]
-implicit val monitorReads: Reads[Monitor] = (
-  (JsPath \ "id").read[Int] and
-    (JsPath \ "description").read[String] and
-    (JsPath \ "deviceType").read[Int] and
-    (JsPath \ "sensor").read[Int] and
-    (JsPath \ "increaser").read[Int]
-  )(Monitor.apply _)
-
-  implicit val monitorWrites = Json.writes[Monitor]
-}
-
-case class ReadableMonitor(override val id: Int, override val description: String,
-                          override val deviceType: Int, sensor:Device, increaser:Device) extends Component
 case class ReadableComponentCollection(name: String, description: String, devices: List[Device],
                                monitors: List[ReadableMonitor])
-
 
 case class ComponentCollection(name: String, description: String, devices: List[Device],
                                monitors: List[Monitor])
@@ -83,8 +45,3 @@ object  ComponentStatus {
   implicit val formats=Json.writes[ComponentStatus]
 }
 
-case class MonitorStatus(componentId:Int, enabled:Boolean, temperature:Double,
-                            sensorStatus:ComponentStatus, increaserStatus:ComponentStatus)
-object  MonitorStatus {
-  implicit val formats=Json.writes[MonitorStatus]
-}

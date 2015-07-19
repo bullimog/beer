@@ -1,0 +1,56 @@
+@(deviceForm: Form[model.Device])
+
+@main("Edit Device") {
+<div style="width:400px;" xmlns="http://www.w3.org/1999/html">
+
+    @helper.form(action = controllers.routes.DeviceEdit.submit()){
+    <fieldset>
+    <legend>Edit Device</legend>
+    <table>
+        <tr>
+            <td>Device Id:</td>
+            <td>@helper.inputText(deviceForm("id"), '_label -> "", 'size -> 3, '_showConstraints -> false, 'readonly -> "readonly")</td>
+        </tr>
+        <tr>
+            <td>Description:</td>
+            <td>@helper.textarea(deviceForm("description"), '_label -> "", 'rows -> 2, 'cols -> 30, '_showConstraints -> false)</td>
+        </tr>
+        <tr>
+            <td>Type:</td>
+            <td>
+                @helper.select(deviceForm("deviceType"), helper.options("0"->"Timer","1"->"Analogue in","2"->"Analogue out","3"->"Digital in","4"->"Digital out"),
+                '_label -> "", '_default->"-- Select Type--", '_showConstraints -> false)
+            </td>
+        </tr>
+        <tr>
+            <td>Channel:</td>
+            <td>
+                @helper.select(deviceForm("port"), helper.options(List("1","2","3","4","5","6","7","8")),
+                    '_label -> "", '_default->"-- Select Channel--", '_showConstraints -> false)
+            </td>
+        </tr>
+        <tr>
+            <td>Units:</td>
+            <td>@helper.inputText(deviceForm("units"), '_label -> "", 'size -> 5)</td>
+        </tr>
+        <tr>
+            <td>Conversion Factor:</td>
+            <td>@helper.inputText(deviceForm("conversionFactor"), '_label -> "", 'size -> 12, '_showConstraints -> false)</td>
+        </tr>
+        <tr>
+            <td>Conversion Offset:</td>
+            <td>@helper.inputText(deviceForm("conversionOffset"), '_label -> "", 'size -> 12, '_showConstraints -> false)</td>
+        </tr>
+        <tr>
+            <td>Decimal Places:</td>
+            <td>@helper.inputText(deviceForm("decimalPlaces"), '_label -> "", 'size -> 1, '_showConstraints -> false)</td>
+        </tr>
+    </table>
+    </fieldset>
+    <input type="submit" class="btn-enable"
+           value='@Messages("index.button.message")'>
+    <input type="submit" class="btn-enable"
+           value='Cancel'>
+}
+</div>
+}
