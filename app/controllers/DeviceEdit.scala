@@ -1,6 +1,9 @@
 package controllers
 
 import connector.{K8055Board, DeviceConnector}
+
+import scala.concurrent.Future
+
 //import controllers.Application._
 import forms.DeviceForm.deviceForm
 import model.{ComponentCollection, Device}
@@ -8,8 +11,13 @@ import play.api.mvc._
 
 trait DeviceEdit extends Controller{
 
-  def present(deviceId:Int) = Action {
-    Ok(views.html.device_edit(deviceForm.fill(fetchDevice(deviceId))))
+  def present(deviceId:Int) = Action.async {
+    //Ok(views.html.device_edit(deviceForm.fill(fetchDevice(deviceId))))
+    fillForm(deviceId)
+  }
+
+  def fillForm(deviceId: Int):Future[Result] = {
+    Future.successful(Ok(views.html.device_edit(deviceForm.fill(fetchDevice(deviceId)))))
   }
 
   def fetchDevice(deviceId:Int): Device = {

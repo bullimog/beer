@@ -2,9 +2,12 @@ package controllers
 
 import model.{Device, ComponentCollection}
 import org.specs2.mutable.Specification
-import play.api.mvc.Result
+import play.api.mvc.{Result}
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, WithApplication, FakeApplication}
+import play.api.mvc._
+
+
 
 import scala.concurrent.{Await, Future}
 
@@ -28,6 +31,18 @@ class DeviceEditSpec extends Specification with DeviceEdit {
     }
   }
 
+  "Invoking the present method" should {
+    "display injected data" in {
+      val controller = new DeviceEdit {
+          override def fetchDevice(deviceId: Int):Device = {
+            Device(1, "Test Pump", 2, 1, None, None, None, None)
+          }
+      }
+      val result:Future[Result] = controller.fillForm(1)
+      contentAsString(result) must contain("Test Pump")
+    }
+  }
+
   "Calling the submit method" should {
     "update the device" in new WithApplication {
 
@@ -42,12 +57,10 @@ class DeviceEditSpec extends Specification with DeviceEdit {
 
       val Some(result:Future[Result]) = route(request)
 
-//      result.map { edval =>
-  //      println("edval="+edval)
-        status(result) must equalTo(OK)
-        contentType(result) must beSome.which(_ == "text/html")
-        contentAsString(result) must contain("stupid")
- //     }
+
+      status(result) must equalTo(OK)
+      contentType(result) must beSome.which(_ == "text/html")
+      contentAsString(result) must contain("stupid")
     }
   }
 }
