@@ -91,8 +91,8 @@
     }
   }
 
-  function startSequencer(){jsRoutes.controllers.Application.startSequencer(null).ajax();};
-  function stopSequencer(){jsRoutes.controllers.Application.stopSequencer(null).ajax();};
+  function startSequencer(){jsRoutes.controllers.StatusController.startSequencer(null).ajax();};
+  function stopSequencer(){jsRoutes.controllers.StatusController.stopSequencer(null).ajax();};
 
 $(function() {
     console.debug("Initialising...")
@@ -105,7 +105,7 @@ function initEvents(){
 
 function makeCall(componentId, state){
     //console.debug("componentId="+componentId+ "   state="+state)
-    jsRoutes.controllers.Application.setComponentState(componentId, state).ajax();
+    jsRoutes.controllers.StatusController.setComponentState(componentId, state).ajax();
 }
 
 
@@ -115,7 +115,7 @@ var sequencerStatusCall = function() {
         success : onSuccess,
         error : onError
     }
-    jsRoutes.controllers.Application.sequencerStatus().ajax(ajaxCallBack);
+    jsRoutes.controllers.StatusController.sequencerStatus().ajax(ajaxCallBack);
 
     setTimeout(sequencerStatusCall, 1000);
 };

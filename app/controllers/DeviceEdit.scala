@@ -1,6 +1,6 @@
 package controllers
 
-import connector.{K8055Board, DeviceConnector}
+import connector.{ConfigIO, K8055Board, DeviceConnector}
 
 import scala.concurrent.Future
 
@@ -26,7 +26,7 @@ trait DeviceEdit extends Controller{
     val componentManager = new ComponentManager with BrewComponentManager {
       override val deviceConnector: DeviceConnector = new DeviceConnector with K8055Board
     }
-    val componentCollection:ComponentCollection = controllers.ConfigIO.readComponentCollection("deviceSetup.json")
+    val componentCollection:ComponentCollection = ConfigIO.readComponentCollection("deviceSetup.json")
     componentManager.deviceFromId(componentCollection, deviceId)
   }
 
