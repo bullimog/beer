@@ -13,10 +13,12 @@ trait DeviceEdit extends Controller{
 
   def present(deviceId:Int) = Action.async {
     //Ok(views.html.device_edit(deviceForm.fill(fetchDevice(deviceId))))
-    fillForm(deviceId)
+    implicit request =>  fillForm(deviceId)
   }
 
-  def fillForm(deviceId: Int):Future[Result] = {
+  def fillForm(deviceId: Int)(implicit request: Request[_]):Future[Result] = {
+    val devices = request.session.get("devices")
+    println("devices="+devices)
     Future.successful(Ok(views.html.device_edit(deviceForm.fill(fetchDevice(deviceId)))))
   }
 

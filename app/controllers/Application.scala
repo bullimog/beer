@@ -42,7 +42,11 @@ object Application extends Controller {
   //initialise the monitor data...
   componentManager.initMonitors(componentCollection)
 
-  def index = Action {
+  def index() = Action {
+    Redirect(routes.DeviceEdit.present(1)).withSession("devices" -> "deviceSetup.json")
+  }
+
+  def present = Action {
     Ok(views.html.index(sequenceToReadableSequence(sequence, componentManager, componentCollection),
       cCToReadableCc(componentCollection)))
   }

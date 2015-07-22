@@ -4,6 +4,7 @@
 
 # Home page
 GET     /                           controllers.Application.index
+GET     /sequencer                  controllers.Application.present
 GET     /components                 controllers.Components.present
 GET     /device-edit                controllers.DeviceEdit.present(deviceId:Int)
 POST    /device-edit                controllers.DeviceEdit.submit()
