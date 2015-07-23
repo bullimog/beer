@@ -43,7 +43,7 @@ object StatusController extends Controller {
   componentManager.initMonitors(componentCollection)
 
   def index() = Action {
-    Redirect(routes.DeviceEdit.present(1)).withSession("devices" -> "deviceSetup.json")
+    Redirect(routes.DeviceEdit.present).withSession("devices" -> "deviceSetup.json")
   }
 
   def present = Action {
@@ -53,9 +53,11 @@ object StatusController extends Controller {
 
   def cCToReadableCc(componentCollection: ComponentCollection):ReadableComponentCollection = {
     val rccMonitors:List[ReadableMonitor] = for (monitor <- componentCollection.monitors)
-      yield{new ReadableMonitor(monitor.id, monitor.description, monitor.deviceType,
-              componentManager.deviceFromId(componentCollection, monitor.sensor),
-              componentManager.deviceFromId(componentCollection, monitor.increaser))
+      yield{
+        ( componentManager.deviceFromId(componentCollection, monitor.sensor),
+          componentManager.deviceFromId(componentCollection, monitor.increaser)) match {
+          case (Some(s), Some(i)) => new ReadableMonitor(monitor.id, monitor.description, monitor.deviceType, s, i)
+        }
       }
     ReadableComponentCollection(componentCollection.name, componentCollection.description,
                                 componentCollection.devices, rccMonitors)

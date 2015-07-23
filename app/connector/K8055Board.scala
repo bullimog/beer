@@ -157,7 +157,7 @@ trait K8055Board extends DeviceConnector{
   }
 
   def executeCommand(command:String): String = {
-    println("executeCommand: "+command)
+    //println("executeCommand: "+command)
     import sys.process.Process
     try{
       val result = Process(""+command+"")
