@@ -20,7 +20,7 @@ abstract class ComponentManager{
   def isOn(component:Component):Boolean
   //def pause(component:Component)
   //def resume(component:Component)
-  def componentFromId(componentCollection:ComponentCollection, id:Int):Component
+  def componentFromId(componentCollection:ComponentCollection, id:Int):Option[Component]
   def deviceFromId(componentCollection:ComponentCollection, id:Int):Option[Device]
 
   def reachedTargetIncreasing(component:Component, targetTemperature: Double):Boolean
@@ -104,14 +104,17 @@ trait BrewComponentManager extends ComponentManager{
 //    componentCollection.devices.filter((device:Device) => device.id == id).head
 //  }
 
-  override def componentFromId(componentCollection:ComponentCollection, id:Int):Component = {
+  override def componentFromId(componentCollection:ComponentCollection, id:Int):Option[Component] = {
     //println("componentCollection="+componentCollection)
     //println("step.device="+id)
     val components:List[Component] = componentCollection.devices ::: componentCollection.monitors
-    components.filter((component:Component) => component.id == id).head
+    try{Some(components.filter((component:Component) => component.id == id).head)}
+    catch{
+      case e:NoSuchElementException => None
+    }
   }
 
-  //TODO: Fail gracefully
+
   override def deviceFromId(componentCollection:ComponentCollection, id:Int):Option[Device] = {
     try{Some(componentCollection.devices.filter((device:Device) => device.id == id).head)}
     catch{
@@ -210,7 +213,11 @@ trait BrewComponentManager extends ComponentManager{
     componentCollection.monitors.foreach(monitor => {
       val sensor = componentFromId(componentCollection, monitor.sensor)
       val increaser = componentFromId(componentCollection, monitor.increaser)
-      setMonitor(sensor, increaser, 0.0, false)
+      (sensor, increaser) match {
+        case (Some(s), Some(i)) => setMonitor(s, i, 0.0, false)
+        case (_,_) =>
+      }
+
     })
   }
 
@@ -221,15 +228,24 @@ trait BrewComponentManager extends ComponentManager{
       case None => startMonitors(componentCollection)
       case _ =>
     }
-    setMonitor(sensor, increaser, target, getMonitorEnabled(monitor))
+    (sensor, increaser) match {
+      case (Some(s), Some(i)) => setMonitor(s, i, target, getMonitorEnabled(monitor))
+      case (_,_) =>
+    }
   }
 
   override def setMonitorEnabled(componentCollection:ComponentCollection, monitor: Monitor, enabled:Boolean) = {
-    val sensor = componentFromId(componentCollection, monitor.sensor)
-    val increaser = componentFromId(componentCollection, monitor.increaser)
+    val sensor:Option[Component] = componentFromId(componentCollection, monitor.sensor)
+    val increaser:Option[Component] = componentFromId(componentCollection, monitor.increaser)
     val target = getMonitorTarget(monitor)
-    monitors = monitors.filter(t => (t._1 != sensor) && t._2 != increaser) //remove old one
-    monitors += ((sensor, increaser, target, enabled)) //add new one
+
+    (sensor, increaser) match {
+      case (Some(s), Some(i)) => {
+        monitors = monitors.filter(t => (t._1 != s) && t._2 != i) //remove old one
+        monitors += ((s, i, target, enabled)) //add new one
+      }
+      case (_,_) =>
+    }
   }
 
   private def addMonitor(sensor: Component, increaser: Component, target:Double, enabled:Boolean): Unit ={
@@ -247,7 +263,11 @@ trait BrewComponentManager extends ComponentManager{
     componentCollection.monitors.foreach(monitor => {
       val sensor = componentFromId(componentCollection, monitor.sensor)
       val increaser = componentFromId(componentCollection, monitor.increaser)
-      addMonitor(sensor, increaser, -1000, true) //low default target.
+
+      (sensor, increaser) match {
+        case (Some(s), Some(i)) => addMonitor(s, i, -1000, true) //low default target.
+        case (_,_) =>
+      }
     })
   }
   private def setMonitor(sensor: Component, increaser: Component, targetTemperature:Double, enabled:Boolean): Unit = {

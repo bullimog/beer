@@ -56,11 +56,13 @@ object StatusController extends Controller {
       yield{
         ( componentManager.deviceFromId(componentCollection, monitor.sensor),
           componentManager.deviceFromId(componentCollection, monitor.increaser)) match {
-          case (Some(s), Some(i)) => new ReadableMonitor(monitor.id, monitor.description, monitor.deviceType, s, i)
+          case (Some(s), Some(i)) => ReadableMonitor(monitor.id, monitor.description, monitor.deviceType, s, i)
+          case _ => ReadableMonitor(Integer.MAX_VALUE, "", 0, null, null) //dummy entry, to satisfy yield :(
         }
       }
+
     ReadableComponentCollection(componentCollection.name, componentCollection.description,
-                                componentCollection.devices, rccMonitors)
+                                componentCollection.devices, rccMonitors.filter(rm => rm.id != Integer.MAX_VALUE))
   }
 
   /** copies a Sequence to a ReadableSequence, formatting internal data to human-readable. */
@@ -75,14 +77,17 @@ object StatusController extends Controller {
   }
 
   private def formatTarget(target: Option[Double], device:Int): Option[String] = {
-    val comp:Component = componentManager.componentFromId(componentCollection, device)
-    (comp,target) match {
-      case (device:Device, Some(temp)) => Some("" + temp + device.units.getOrElse(""))
-      case (monitor:Monitor, Some(temp)) => {
-        val sensor:Component = componentManager.componentFromId(componentCollection, monitor.sensor)
-        sensor match {case device:Device => Some("" + temp + device.units.getOrElse(""))}
+    val oComp = componentManager.componentFromId(componentCollection, device)
+    (oComp, target) match {
+      case (Some(device: Device), Some(temp)) => Some("" + temp + device.units.getOrElse(""))
+      case (Some(monitor: Monitor), Some(temp)) => {
+        val oSensor = componentManager.componentFromId(componentCollection, monitor.sensor)
+        oSensor match {
+          case Some(device: Device) => Some("" + temp + device.units.getOrElse(""))
+          case (_) => None
+        }
       }
-      case (_,_) => None
+      case (_) => None
     }
   }
 
@@ -117,19 +122,21 @@ object StatusController extends Controller {
 
 
   private def compileMonitorStatuses(): List[MonitorStatus] = {
-    for(monitor <- componentCollection.monitors) yield {
+    val monitorStatuses = for(monitor <- componentCollection.monitors) yield {
       val enabled:Boolean = componentManager.getMonitorEnabled(monitor)
       val temperature:Double = componentManager.getMonitorTarget(monitor)
-      val cSensor:Component = componentManager.componentFromId(componentCollection, monitor.sensor)
-      val cIncreaser:Component = componentManager.componentFromId(componentCollection, monitor.increaser)
+      val cSensor:Option[Component] = componentManager.componentFromId(componentCollection, monitor.sensor)
+      val cIncreaser:Option[Component] = componentManager.componentFromId(componentCollection, monitor.increaser)
       (cSensor, cIncreaser) match {
-        case(sensor:Device, increaser:Device) => {  //Need to cast to Devices, to get units
+        case(Some(sensor:Device), Some(increaser:Device)) => {  //Need to cast to Devices, to get units
           val sensorStatus = ComponentStatus(sensor.id, Component.ANALOGUE_IN, componentManager.readSensor(sensor).getOrElse(0).toString, sensor.units)
           val increaserStatus = ComponentStatus(increaser.id, increaser.deviceType, componentManager.getPower(increaser).getOrElse(0).toString, increaser.units)
           MonitorStatus(monitor.id, enabled, temperature, sensorStatus, increaserStatus)
         }
+        case (_,_) => MonitorStatus(Integer.MAX_VALUE, false, 0, null, null) //dummy, to satisfy yield :(
       }
     }
+    monitorStatuses.filter(ms => ms.componentId != Integer.MAX_VALUE)
   }
 
   def startSequencer() = Action { implicit request =>
@@ -144,10 +151,11 @@ object StatusController extends Controller {
 
 
   def setComponentState(componentId: String, state:String) = Action { implicit request =>
-    val component = componentManager.componentFromId(componentCollection, componentId.toInt)
+    val component:Option[Component] = componentManager.componentFromId(componentCollection, componentId.toInt)
     component match {
-      case t:Monitor => setMonitorState(t, state)
-      case d:Device => setDeviceState(d, state)
+      case Some(t:Monitor) => setMonitorState(t, state)
+      case Some(d:Device) => setDeviceState(d, state)
+      case (_) =>
     }
     Ok("Ok")
   }

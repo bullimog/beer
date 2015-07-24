@@ -31,10 +31,10 @@ trait DeviceEdit extends Controller{
       case Some(deviceId) => {
         fetchDevice(deviceId) match {
           case Some(device) =>Future.successful(Ok(views.html.device_edit(deviceForm.fill(device))))
-          case _ => Future.successful(Redirect(routes.ComponentsController.present))
+          case _ => Future.successful(Redirect(routes.ComponentsController.present()))
         }
       }
-      case _ => Future.successful(Redirect(routes.ComponentsController.present))
+      case _ => Future.successful(Redirect(routes.ComponentsController.present()))
     }
   }
 

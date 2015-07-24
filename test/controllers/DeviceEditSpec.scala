@@ -31,14 +31,14 @@ class DeviceEditSpec extends Specification with DeviceEdit {
     }
   }
 
-  "Invoking the present method" should {
+  "Invoking the fillForm method" should {
     "add the injected data to the output" in {
       val controller = new DeviceEdit {
-          override def fetchDevice(deviceId: Int):Device = {
-            Device(1, "Test Pump", 2, 1, None, None, None, None)
+          override def fetchDevice(deviceId: Int):Option[Device] = {
+            Some(Device(1, "Test Pump", 2, 1, None, None, None, None))
           }
       }
-      val result:Future[Result] = controller.fillForm(1)(FakeRequest())
+      val result:Future[Result] = controller.fillForm()(FakeRequest().withSession(("diviceId", "1")))
       contentAsString(result) must contain("Test Pump")
     }
   }

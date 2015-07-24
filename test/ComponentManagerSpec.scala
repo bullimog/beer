@@ -53,8 +53,12 @@ class ComponentManagerSpec extends Specification {
 
   "ComponentManager" should {
     "identify a device within a ComponentCollection, for a given id" in {
-      val foundDevice = componentManager.componentFromId(componentCollection, 4)
-      foundDevice.description must equalTo("Heater")
+      componentManager.componentFromId(componentCollection, 4) match {
+        case Some(foundDevice) => foundDevice.description must equalTo("Heater")
+        case _ => 1 must equalTo(2)
+      }
+
+
     }
   }
 
