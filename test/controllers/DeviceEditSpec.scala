@@ -38,7 +38,7 @@ class DeviceEditSpec extends Specification with DeviceEdit {
             Some(Device(1, "Test Pump", 2, 1, None, None, None, None))
           }
       }
-      val result:Future[Result] = controller.fillForm()(FakeRequest().withSession(("diviceId", "1")))
+      val result:Future[Result] = controller.fillForm()(FakeRequest(GET, "/myFakeUrl?deviceId=1"))  //.withSession(("deviceId", "1"))
       contentAsString(result) must contain("Test Pump")
     }
   }
