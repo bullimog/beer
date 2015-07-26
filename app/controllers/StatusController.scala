@@ -29,6 +29,7 @@ import sequencer.Sequencer
 
 
 import scala.collection.mutable.ListBuffer
+import scala.concurrent.Future
 
 object StatusController extends Controller {
 
@@ -36,19 +37,33 @@ object StatusController extends Controller {
     override val deviceConnector: DeviceConnector = new DeviceConnector with K8055Board //DeviceConnectorStub //stub for now...
   }
 
-  val sequence:Sequence = ConfigIO.readSteps("sequence1.json")
-  val componentCollection = connector.ConfigIO.readComponentCollection("deviceSetup.json")
+  //Mutable state, shared by all users...
+  var sequence:Sequence = ConfigIO.readSteps("sequence1.json")
+  var defaultComponentCollection: ComponentCollection =  ConfigIO.readComponentCollection("deviceSetup.json").get //ComponentCollection ("Empty", "None", List(), List())
+  var componentCollection = defaultComponentCollection
+
 
   //initialise the monitor data...
-  componentManager.initMonitors(componentCollection)
+//  componentManager.initMonitors(componentCollection)
 
-  def index() = Action {
-    Redirect(routes.DeviceEdit.present).withSession("devices" -> "deviceSetup.json")
+  def index() = Action.async {
+    implicit request => {
+      //componentCollection = loadComponentConfig()
+      Future.successful(Redirect(routes.StatusController.present).withSession("devices" -> "deviceSetup.json"))
+    }
   }
 
-  def present = Action {
-    Ok(views.html.index(sequenceToReadableSequence(sequence, componentManager, componentCollection),
-      cCToReadableCc(componentCollection)))
+  def present = Action.async {
+    implicit request => {
+      Future.successful(Ok(views.html.index(sequenceToReadableSequence(sequence, componentManager, componentCollection),
+        cCToReadableCc(componentCollection))))
+    }
+  }
+
+  def loadComponentConfig()(implicit request:Request[_]): ComponentCollection ={
+    //sequence = ConfigIO.readSteps("sequence1.json")
+    val deviceConfigFile = request.session.get("devices").getOrElse("badConfigFile")
+    connector.ConfigIO.readComponentCollection(deviceConfigFile).getOrElse(defaultComponentCollection)
   }
 
   def cCToReadableCc(componentCollection: ComponentCollection):ReadableComponentCollection = {
@@ -69,11 +84,15 @@ object StatusController extends Controller {
   def sequenceToReadableSequence(sequence: Sequence, componentManager: ComponentManager,
                                  componentCollection: ComponentCollection): ReadableSequence = {
     val lbFSteps = for (step <- sequence.steps) yield {
-      ReadableStep(step.id, step.device,
-        componentManager.getComponentFromCollection(step, componentCollection).description,
-        step.eventType, step.decode, formatTarget(step.target, step.device), formatPeriod(step.duration))
+      componentManager.getComponentFromCollection(step, componentCollection) match{
+        case Some(component) => ReadableStep(step.id, step.device, component.description,
+          step.eventType, step.decode, formatTarget(step.target, step.device), formatPeriod(step.duration))
+        case None => ReadableStep(Integer.MAX_VALUE, step.device, "none",
+          step.eventType, step.decode, formatTarget(step.target, step.device), formatPeriod(step.duration))
+      }
     }
-    ReadableSequence(sequence.description, lbFSteps, 0)
+
+    ReadableSequence(sequence.description, lbFSteps.filter(rs => rs.stepId != Integer.MAX_VALUE), 0)
   }
 
   private def formatTarget(target: Option[Double], device:Int): Option[String] = {
@@ -216,7 +235,7 @@ object Beer extends App{
   val componentManager = new ComponentManager with BrewComponentManager{
     override val deviceConnector:DeviceConnector = new DeviceConnector with DeviceConnectorStub //stub for now...
   }
-  var componentCollection = connector.ConfigIO.readComponentCollection("deviceSetup.json")
+  var componentCollection = connector.ConfigIO.readComponentCollection("deviceSetup.json").get
   val sequence = connector.ConfigIO.readSteps("sequence1.json")
   //val sequencer = new Sequencer
 

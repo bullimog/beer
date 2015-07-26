@@ -44,10 +44,10 @@ abstract class ComponentManager{
 
   var cancellable:Option[Cancellable] = None
   var actorRef:ActorRef = null
-  def getComponentFromList(step:Step, componentList:List[Component]):Component
+  def getComponentFromList(step:Step, componentList:List[Component]):Option[Component]
 
   //function to find the item of Equipment, for the given step
-  def getComponentFromCollection(step:Step, componentCollection:ComponentCollection):Component
+  def getComponentFromCollection(step:Step, componentCollection:ComponentCollection):Option[Component]
 
   // (sensor, Increaser, monitorTarget, MonitorEnabled)
   var monitors:mutable.MutableList[(Component, Component, Double, Boolean)] = mutable.MutableList()
@@ -90,12 +90,15 @@ trait BrewComponentManager extends ComponentManager{
   }
 
   //function to find the (first) item of Equipment, for the given step
-  override def getComponentFromList(step:Step, componentList:List[Component]):Component = {
-    componentList.filter(component => component.id == step.device).head
+  override def getComponentFromList(step:Step, componentList:List[Component]):Option[Component] = {
+    try{Some(componentList.filter(component => component.id == step.device).head)}
+    catch{
+      case e:NoSuchElementException => None
+    }
   }
 
   //function to find the item of Equipment, for the given step
-  override def getComponentFromCollection(step:Step, componentCollection:ComponentCollection):Component = {
+  override def getComponentFromCollection(step:Step, componentCollection:ComponentCollection):Option[Component] = {
     val components:List[Component] = componentCollection.devices ::: componentCollection.monitors
     getComponentFromList(step, components)
   }
@@ -275,12 +278,25 @@ trait BrewComponentManager extends ComponentManager{
     monitors += ((sensor, increaser, targetTemperature, enabled)) //add new one
   }
 
-  override def getMonitorTarget(monitor: Monitor):Double = {getMonitorData(monitor)._3}
+  override def getMonitorTarget(monitor: Monitor):Double = {  //getMonitorData(monitor)._3
+    getMonitorData(monitor) match{
+      case Some((_, _, target, _)) => target
+      case _ => 0.0
+    }
+  }
 
-  override def getMonitorEnabled(monitor: Monitor):Boolean = {getMonitorData(monitor)._4}
+  override def getMonitorEnabled(monitor: Monitor):Boolean = {  //getMonitorData(monitor)._4
+    getMonitorData(monitor) match{
+      case Some((_, _, _, enabled)) => enabled
+      case _ => false
+    }
+  }
 
-  private def getMonitorData(monitor: Monitor):(Component, Component, Double, Boolean) = {
-    monitors.filter(t => (t._1.id == monitor.sensor) && t._2.id == monitor.increaser).head
+  private def getMonitorData(monitor: Monitor):Option[(Component, Component, Double, Boolean)] = {
+    try{Some(monitors.filter(t => (t._1.id == monitor.sensor) && t._2.id == monitor.increaser).head)}
+    catch{
+      case e:NoSuchElementException => None
+    }
   }
 
 

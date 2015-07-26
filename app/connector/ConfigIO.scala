@@ -1,6 +1,6 @@
 package connector
 
-import java.io.{File, PrintWriter}
+import java.io.{FileNotFoundException, File, PrintWriter}
 
 import model.{ComponentCollection, Sequence}
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
@@ -10,17 +10,21 @@ import scala.io.Source
 
 object ConfigIO {
 
-  def readComponentCollection(json: JsValue):ComponentCollection = {
+  def readComponentCollection(json: JsValue):Option[ComponentCollection] = {
     json.validate[ComponentCollection] match {
-      case s: JsSuccess[ComponentCollection] => s.get
-      case e: JsError => new ComponentCollection("None", "Collection not found", List(), List())
+      case s: JsSuccess[ComponentCollection] => Some(s.get)
+      case e: JsError => None //new ComponentCollection("None", "Collection not found", List(), List())
     }
   }
 
-  def readComponentCollection(fileName:String):ComponentCollection = {
-    val source = Source.fromFile(fileName, "UTF-8")
-    val json: JsValue = Json.parse(source.mkString)
-    readComponentCollection(json)
+  def readComponentCollection(fileName:String):Option[ComponentCollection] = {
+    try{
+      val source = Source.fromFile(fileName, "UTF-8")
+      val json: JsValue = Json.parse(source.mkString)
+      readComponentCollection(json)
+    }catch{
+      case e:FileNotFoundException => None
+    }
   }
 
 

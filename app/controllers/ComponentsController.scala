@@ -7,7 +7,7 @@ import play.api.mvc.Action
 
 
 trait ComponentsController {
-  val componentCollection = ConfigIO.readComponentCollection("deviceSetup.json")
+  val componentCollection = ConfigIO.readComponentCollection("deviceSetup.json").get  //TODO remove hardcoded file
 
   val type2Description = (componentType: Int) => componentType match {
     case Component.TIMER => "Timer"

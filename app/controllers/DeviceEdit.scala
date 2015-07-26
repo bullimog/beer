@@ -42,7 +42,7 @@ trait DeviceEdit extends Controller{
     val componentManager = new ComponentManager with BrewComponentManager {
       override val deviceConnector: DeviceConnector = new DeviceConnector with K8055Board
     }
-    val componentCollection:ComponentCollection = ConfigIO.readComponentCollection("deviceSetup.json")
+    val componentCollection:ComponentCollection = ConfigIO.readComponentCollection("deviceSetup.json").get //TODO remove hard coded file
     componentManager.deviceFromId(componentCollection, deviceId)
   }
 

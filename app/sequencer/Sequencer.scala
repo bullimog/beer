@@ -137,20 +137,20 @@ class SequencerActor(sequence: Sequence, componentManager: ComponentManager, com
   }
 
   def performStep(step: Step): Unit ={
-    val component: Component = componentManager.getComponentFromCollection(step, componentCollection)
+    val oComponent: Option[Component] = componentManager.getComponentFromCollection(step, componentCollection)
     //println("step " + step + " to be serviced by " + component)
 
-    step.eventType match {
-      case (Step.ON) => componentManager.on(componentCollection, component); Sequencer.currentStep += 1 //Digital Out
-      case (Step.OFF) => componentManager.off(componentCollection, component); Sequencer.currentStep += 1 //Digital/Analogue Out/Monitor
-      case (Step.SET_TARGET) => { //Monitor or Analogue Out
+    (step.eventType,oComponent) match {
+      case (Step.ON, Some(component)) => componentManager.on(componentCollection, component); Sequencer.currentStep += 1 //Digital Out
+      case (Step.OFF, Some(component)) => componentManager.off(componentCollection, component); Sequencer.currentStep += 1 //Digital/Analogue Out/Monitor
+      case (Step.SET_TARGET, Some(component)) => { //Monitor or Analogue Out
         Sequencer.runSetTarget(step, component, componentManager, componentCollection)
         Sequencer.currentStep += 1
       }
-      case (Step.WAIT_RISING) => Sequencer.runWaitRising(step, component, componentManager) //Sensor
-      case (Step.WAIT_TIME) => Sequencer.runWaitTime(step, component) //Any
-      case (Step.WAIT_FALLING) => Sequencer.runWaitFalling(step, component, componentManager) //Sensor
-      case (Step.WAIT_ON) => Sequencer.runWaitOn(step, component, componentManager) // C
+      case (Step.WAIT_RISING, Some(component)) => Sequencer.runWaitRising(step, component, componentManager) //Sensor
+      case (Step.WAIT_TIME, Some(component)) => Sequencer.runWaitTime(step, component) //Any
+      case (Step.WAIT_FALLING, Some(component)) => Sequencer.runWaitFalling(step, component, componentManager) //Sensor
+      case (Step.WAIT_ON, Some(component)) => Sequencer.runWaitOn(step, component, componentManager) // C
       case _ => println("Bad Step Type")//TODO report/log
     }
   }
