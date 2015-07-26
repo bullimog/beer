@@ -39,7 +39,7 @@ object StatusController extends Controller {
 
   //Mutable state, shared by all users...
   var sequence:Sequence = ConfigIO.readSteps("sequence1.json")
-  var defaultComponentCollection: ComponentCollection =  ConfigIO.readComponentCollection("deviceSetup.json").get //ComponentCollection ("Empty", "None", List(), List())
+  var defaultComponentCollection: ComponentCollection =  ComponentCollection ("Empty", "None", List(), List()) //ConfigIO.readComponentCollection("deviceSetup.json").get //
   var componentCollection = defaultComponentCollection
 
 
@@ -48,15 +48,21 @@ object StatusController extends Controller {
 
   def index() = Action.async {
     implicit request => {
-      //componentCollection = loadComponentConfig()
-      Future.successful(Redirect(routes.StatusController.present).withSession("devices" -> "deviceSetup.json"))
+      Future.successful(Redirect(routes.StatusController.present()).withSession("devices" -> "deviceSetup.json"))
     }
   }
 
   def present = Action.async {
     implicit request => {
-      Future.successful(Ok(views.html.index(sequenceToReadableSequence(sequence, componentManager, componentCollection),
-        cCToReadableCc(componentCollection))))
+      request.session.get("devices") match {
+        case Some(_) =>{
+          componentCollection = loadComponentConfig()
+          Future.successful(Ok(views.html.index(sequenceToReadableSequence(sequence, componentManager, componentCollection),
+            cCToReadableCc(componentCollection))))
+        }
+        case None => Future.successful(Redirect(routes.DeviceEdit.present()))
+      }
+
     }
   }
 
