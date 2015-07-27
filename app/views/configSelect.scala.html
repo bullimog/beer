@@ -5,9 +5,19 @@
 
 
 <div style="width:400px;" xmlns="http://www.w3.org/1999/html">
+    <h2>Sequences:</h2>
+    <ul>
     @sequences.map {sequence =>
-      file: @sequence <br>
+      <li> @sequence </li>
     }
+    </ul>
+
+    <h2>Hardware Configuration:</h2>
+    <ul>
+        @deviceConfigs.map {deviceConfig =>
+    <li> @deviceConfig </li>
+    }
+    </ul>
 
 
 </div>

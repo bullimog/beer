@@ -13,19 +13,19 @@ import scala.concurrent.Future
 trait SelectConfigController extends Controller{
   def present = Action.async {
 
-    val sequences = findFiles("sequence.json")
-    val deviceConfigs = findFiles("devices.json")
+    val sequences = findFiles("1.json")
+    val deviceConfigs = findFiles(".json")
 
     Future.successful(Ok(views.html.configSelect(sequences, deviceConfigs)))
 
   }
 
-  def findFiles(filter:String):List[String] ={
+  def findFiles(strFilter:String):List[String] ={
     val myDirectory = new File(".")
     val fileList =
-    for (file <- myDirectory.listFiles if file.getName endsWith filter) yield {
-      file.getName
-    }
+      for (file <- myDirectory.listFiles if file.getName endsWith strFilter) yield {
+        file.getName.replaceAll(strFilter, "")
+      }
     fileList.toList
   }
 }
