@@ -1,24 +1,27 @@
 @(sequences:List[String], deviceConfigs:List[String])
 
-@main("View my Components") {
+@main("Configuration Selector") {
 
 
 
 <div style="width:400px;" xmlns="http://www.w3.org/1999/html">
     <h2>Sequences:</h2>
-    <ul>
-    @sequences.map {sequence =>
-      <li> @sequence </li>
+
+    @helper.form(action = controllers.routes.DeviceEdit.submit()){
+
+        <ul>
+        @sequences.map {sequence =>
+          <li> @sequence <a href="">Select</a> <a href="">Edit</a></li>
+        }
+        </ul>
+
+        <h2>Hardware Configuration:</h2>
+        <ul>
+            @deviceConfigs.map {deviceConfig =>
+        <li> @deviceConfig <a href="">Select</a> <a href="">Edit</a></li>
+        }
+        </ul>
+
     }
-    </ul>
-
-    <h2>Hardware Configuration:</h2>
-    <ul>
-        @deviceConfigs.map {deviceConfig =>
-    <li> @deviceConfig </li>
-    }
-    </ul>
-
-
 </div>
 }

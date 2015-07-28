@@ -7,12 +7,12 @@ import play.api.data.format.Formats._
 
 
 object DeviceForm {
-  val deviceForm = Form(
+  val deviceForm:Form[Device] = Form(
     mapping(
       "id" -> number,
       "description" -> nonEmptyText,
-      "deviceType" -> number(min=0, max=4),
-      "port" -> number(min=0, max=8),
+      "deviceType" -> number(min = 0, max = 4),
+      "port" -> number(min = 0, max = 8),
       "units" -> optional(text),
       "conversionFactor" -> optional(of[Double]),
       "conversionOffset" -> optional(of[Double]),
@@ -20,3 +20,8 @@ object DeviceForm {
     )(Device.apply)(Device.unapply)
   )
 }
+
+
+
+
+

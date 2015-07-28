@@ -1,0 +1,37 @@
+{
+  "name" : "Masher 1",
+  "description" : "My first set-up, for mashing",
+  "devices" : [ {
+    "id" : 1,
+    "description" : "Thermometer",
+    "deviceType" : 1,
+    "port" : 1, 
+	"units" : "°c",
+    "conversionFactor" : 0.384313725,
+    "conversionOffset" : 2,
+    "decimalPlaces" : 1
+  }, {
+    "id" : 2,
+    "description" : "Pump",
+    "deviceType" : 4,
+    "port" : 1
+  }, {
+    "id" : 3,
+    "description" : "Heater",
+    "deviceType" : 2,
+    "port" : 1,
+	"units" : "%"
+  }, {
+    "id" : 4,
+    "description" : "Clock",
+    "deviceType" : 0,
+    "port" : 0
+  } ],
+  "monitors" : [ {
+    "id" : 104,
+    "description" : "Boiler Thermostat",
+    "deviceType" : 5,
+    "sensor" : 1,
+    "increaser" : 3
+  } ]
+}
