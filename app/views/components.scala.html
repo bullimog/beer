@@ -1,9 +1,18 @@
-@(componentCollection: model.ReadableComponentCollection, type2Desc:(Int=>String))
+@(deviceConfigurationForm: Form[model.DeviceConfiguration] , deviceConfigs:List[String], componentCollection: model.ReadableComponentCollection, type2Desc:(Int=>String))
 
 @main("View my Components") {
 <div style="width:400px;" xmlns="http://www.w3.org/1999/html">
+
+    @helper.select(
+      deviceConfigurationForm("deviceConfiguration"),
+      helper.options(deviceConfigs),
+      '_label -> "Current Configuration", '_default -> "-- Select configuration --"
+    )
+
+    <br><br>
+
     <fieldset>
-    <legend>Monitors</legend>
+    <legend>Monitors <a href="monitor-create">+</a></legend>
     <table>
         <tr>
             <th>Id</th><th>Description</th><th>Sensor</th><th>Booster</th>
@@ -18,11 +27,11 @@
         }
     </table>
     </fieldset>
-    <a href="monitor-create">Create Monitor</a>
+
 
 
     <fieldset>
-    <legend>Devices</legend>
+    <legend>Devices <a href="device-create">+</a></legend>
     <table>
         <tr>
         <th>Id</th><th>Description</th><th>DeviceType</th><th>Channel</th><th>Units</th><th>Conversion Factor</th>
@@ -39,6 +48,6 @@
     }
         </table>
     </fieldset>
-    <a href="device-create">Create Device</a>
+
 </div>
 }

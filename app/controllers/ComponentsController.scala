@@ -1,9 +1,14 @@
 package controllers
 
+import java.io.File
+
 import connector.ConfigIO
 import controllers.StatusController._
-import model.Component
+import forms.DeviceConfigurationForm._
+import model.{DeviceConfiguration, Component}
 import play.api.mvc.Action
+
+import scala.concurrent.Future
 
 
 trait ComponentsController {
@@ -19,8 +24,23 @@ trait ComponentsController {
     case _ => "Unknown Type"
   }
 
-  def present = Action {
-    Ok(views.html.components(cCToReadableCc(componentCollection), type2Description))
+  def present = Action.async {
+    implicit request => {
+      val deviceConfig = "second" // request.session.get("devices").getOrElse("")
+      println("deviceConfig = "+deviceConfig)
+      val deviceConfigs = findFiles("-devices.json")
+      Future.successful(Ok(views.html.components(deviceConfigurationForm.fill(DeviceConfiguration(currentSequence=deviceConfig)),
+        deviceConfigs, cCToReadableCc(componentCollection), type2Description)))
+    }
+  }
+
+  def findFiles(strFilter:String):List[String] ={
+    val myDirectory = new File(".")
+    val fileList =
+      for (file <- myDirectory.listFiles if file.getName endsWith strFilter) yield {
+        file.getName.replaceAll(strFilter, "")
+      }
+    fileList.toList
   }
 }
 
