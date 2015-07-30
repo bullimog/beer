@@ -29,7 +29,7 @@ trait ComponentsController {
       val deviceConfig = "second" // request.session.get("devices").getOrElse("")
       println("deviceConfig = "+deviceConfig)
       val deviceConfigs = findFiles("-devices.json")
-      Future.successful(Ok(views.html.components(deviceConfigurationForm.fill(DeviceConfiguration(currentSequence=deviceConfig)),
+      Future.successful(Ok(views.html.components(deviceConfigurationForm.fill(DeviceConfiguration(deviceConfig)),
         deviceConfigs, cCToReadableCc(componentCollection), type2Description)))
     }
   }

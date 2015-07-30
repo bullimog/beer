@@ -1,10 +1,10 @@
-@(deviceConfigurationForm: Form[model.DeviceConfiguration] , deviceConfigs:List[String], componentCollection: model.ReadableComponentCollection, type2Desc:(Int=>String))
+@(deviceConfigurationForm: Form[model.DeviceConfiguration], deviceConfigs:List[String], componentCollection: model.ReadableComponentCollection, type2Desc:(Int=>String))
 
 @main("View my Components") {
 <div style="width:400px;" xmlns="http://www.w3.org/1999/html">
 
     @helper.select(
-      deviceConfigurationForm("deviceConfiguration"),
+      deviceConfigurationForm("currentSequence"),
       helper.options(deviceConfigs),
       '_label -> "Current Configuration", '_default -> "-- Select configuration --"
     )
