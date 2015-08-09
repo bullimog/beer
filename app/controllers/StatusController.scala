@@ -22,7 +22,9 @@ import connector.{ConfigIO, K8055Board, DeviceConnector, DeviceConnectorStub}
 import model._
 import org.joda.time.Period
 import org.joda.time.format.PeriodFormat
-import play.api._
+import play.api.Routes
+
+//import play.api._
 import play.api.libs.json.Json
 import play.api.mvc._
 import sequencer.Sequencer
@@ -38,7 +40,7 @@ object StatusController extends Controller {
   }
 
   //Mutable state, shared by all users...
-  var sequence:Sequence = ConfigIO.readSteps("sequence1.json")
+  var sequence:Sequence = ConfigIO.readSteps("sequence1.json") //TODO move to session??
   var defaultComponentCollection: ComponentCollection =  ComponentCollection ("Empty", "None", List(), List()) //ConfigIO.readComponentCollection("deviceSetup.json").get //
   var componentCollection = defaultComponentCollection
 

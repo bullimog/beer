@@ -3,18 +3,22 @@ package controllers
 import java.io.File
 
 import connector.ConfigIO
-import controllers.StatusController._
+import controllers.StatusController.cCToReadableCc
 import forms.DeviceConfigurationForm._
-import model.{DeviceConfiguration, Component}
-import play.api.mvc.{Result, Action}
+import model.{ComponentCollection, DeviceConfiguration, Component}
+import play.api.mvc._
 
 import scala.concurrent.Future
 
 
-trait ComponentsController {
+trait ComponentsController extends Controller{
   val DevicesFileExt:String = "-devices.json"
 
-  val componentCollection = ConfigIO.readComponentCollection("deviceSetup.json").get  //TODO remove hardcoded file
+//  val componentCollection = ConfigIO.readComponentCollection("deviceSetup.json").get  //TODO remove hardcoded file
+
+  def componentCollection(deviceConfig:String):ComponentCollection = {
+    ConfigIO.readComponentCollection(deviceConfig+DevicesFileExt).getOrElse(StatusController.defaultComponentCollection)
+  }
 
   val type2Description = (componentType: Int) => componentType match {
     case Component.TIMER => "Timer"
@@ -29,10 +33,9 @@ trait ComponentsController {
   def present = Action.async {
     implicit request => {
       val deviceConfig = request.session.get("devices").getOrElse("")
-      println("### deviceConfig = "+deviceConfig)
       val deviceConfigs:List[String] = findFiles(DevicesFileExt)
       Future.successful(Ok(views.html.components(deviceConfigurationForm.fill(DeviceConfiguration(deviceConfig)),
-        deviceConfigs, cCToReadableCc(componentCollection), type2Description)))
+        deviceConfigs, cCToReadableCc(componentCollection(deviceConfig)), type2Description)))
     }
   }
 
@@ -51,14 +54,14 @@ trait ComponentsController {
 
       deviceConfigurationForm.bindFromRequest.fold(
         errors => Future.successful(Ok(views.html.components(errors, deviceConfigs,
-          cCToReadableCc(componentCollection), type2Description))),
-        deviceConfig => saveAndPopulate(deviceConfig, deviceConfigs))
+          cCToReadableCc(componentCollection("")), type2Description))),
+        deviceConfig => saveAndPopulate(deviceConfig.currentSequence, deviceConfigs))
     }
   }
 
-  private def saveAndPopulate(deviceConfig:DeviceConfiguration, deviceConfigs:List[String]):Future[Result] = {
-    Future.successful(Ok(views.html.components(deviceConfigurationForm.fill(DeviceConfiguration(deviceConfig.currentSequence)),
-      deviceConfigs, cCToReadableCc(componentCollection), type2Description)).withSession("devices" -> deviceConfig.currentSequence))
+  private def saveAndPopulate(deviceConfig:String, deviceConfigs:List[String]):Future[Result] = {
+    Future.successful(Ok(views.html.components(deviceConfigurationForm.fill(DeviceConfiguration(deviceConfig)),
+      deviceConfigs, cCToReadableCc(componentCollection(deviceConfig)), type2Description)).withSession("devices" -> deviceConfig))
   }
 }
 
