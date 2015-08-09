@@ -1,7 +1,10 @@
-@(deviceConfigurationForm: Form[model.DeviceConfiguration], deviceConfigs:List[String], componentCollection: model.ReadableComponentCollection, type2Desc:(Int=>String))
+@(deviceConfigurationForm: Form[model.DeviceConfiguration], deviceConfigs:List[String],
+    componentCollection: model.ReadableComponentCollection, type2Desc:(Int=>String))
 
 @main("View my Components") {
 <div style="width:400px;" xmlns="http://www.w3.org/1999/html">
+
+    <form action="components" method="POST">
 
     @helper.select(
       deviceConfigurationForm("currentSequence"),
@@ -9,8 +12,13 @@
       '_label -> "Current Configuration", '_default -> "-- Select configuration --"
     )
 
+    <input type="submit" class=""
+           value='Submit'>
     <br><br>
+    </form>
 
+    Name: @componentCollection.name<br>
+    Description: @componentCollection.description<br>
     <fieldset>
     <legend>Monitors <a href="monitor-create">+</a></legend>
     <table>

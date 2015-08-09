@@ -7,18 +7,19 @@ GET     /                           controllers.StatusController.index
 GET     /sequencer                  controllers.StatusController.present
 
 GET     /components                 controllers.ComponentsController.present
+POST     /components                controllers.ComponentsController.submit
 
 GET     /device-edit                controllers.DeviceEdit.present
 POST    /device-edit                controllers.DeviceEdit.submit
-#GET     /device-delete              controllers.DeviceDelete.present(deviceId:Int)
+#GET     /device-delete             controllers.DeviceDelete.present(deviceId:Int)
 
 GET     /select-config              controllers.SelectConfigController.present
 
+#### AJAX CALLS ####
 GET     /sequencerStatus/           controllers.StatusController.sequencerStatus
 GET     /startSequencer/            controllers.StatusController.startSequencer
 GET     /stopSequencer/             controllers.StatusController.stopSequencer
 GET     /setComponentState/         controllers.StatusController.setComponentState(component:String, value:String)
-
 GET     /javascriptRoutes           controllers.StatusController.javascriptRoutes
 
 

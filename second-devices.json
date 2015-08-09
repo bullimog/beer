@@ -1,6 +1,6 @@
 {
-  "name" : "Masher 1",
-  "description" : "My first set-up, for mashing",
+  "name" : "Masher 2",
+  "description" : "My second set-up, for mashing",
   "devices" : [ {
     "id" : 1,
     "description" : "Thermometer",

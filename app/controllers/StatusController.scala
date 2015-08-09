@@ -44,7 +44,7 @@ object StatusController extends Controller {
 
 
   //initialise the monitor data...
-//  componentManager.initMonitors(componentCollection)
+  //  componentManager.initMonitors(componentCollection)
 
   def index() = Action.async {
     implicit request => {
