@@ -29,7 +29,7 @@
   } ],
   "monitors" : [ {
     "id" : 104,
-    "description" : "Boiler Thermostat",
+    "description" : "Boiler2 Thermostat",
     "deviceType" : 5,
     "sensor" : 1,
     "increaser" : 3

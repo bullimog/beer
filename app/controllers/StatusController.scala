@@ -23,14 +23,9 @@ import model._
 import org.joda.time.Period
 import org.joda.time.format.PeriodFormat
 import play.api.Routes
-
-//import play.api._
 import play.api.libs.json.Json
 import play.api.mvc._
 import sequencer.Sequencer
-
-
-import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
 
 object StatusController extends Controller {
@@ -43,6 +38,7 @@ object StatusController extends Controller {
   var sequence:Sequence = ConfigIO.readSteps("sequence1.json") //TODO move to session??
   var defaultComponentCollection: ComponentCollection =  ComponentCollection ("Empty", "None", List(), List()) //ConfigIO.readComponentCollection("deviceSetup.json").get //
   var componentCollection = defaultComponentCollection
+  val devicesFileExt:String = "-devices.json"
 
 
   //initialise the monitor data...
@@ -50,7 +46,8 @@ object StatusController extends Controller {
 
   def index() = Action.async {
     implicit request => {
-      Future.successful(Redirect(routes.StatusController.present()).withSession("devices" -> "deviceSetup.json"))
+      //Future.successful(Redirect(routes.StatusController.present()).withSession("devices" -> "deviceSetup.json"))
+      Future.successful(Redirect(routes.StatusController.present()))
     }
   }
 
@@ -70,7 +67,7 @@ object StatusController extends Controller {
 
   def loadComponentConfig()(implicit request:Request[_]): ComponentCollection ={
     //sequence = ConfigIO.readSteps("sequence1.json")
-    val deviceConfigFile = request.session.get("devices").getOrElse("badConfigFile")
+    val deviceConfigFile = request.session.get("devices").getOrElse("badConfigFile") + devicesFileExt
     connector.ConfigIO.readComponentCollection(deviceConfigFile).getOrElse(defaultComponentCollection)
   }
 

@@ -1,24 +1,34 @@
 @(deviceConfigurationForm: Form[model.DeviceConfiguration], deviceConfigs:List[String],
     componentCollection: model.ReadableComponentCollection, type2Desc:(Int=>String))
 
+
+
 @main("View my Components") {
 <div style="width:400px;" xmlns="http://www.w3.org/1999/html">
 
-    <form action="components" method="POST">
+<script type="text/javascript">
+$(document).ready(function(){
+//    console.log("dsads");
+    $('#currentSequence').change(function(){
+        this.form.submit();
+    });
+});
+</script>
 
-    @helper.select(
-      deviceConfigurationForm("currentSequence"),
-      helper.options(deviceConfigs),
-      '_label -> "Current Configuration", '_default -> "-- Select configuration --"
-    )
+    <fieldset>
+        <legend>Name: @componentCollection.name</legend>
+        Description: @componentCollection.description
+        <form action="components" method="POST">
 
-    <input type="submit" class=""
-           value='Submit'>
-    <br><br>
-    </form>
+            @helper.select(
+            deviceConfigurationForm("currentSequence"),
+            helper.options(deviceConfigs),
+            '_label -> "Select Alternative Configuration:", '_default -> "-- Select configuration --"
+            )
+        </form>
+        <a href="/">Use this Hardware Configuration</a>
+    </fieldset>
 
-    Name: @componentCollection.name<br>
-    Description: @componentCollection.description<br>
     <fieldset>
     <legend>Monitors <a href="monitor-create">+</a></legend>
     <table>
