@@ -3,6 +3,7 @@ package controllers
 import java.io.File
 
 import connector.ConfigIO
+import connector.ConfigIO.devicesFileExt
 import controllers.StatusController.cCToReadableCc
 import forms.DeviceConfigurationForm._
 import model.{ComponentCollection, DeviceConfiguration, Component}
@@ -12,12 +13,12 @@ import scala.concurrent.Future
 
 
 trait ComponentsController extends Controller{
-  val DevicesFileExt:String = "-devices.json"
+//  val DevicesFileExt:String = "-devices.json"
 
 //  val componentCollection = ConfigIO.readComponentCollection("deviceSetup.json").get  //TODO remove hardcoded file
 
   def componentCollection(deviceConfig:String):ComponentCollection = {
-    ConfigIO.readComponentCollection(deviceConfig+DevicesFileExt).getOrElse(StatusController.defaultComponentCollection)
+    ConfigIO.readComponentCollection(deviceConfig+devicesFileExt).getOrElse(StatusController.defaultComponentCollection)
   }
 
   val type2Description = (componentType: Int) => componentType match {
@@ -33,7 +34,7 @@ trait ComponentsController extends Controller{
   def present = Action.async {
     implicit request => {
       val deviceConfig = request.session.get("devices").getOrElse("")
-      val deviceConfigs:List[String] = findFiles(DevicesFileExt)
+      val deviceConfigs:List[String] = findFiles(devicesFileExt)
       Future.successful(Ok(views.html.components(deviceConfigurationForm.fill(DeviceConfiguration(deviceConfig)),
         deviceConfigs, cCToReadableCc(componentCollection(deviceConfig)), type2Description)))
     }
@@ -50,7 +51,7 @@ trait ComponentsController extends Controller{
 
   def submit = Action.async {
     implicit request => {
-      val deviceConfigs:List[String] = findFiles(DevicesFileExt)
+      val deviceConfigs:List[String] = findFiles(devicesFileExt)
 
       deviceConfigurationForm.bindFromRequest.fold(
         errors => Future.successful(Ok(views.html.components(errors, deviceConfigs,

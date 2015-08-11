@@ -34,28 +34,26 @@ object StatusController extends Controller {
     override val deviceConnector: DeviceConnector = new DeviceConnector with K8055Board //DeviceConnectorStub //stub for now...
   }
 
+  val defaultComponentCollection: ComponentCollection =  ComponentCollection ("Empty", "None", List(), List())
+
   //Mutable state, shared by all users...
   var sequence:Sequence = ConfigIO.readSteps("sequence1.json") //TODO move to session??
-  var defaultComponentCollection: ComponentCollection =  ComponentCollection ("Empty", "None", List(), List()) //ConfigIO.readComponentCollection("deviceSetup.json").get //
   var componentCollection = defaultComponentCollection
-  val devicesFileExt:String = "-devices.json"
 
 
   //initialise the monitor data...
   //  componentManager.initMonitors(componentCollection)
 
   def index() = Action.async {
-    implicit request => {
-      //Future.successful(Redirect(routes.StatusController.present()).withSession("devices" -> "deviceSetup.json"))
-      Future.successful(Redirect(routes.StatusController.present()))
-    }
+    implicit request => {Future.successful(Redirect(routes.StatusController.present()))}
   }
 
   def present = Action.async {
     implicit request => {
       request.session.get("devices") match {
         case Some(_) =>{
-          componentCollection = loadComponentConfig()
+          val deviceConfigFile = request.session.get("devices").getOrElse("badConfigFile")
+          componentCollection = ComponentsController.componentCollection(deviceConfigFile)
           Future.successful(Ok(views.html.index(sequenceToReadableSequence(sequence, componentManager, componentCollection),
             cCToReadableCc(componentCollection))))
         }
@@ -65,11 +63,6 @@ object StatusController extends Controller {
     }
   }
 
-  def loadComponentConfig()(implicit request:Request[_]): ComponentCollection ={
-    //sequence = ConfigIO.readSteps("sequence1.json")
-    val deviceConfigFile = request.session.get("devices").getOrElse("badConfigFile") + devicesFileExt
-    connector.ConfigIO.readComponentCollection(deviceConfigFile).getOrElse(defaultComponentCollection)
-  }
 
   def cCToReadableCc(componentCollection: ComponentCollection):ReadableComponentCollection = {
     val rccMonitors:List[ReadableMonitor] = for (monitor <- componentCollection.monitors)

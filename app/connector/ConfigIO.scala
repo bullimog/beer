@@ -10,6 +10,9 @@ import scala.io.Source
 
 object ConfigIO {
 
+  val devicesFileExt:String = "-devices.json"
+  val sequenceFileExt:String = "-sequence.json"
+
   def readComponentCollection(json: JsValue):Option[ComponentCollection] = {
     json.validate[ComponentCollection] match {
       case s: JsSuccess[ComponentCollection] => Some(s.get)
