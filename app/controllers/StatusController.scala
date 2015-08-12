@@ -38,8 +38,12 @@ object StatusController extends Controller {
 
   //Mutable state, shared by all users...
   var sequence:Sequence = ConfigIO.readSteps("sequence1.json") //TODO move to session??
-  var componentCollection = defaultComponentCollection
+//  var componentCollection = defaultComponentCollection
 
+  def componentCollection()(implicit req: Request[_]):ComponentCollection = {
+    val deviceConfigFile = req.session.get("devices").getOrElse("badConfigFile")
+    ComponentsController.componentCollection(deviceConfigFile)
+  }
 
   //initialise the monitor data...
   //  componentManager.initMonitors(componentCollection)
@@ -53,7 +57,7 @@ object StatusController extends Controller {
       request.session.get("devices") match {
         case Some(_) =>{
           val deviceConfigFile = request.session.get("devices").getOrElse("badConfigFile")
-          componentCollection = ComponentsController.componentCollection(deviceConfigFile)
+//          componentCollection = ComponentsController.componentCollection(deviceConfigFile)
           Future.successful(Ok(views.html.index(sequenceToReadableSequence(sequence, componentManager, componentCollection),
             cCToReadableCc(componentCollection))))
         }
@@ -80,7 +84,8 @@ object StatusController extends Controller {
 
   /** copies a Sequence to a ReadableSequence, formatting internal data to human-readable. */
   def sequenceToReadableSequence(sequence: Sequence, componentManager: ComponentManager,
-                                 componentCollection: ComponentCollection): ReadableSequence = {
+                                 componentCollection: ComponentCollection)
+                                (implicit request: Request[_]) :ReadableSequence = {
     val lbFSteps = for (step <- sequence.steps) yield {
       componentManager.getComponentFromCollection(step, componentCollection) match{
         case Some(component) => ReadableStep(step.id, step.device, component.description,
@@ -93,7 +98,7 @@ object StatusController extends Controller {
     ReadableSequence(sequence.description, lbFSteps.filter(rs => rs.stepId != Integer.MAX_VALUE), 0)
   }
 
-  private def formatTarget(target: Option[Double], device:Int): Option[String] = {
+  private def formatTarget(target: Option[Double], device:Int) (implicit request: Request[_]): Option[String] = {
     val oComp = componentManager.componentFromId(componentCollection, device)
     (oComp, target) match {
       case (Some(device: Device), Some(temp)) => Some("" + temp + device.units.getOrElse(""))
@@ -125,7 +130,7 @@ object StatusController extends Controller {
     Ok(Json.toJson(ss).toString())
   }
 
-  private def compileComponentsStatuses(): List[ComponentStatus] = {
+  private def compileComponentsStatuses()(implicit request: Request[_]): List[ComponentStatus] = {
     for(device <- componentCollection.devices) yield {
       device.deviceType match {
         case Component.TIMER => ComponentStatus(device.id, device.deviceType, Timer.remainingTime().toString, device.units)
@@ -138,7 +143,7 @@ object StatusController extends Controller {
   }
 
 
-  private def compileMonitorStatuses(): List[MonitorStatus] = {
+  private def compileMonitorStatuses()(implicit request: Request[_]): List[MonitorStatus] = {
     val monitorStatuses = for(monitor <- componentCollection.monitors) yield {
       val enabled:Boolean = componentManager.getMonitorEnabled(monitor)
       val temperature:Double = componentManager.getMonitorTarget(monitor)
@@ -177,7 +182,7 @@ object StatusController extends Controller {
     Ok("Ok")
   }
 
-  private def setMonitorState(monitor: Monitor, state:String): Unit ={
+  private def setMonitorState(monitor: Monitor, state:String) (implicit request: Request[_]): Unit ={
     try{ // to convert state to Boolean
       componentManager.setMonitorEnabled(componentCollection, monitor, state.toBoolean)
     }catch{ // ok, not a Boolean, so execute a heat adjustment...
@@ -194,7 +199,7 @@ object StatusController extends Controller {
   }
 
 
-  private def setDeviceState(device:Device, state:String) = {
+  private def setDeviceState(device:Device, state:String) (implicit request: Request[_]) = {
     val limitPercent:Int=>Int =(in:Int) => math.min(math.max(0,in) ,100)
     device.deviceType match {
       case Component.DIGITAL_OUT =>
