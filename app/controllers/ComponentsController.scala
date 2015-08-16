@@ -30,6 +30,7 @@ trait ComponentsController extends Controller{
     case Component.MONITOR => "Monitor"
     case _ => "Unknown Type"
   }
+  
 
   def present = Action.async {
     implicit request => {

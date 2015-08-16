@@ -233,6 +233,7 @@ object StatusController extends Controller {
 /**********************************************************
   For testing...
  *********************************************************/
+/*
 object Beer extends App{
   //instantiate Sequencer singleton Object
   val componentManager = new ComponentManager with BrewComponentManager{
@@ -250,3 +251,4 @@ object Beer extends App{
   componentManager.stopMonitors()
 
 }
+*/
