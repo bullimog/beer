@@ -7,8 +7,8 @@
     "deviceType" : 1,
     "port" : 1, 
 	"units" : "°c",
-    "conversionFactor" : 0.384313725,
-    "conversionOffset" : 2,
+    "conversionFactor" : 0.392156862,
+    "conversionOffset" : 0,
     "decimalPlaces" : 1
   }, {
     "id" : 2,
