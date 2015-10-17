@@ -319,6 +319,10 @@ class MonitorActor(componentManager: ComponentManager, componentCollection: Comp
         if(enabled){
           val sensor = monitor._1
           val targetTemperature = monitor._3
+
+          //Using fold, instead of match... This compiles, but not tested it yet...
+//          componentManager.setPower(increaser, calculateOutputSetting(targetTemperature - componentManager.readSensor(sensor).fold(0.0) (_ + 0.0)))
+
           componentManager.readSensor(sensor) match {
            case Some(currentTemp) => componentManager.setPower(increaser, calculateOutputSetting(targetTemperature - currentTemp))
            case _ => componentManager.off(componentCollection, increaser);println("no sensor reading:") //to be safe!
