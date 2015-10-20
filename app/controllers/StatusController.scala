@@ -31,7 +31,8 @@ import scala.concurrent.Future
 object StatusController extends Controller {
 
   val componentManager = new ComponentManager with BrewComponentManager {
-    override val deviceConnector: DeviceConnector = new DeviceConnector with K8055Board //DeviceConnectorStub //stub for now...
+    override val deviceConnector: DeviceConnector = new DeviceConnector with DeviceConnectorStub //stub for now...
+    //override val deviceConnector: DeviceConnector = new DeviceConnector with K8055Board
   }
 
   val defaultComponentCollection: ComponentCollection =  ComponentCollection ("Empty", "None", List(), List())
@@ -56,14 +57,15 @@ object StatusController extends Controller {
     implicit request => {
       request.session.get("devices") match {
         case Some(_) =>{
-          val deviceConfigFile = request.session.get("devices").getOrElse("badConfigFile")
+//          val deviceConfigFile = request.session.get("devices").getOrElse("badConfigFile")
 //          componentCollection = ComponentsController.componentCollection(deviceConfigFile)
-          Future.successful(Ok(views.html.index(sequenceToReadableSequence(sequence, componentManager, componentCollection),
-            cCToReadableCc(componentCollection))))
+          Future.successful(Ok(views.html.index(
+            sequenceToReadableSequence(sequence, componentManager, componentCollection),
+            cCToReadableCc(componentCollection)))
+          )
         }
         case None => Future.successful(Redirect(routes.DeviceEdit.present()))
       }
-
     }
   }
 
@@ -114,13 +116,7 @@ object StatusController extends Controller {
   }
 
   private def formatPeriod(seconds: Option[Int]): Option[String] = {
-    seconds match {
-      case Some(secs) => {
-        val period: Period = Period.seconds(secs)
-        Some(PeriodFormat.getDefault.print(period.normalizedStandard()))
-      }
-      case None => None
-    }
+    seconds.map(secs => PeriodFormat.getDefault.print(Period.seconds(secs).normalizedStandard()))
   }
 
   /** ***************** Ajax Services ********************
