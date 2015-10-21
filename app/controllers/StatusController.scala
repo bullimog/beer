@@ -55,17 +55,16 @@ object StatusController extends Controller {
 
   def present = Action.async {
     implicit request => {
-      request.session.get("devices") match {
-        case Some(_) =>{
+      if (request.session.get("devices").isDefined) {
 //          val deviceConfigFile = request.session.get("devices").getOrElse("badConfigFile")
 //          componentCollection = ComponentsController.componentCollection(deviceConfigFile)
+
           Future.successful(Ok(views.html.index(
             sequenceToReadableSequence(sequence, componentManager, componentCollection),
             cCToReadableCc(componentCollection)))
           )
-        }
-        case None => Future.successful(Redirect(routes.DeviceEdit.present()))
       }
+      else Future.successful(Redirect(routes.DeviceEdit.present()))
     }
   }
 
@@ -73,15 +72,14 @@ object StatusController extends Controller {
   def cCToReadableCc(componentCollection: ComponentCollection):ReadableComponentCollection = {
     val rccMonitors:List[ReadableMonitor] = for (monitor <- componentCollection.monitors)
       yield{
-        ( componentManager.deviceFromId(componentCollection, monitor.sensor),
-          componentManager.deviceFromId(componentCollection, monitor.increaser)) match {
-          case (Some(s), Some(i)) => ReadableMonitor(monitor.id, monitor.description, monitor.deviceType, s, i)
-          case _ => ReadableMonitor(Integer.MAX_VALUE, "", 0, null, null) //dummy entry, to satisfy yield :(
-        }
+        ReadableMonitor(monitor.id, monitor.description, monitor.deviceType,
+          componentManager.deviceFromId(componentCollection, monitor.sensor).orNull,
+          componentManager.deviceFromId(componentCollection, monitor.increaser).orNull)
       }
 
+    //I don't like this filter. Need to remove them in the yield, instead...
     ReadableComponentCollection(componentCollection.name, componentCollection.description,
-                                componentCollection.devices, rccMonitors.filter(rm => rm.id != Integer.MAX_VALUE))
+                                componentCollection.devices, rccMonitors.filter(rm => rm.sensor != null || rm.increaser != null))
   }
 
   /** copies a Sequence to a ReadableSequence, formatting internal data to human-readable. */
