@@ -69,33 +69,35 @@ object StatusController extends Controller {
   }
 
 
-  def cCToReadableCc(componentCollection: ComponentCollection):ReadableComponentCollection = {
-    val rccMonitors:List[ReadableMonitor] = for (monitor <- componentCollection.monitors)
-      yield{
-        ReadableMonitor(monitor.id, monitor.description, monitor.deviceType,
-          componentManager.deviceFromId(componentCollection, monitor.sensor).orNull,
-          componentManager.deviceFromId(componentCollection, monitor.increaser).orNull)
-      }
 
-    //I don't like this filter. Need to remove them in the yield, instead...
+  def cCToReadableCc(componentCollection: ComponentCollection):ReadableComponentCollection = {
+    val rccMonitors:List[ReadableMonitor] = for {monitor <- componentCollection.monitors
+      if componentManager.deviceFromId(componentCollection, monitor.sensor).isDefined &&
+         componentManager.deviceFromId(componentCollection, monitor.increaser).isDefined
+    }
+    yield{
+      ReadableMonitor(monitor.id, monitor.description, monitor.deviceType,
+        componentManager.deviceFromId(componentCollection, monitor.sensor).orNull,
+        componentManager.deviceFromId(componentCollection, monitor.increaser).orNull)
+    }
+
     ReadableComponentCollection(componentCollection.name, componentCollection.description,
-                                componentCollection.devices, rccMonitors.filter(rm => rm.sensor != null || rm.increaser != null))
+      componentCollection.devices, rccMonitors)
+
   }
 
   /** copies a Sequence to a ReadableSequence, formatting internal data to human-readable. */
   def sequenceToReadableSequence(sequence: Sequence, componentManager: ComponentManager,
                                  componentCollection: ComponentCollection)
                                 (implicit request: Request[_]) :ReadableSequence = {
-    val lbFSteps = for (step <- sequence.steps) yield {
-      componentManager.getComponentFromCollection(step, componentCollection) match{
-        case Some(component) => ReadableStep(step.id, step.device, component.description,
-          step.eventType, step.decode, formatTarget(step.target, step.device), formatPeriod(step.duration))
-        case None => ReadableStep(Integer.MAX_VALUE, step.device, "none",
-          step.eventType, step.decode, formatTarget(step.target, step.device), formatPeriod(step.duration))
-      }
+    val steps = for (step <- sequence.steps) yield {
+      componentManager.getComponentFromCollection(step, componentCollection).map( // find a component, for each step...
+        component => ReadableStep(step.id, step.device, component.description,    // Create a human-readable step...
+                                  step.eventType, step.decode,
+                                  formatTarget(step.target, step.device), formatPeriod(step.duration))
+      )
     }
-
-    ReadableSequence(sequence.description, lbFSteps.filter(rs => rs.stepId != Integer.MAX_VALUE), 0)
+    ReadableSequence(sequence.description, steps.flatMap(s => s), 0)
   }
 
   private def formatTarget(target: Option[Double], device:Int) (implicit request: Request[_]): Option[String] = {
@@ -103,9 +105,10 @@ object StatusController extends Controller {
     (oComp, target) match {
       case (Some(device: Device), Some(temp)) => Some("" + temp + device.units.getOrElse(""))
       case (Some(monitor: Monitor), Some(temp)) => {
-        val oSensor = componentManager.componentFromId(componentCollection, monitor.sensor)
-        oSensor match {
-          case Some(device: Device) => Some("" + temp + device.units.getOrElse(""))
+        val maybeSensor:Option[Component] = componentManager.componentFromId(componentCollection, monitor.sensor)
+
+        maybeSensor match {
+          case Some(sensor: Device) => Some("" + temp + sensor.units.getOrElse(""))
           case (_) => None
         }
       }
