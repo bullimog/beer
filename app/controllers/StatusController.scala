@@ -120,6 +120,8 @@ object StatusController extends Controller {
     seconds.map(secs => PeriodFormat.getDefault.print(Period.seconds(secs).normalizedStandard()))
   }
 
+
+
   /** ***************** Ajax Services ********************
     * *******************************************************/
   def sequencerStatus() = Action { implicit request =>
@@ -139,7 +141,6 @@ object StatusController extends Controller {
     }
   }
 
-
   private def compileMonitorStatuses()(implicit request: Request[_]): List[MonitorStatus] = {
     val monitorStatuses = for(monitor <- componentCollection.monitors) yield {
       val enabled:Boolean = componentManager.getMonitorEnabled(monitor)
@@ -157,6 +158,8 @@ object StatusController extends Controller {
     }
     monitorStatuses.filter(ms => ms.componentId != Integer.MAX_VALUE)
   }
+
+  //----------------------------------------------------------------------
 
   def startSequencer() = Action { implicit request =>
     Sequencer.runSequence(componentManager, componentCollection, sequence)
