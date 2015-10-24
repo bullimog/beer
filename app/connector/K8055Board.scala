@@ -78,11 +78,9 @@ trait K8055Board extends DeviceConnector{
     (digitalOut & byteMask(channel)) > 0
   }
 
-  override def setDigitalOut(channel:Int, value:Boolean): Unit ={
-    value match{
-      case true => setDigitalChannel(channel)
-      case _ =>    clearDigitalChannel(channel)
-    }
+  override def setDigitalOut(channel:Int, isOn:Boolean): Unit ={
+    if(isOn) setDigitalChannel(channel)
+    else clearDigitalChannel(channel)
   }
 
   private def byteMask(i:Int): Byte = {math.pow(2,i-1).toByte}
@@ -106,18 +104,19 @@ trait K8055Board extends DeviceConnector{
     if((source & mask) > 0) true
     else false
   }
+
   override def getDigitalIn(channel:Int): Boolean ={
-    readStatus() match {
-      case Some(status) => andBitsTogether(status(K8055_DIGITAL).toByte, byteMask(channel))
-      case None => false
-    }
+    readStatus().fold(false)(status => andBitsTogether(status(K8055_DIGITAL).toByte, byteMask(channel)))
   }
 
   def getCount(channel: Int): Int = {
     (channel, readStatus()) match{
       case (1, Some(status)) => status(K8055_COUNTER_1).toInt
       case (2, Some(status)) => status(K8055_COUNTER_2).toInt
-      case _ => 0
+      case _ => {
+        println("Can only get count from channels 1 & 2, not "+channel)
+        0
+      }
     }
   }
 

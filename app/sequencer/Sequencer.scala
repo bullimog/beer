@@ -92,7 +92,8 @@ object Sequencer{
     }
   }
 
-  def runWaitOn(step:Step, component:Component, componentManager: ComponentManager): Unit ={
+  /*Doesn't Depend upon Input being on at that particular moment.*/
+  def runWaitCount(step:Step, component:Component, componentManager: ComponentManager): Unit ={
     step.target match {
       case Some(targetCount) => {
         if (componentManager.reachedCount(component, targetCount.toInt)) {
@@ -103,6 +104,15 @@ object Sequencer{
       case _ => println("No count specified,  can't wait for: "+step)
     }
   }
+
+  /*Depends upon Input being on at that particular moment.*/
+  def runWaitOn(step:Step, component:Component, componentManager: ComponentManager): Unit ={
+    if (componentManager.isOn(component)) {
+      currentStep +=1
+      println(s"component $component is on!")
+    }
+  }
+
 }
 
 /***********************************************************************
@@ -136,6 +146,7 @@ class SequencerActor(sequence: Sequence, componentManager: ComponentManager, com
     }
   }
 
+  //TODO: Does this method need to be in the Actor? Should it not be in the Sequencer??
   def performStep(step: Step): Unit ={
     val oComponent: Option[Component] = componentManager.getComponentFromCollection(step, componentCollection)
     //println("step " + step + " to be serviced by " + component)
@@ -150,7 +161,8 @@ class SequencerActor(sequence: Sequence, componentManager: ComponentManager, com
       case (Step.WAIT_RISING, Some(component)) => Sequencer.runWaitRising(step, component, componentManager) //Sensor
       case (Step.WAIT_TIME, Some(component)) => Sequencer.runWaitTime(step, component) //Any
       case (Step.WAIT_FALLING, Some(component)) => Sequencer.runWaitFalling(step, component, componentManager) //Sensor
-      case (Step.WAIT_ON, Some(component)) => Sequencer.runWaitOn(step, component, componentManager) // C
+      case (Step.WAIT_ON, Some(component)) => Sequencer.runWaitOn(step, component, componentManager)
+      case (Step.WAIT_COUNT, Some(component)) => Sequencer.runWaitCount(step, component, componentManager) // C
       case _ => println("Bad Step Type")//TODO report/log
     }
   }

@@ -85,6 +85,11 @@ trait BrewComponentManager extends ComponentManager{
           case d:Device => deviceConnector.getDigitalOut(d.port)
           case _ => false
         }
+      case Component.DIGITAL_IN =>
+        component match{
+          case d:Device => deviceConnector.getDigitalIn(d.port)
+          case _ => false
+        }
       case _ => false
     }
   }
